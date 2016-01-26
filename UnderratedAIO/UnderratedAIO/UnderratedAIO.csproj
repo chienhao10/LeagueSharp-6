@@ -62,6 +62,7 @@
     <Compile Include="Champions\Galio.cs" />
     <Compile Include="Champions\Gangplank.cs" />
     <Compile Include="Champions\Gragas.cs" />
+    <Compile Include="Champions\Jax.cs" />
     <Compile Include="Champions\Kennen.cs" />
     <Compile Include="Champions\Evelynn.cs" />
     <Compile Include="Champions\Fiora.cs" />
