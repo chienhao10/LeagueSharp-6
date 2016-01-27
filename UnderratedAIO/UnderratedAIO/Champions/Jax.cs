@@ -33,9 +33,9 @@ namespace UnderratedAIO.Champions
         private void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             if (!unit.IsMe || !W.IsReady() || !target.IsValidTarget() || !target.IsEnemy ||
-                ObjectManager.Get<Obj_AI_Base>()
-                    .Count(o => o.IsEnemy && o.Distance(player.Position) <= Orbwalking.GetRealAutoAttackRange(target)) <=
-                1)
+                (ObjectManager.Get<Obj_AI_Base>()
+                    .Count(o => o.IsEnemy && o.Distance(player.Position) <= Orbwalking.GetRealAutoAttackRange(target)) ==
+                 1 && player.GetAutoAttackDamage((Obj_AI_Base) target, true) > target.Health))
             {
                 return;
             }
@@ -189,7 +189,8 @@ namespace UnderratedAIO.Champions
                 {
                     if (player.CountEnemiesInRange(Q.Range) == 1 && config.Item("useq", true).GetValue<bool>() &&
                         (target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target) ||
-                         Q.GetDamage(target) > target.Health))
+                         (Q.GetDamage(target) > target.Health) &&
+                         (player.HealthPercent < 50 || player.CountAlliesInRange(900) > 0)))
                     {
                         Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
                         HandleECombo();
