@@ -382,10 +382,6 @@ namespace UnderratedAIO.Champions
 
                 E.Cast(target.Position, config.Item("packets").GetValue<bool>());
             }
-            if (Q.IsReady() && config.Item("useq").GetValue<bool>())
-            {
-                Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
-            }
             ItemHandler.UseItems(target, config);
         }
 
