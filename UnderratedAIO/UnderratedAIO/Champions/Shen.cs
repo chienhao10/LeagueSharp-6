@@ -411,7 +411,7 @@ namespace UnderratedAIO.Champions
 
         private void Game_ProcessSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (args.SData.Name == "ShenQ" || args.SData.Name == "ShenR")
+            if (sender.IsMe && (args.SData.Name == "ShenQ" || args.SData.Name == "ShenR"))
             {
                 bladeOnCast = args.End;
             }
