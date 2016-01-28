@@ -3,6 +3,7 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SharpDX;
 using UnderratedAIO.Helpers;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
 
@@ -15,7 +16,7 @@ namespace UnderratedAIO.Champions
         public static AutoLeveler autoLeveler;
         public static Spell Q, W, E, R;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
-        public bool justE;
+        public bool justE, justWJ;
 
         public Jax()
         {
@@ -106,6 +107,64 @@ namespace UnderratedAIO.Champions
                     E.Cast();
                 }
             }
+            if (config.Item("wardJump", true).GetValue<KeyBind>().Active)
+            {
+                WardJump();
+            }
+        }
+
+        private void WardJump()
+        {
+            Orbwalking.MoveTo(Game.CursorPos);
+            if (!Q.IsReady())
+            {
+                return;
+            }
+            var wardSlot = Items.GetWardSlot();
+            var pos = Game.CursorPos;
+            if (pos.Distance(player.Position) > 600)
+            {
+                pos = player.Position.Extend(pos, 600);
+            }
+
+            var ward = GetWard(pos);
+            if (ward != null)
+            {
+                Q.CastOnUnit(ward);
+            }
+            else
+            {
+                if (wardSlot != null && wardSlot.IsValidSlot() &&
+                    (player.Spellbook.CanUseSpell(wardSlot.SpellSlot) == SpellState.Ready || wardSlot.Stacks != 0) &&
+                    !justWJ)
+                {
+                    justWJ = true;
+                    Utility.DelayAction.Add(new Random().Next(1000, 1500), () => { justWJ = false; });
+                    player.Spellbook.CastSpell(wardSlot.SpellSlot, pos);
+                    Utility.DelayAction.Add(
+                        150, () =>
+                        {
+                            var predWard = GetWard(pos);
+                            if (predWard != null && Q.IsReady())
+                            {
+                                Q.CastOnUnit(predWard);
+                            }
+                        });
+                }
+            }
+        }
+
+        public Obj_AI_Minion GetWard(Vector3 pos)
+        {
+            return
+                ObjectManager.Get<Obj_AI_Minion>()
+                    .Where(
+                        obj =>
+                            (((obj.Name.Contains("Ward") || obj.Name.Contains("ward") || obj.Name.Contains("Trinket")) &&
+                              obj.IsAlly) || (!obj.IsAlly && obj.MaxHealth > 5)) &&
+                            player.Distance(obj.ServerPosition) <= 600 && pos.Distance(obj.ServerPosition) <= 100)
+                    .OrderBy(obj => obj.Distance(pos))
+                    .FirstOrDefault();
         }
 
         private void Harass()
@@ -335,6 +394,9 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("autoE", "Auto E", true)).SetValue(true);
             menuM.AddItem(new MenuItem("EAggro", "   Aggro count", true)).SetValue(new Slider(3, 1, 10));
             menuM.AddItem(new MenuItem("Emindam", "   Damage % in health", true)).SetValue(new Slider(15, 1, 100));
+            menuM.AddItem(new MenuItem("wardJump", "Ward jump", true))
+                .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
+                .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
             menuM = Jungle.addJungleOptions(menuM);
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);

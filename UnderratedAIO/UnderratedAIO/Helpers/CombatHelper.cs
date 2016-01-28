@@ -398,6 +398,30 @@ namespace UnderratedAIO.Helpers
             return (float) result;
         }
 
+        public static Geometry.Polygon GetPoly(Vector3 pos, float range, float widht)
+        {
+            var POS = player.ServerPosition.Extend(pos, range);
+            var direction = (POS.To2D() - player.ServerPosition.To2D()).Normalized();
+
+            var pos1 = (player.ServerPosition.To2D() - direction.Perpendicular() * widht / 2f).To3D();
+
+            var pos2 =
+                (POS.To2D() + (POS.To2D() - player.ServerPosition.To2D()).Normalized() +
+                 direction.Perpendicular() * widht / 2f).To3D();
+
+            var pos3 = (player.ServerPosition.To2D() + direction.Perpendicular() * widht / 2f).To3D();
+
+            var pos4 =
+                (POS.To2D() + (POS.To2D() - player.ServerPosition.To2D()).Normalized() -
+                 direction.Perpendicular() * widht / 2f).To3D();
+            var poly = new Geometry.Polygon();
+            poly.Add(pos1);
+            poly.Add(pos3);
+            poly.Add(pos2);
+            poly.Add(pos4);
+            return poly;
+        }
+
         public static float GetChampDmgToMe(Obj_AI_Hero enemy)
         {
             double result = 0;

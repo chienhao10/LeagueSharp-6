@@ -77,10 +77,6 @@ namespace UnderratedAIO.Helpers
                     if (Game.Time - d.Time > d.delete)
                     {
                         incDamage.Damages.RemoveAt(index);
-                        if (incDamage.DamageCount > 0)
-                        {
-                            incDamage.DamageCount--;
-                        }
                     }
                 }
             }
@@ -92,7 +88,6 @@ namespace UnderratedAIO.Helpers
                 IncomingDamagesAlly.Concat(IncomingDamagesEnemy))
             {
                 incDamage.Damages.Clear();
-                incDamage.DamageCount = 0;
             }
         }
 
@@ -116,7 +111,6 @@ namespace UnderratedAIO.Helpers
                             {
                                 var dmg = (float) sender.GetAutoAttackDamage(target, true);
                                 data.Damages.Add(new Dmg(dmg, missileSpeed, true));
-                                data.DamageCount++;
                             }
                             else
                             {
@@ -127,7 +121,6 @@ namespace UnderratedAIO.Helpers
                                         new Dmg(
                                             (float) Damage.GetSpellDamage(hero, (Obj_AI_Base) args.Target, args.Slot),
                                             missileSpeed, CombatHelper.isTargetedCC(args.SData.Name, true)));
-                                    data.DamageCount++;
                                 }
                             }
                         }
@@ -141,7 +134,6 @@ namespace UnderratedAIO.Helpers
     internal class IncData
     {
         public List<Dmg> Damages = new List<Dmg>();
-        public int DamageCount;
         public Obj_AI_Hero Hero;
 
 
@@ -168,6 +160,11 @@ namespace UnderratedAIO.Helpers
         public float AADamageCount
         {
             get { return Damages.Count(d => d.isAA); }
+        }
+
+        public float DamageCount
+        {
+            get { return Damages.Count(); }
         }
 
         public IncData(Obj_AI_Hero _hero)
