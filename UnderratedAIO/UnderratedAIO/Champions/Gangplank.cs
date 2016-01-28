@@ -810,6 +810,26 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
+
+            if (config.Item("drawEmini", true).GetValue<bool>())
+            {
+                var barrels =
+                    GetBarrels()
+                        .Where(
+                            o =>
+                                o.IsValid && !o.IsDead && o.Distance(player) < E.Range &&
+                                o.SkinName == "GangplankBarrel" && o.GetBuff("gangplankebarrellife").Caster.IsMe);
+                foreach (var b in barrels)
+                {
+                    var minis = MinionManager.GetMinions(
+                        b.Position, BarrelExplosionRange, MinionTypes.All, MinionTeam.NotAlly);
+                    foreach (var m in
+                        minis.Where(e => Q.GetDamage(e) + ItemHandler.GetSheenDmg(e) >= e.Health && e.Health > 3))
+                    {
+                        Render.Circle.DrawCircle(m.Position, 45, Color.Yellow, 7);
+                    }
+                }
+            }
         }
 
         public void drawText(int mode, string result)
@@ -931,6 +951,7 @@ namespace UnderratedAIO.Champions
             menuD.AddItem(new MenuItem("drawee", "Draw E range", true))
                 .SetValue(new Circle(false, Color.FromArgb(180, 100, 146, 166)));
             menuD.AddItem(new MenuItem("drawWcd", "Draw E countdown", true)).SetValue(true);
+            menuD.AddItem(new MenuItem("drawEmini", "Draw killable minions around E", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawcombo", "Draw combo damage", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawEQ", "Draw EQ to cursor", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawKillableSL", "Show killable targets with R", true))

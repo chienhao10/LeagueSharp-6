@@ -476,6 +476,13 @@ namespace UnderratedAIO.Helpers
             {
                 damage += Damage.GetItemDamage(player, target, Damage.DamageItems.Botrk);
             }
+            damage += GetSheenDmg(target);
+            return (float) damage;
+        }
+
+        public static double GetSheenDmg(Obj_AI_Base target)
+        {
+            double damage = 0;
             if (Items.HasItem(sheen.Id) && (Items.CanUseItem(sheen.Id) || player.HasBuff("sheen")))
             {
                 damage += player.CalcDamage(target, Damage.DamageType.Physical, player.BaseAttackDamage);
@@ -488,7 +495,7 @@ namespace UnderratedAIO.Helpers
             {
                 damage += player.CalcDamage(target, Damage.DamageType.Physical, player.BaseAttackDamage * 2);
             }
-            return (float) damage;
+            return damage;
         }
 
 
