@@ -51,8 +51,8 @@ namespace UnderratedAIO.Champions
             var s = ObjectManager.Get<Obj_AI_Hero>().FirstOrDefault(h => h.NetworkId == args.TargetNetworkId);
             if (t != null && s != null &&
                 (t.IsMe &&
-                 ObjectManager.Get<Obj_AI_Turret>().FirstOrDefault(tw => tw.Distance(t) < 750 && tw.Distance(s) < 750) !=
-                 null))
+                 ObjectManager.Get<Obj_AI_Turret>()
+                     .FirstOrDefault(tw => tw.Distance(t) < 750 && tw.Distance(s) < 750 && tw.IsAlly) != null))
             {
                 if (config.Item("autotauntattower", true).GetValue<bool>() && E.CanCast(s))
                 {
