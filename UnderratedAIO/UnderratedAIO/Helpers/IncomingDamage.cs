@@ -13,6 +13,7 @@ namespace UnderratedAIO.Helpers
     {
         public List<IncData> IncomingDamagesAlly = new List<IncData>();
         public List<IncData> IncomingDamagesEnemy = new List<IncData>();
+        public float Globalreset;
         public bool enabled;
 
         public IncData GetAllyData(int networkId)
@@ -32,9 +33,9 @@ namespace UnderratedAIO.Helpers
             {
                 Console.WriteLine(d.Hero.Name);
                 Console.WriteLine("\t DamageCount: " + d.DamageCount);
-                Console.WriteLine("\t DamageCount: " + d.AADamageCount);
+                Console.WriteLine("\t AADamageCount: " + d.AADamageCount);
                 Console.WriteLine("\t DamageTaken: " + d.DamageTaken);
-                Console.WriteLine("\t DamageTaken: " + d.AADamageTaken);
+                Console.WriteLine("\t AADamageTaken: " + d.AADamageTaken);
                 Console.WriteLine("\t TargetedCC: " + d.TargetedCC);
             }
         }
@@ -63,6 +64,11 @@ namespace UnderratedAIO.Helpers
             else
             {
                 resetData();
+            }
+            if (System.Environment.TickCount - Globalreset > 10000)
+            {
+                Globalreset = System.Environment.TickCount;
+                resetAllData();
             }
         }
 
@@ -110,7 +116,7 @@ namespace UnderratedAIO.Helpers
                             if (Orbwalking.IsAutoAttack(args.SData.Name))
                             {
                                 var dmg = (float) sender.GetAutoAttackDamage(target, true);
-                                data.Damages.Add(new Dmg(dmg, missileSpeed, true));
+                                data.Damages.Add(new Dmg(dmg, missileSpeed, !sender.Name.ToLower().Contains("turret")));
                             }
                             else
                             {
