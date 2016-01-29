@@ -234,8 +234,7 @@ namespace UnderratedAIO.Champions
             }
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
-            if (config.Item("useIgnite", true).GetValue<bool>() &&
-                ignitedmg > Program.IncDamages.GetEnemyData(target.NetworkId).HealthPrediction && hasIgnite &&
+            if (config.Item("useIgnite", true).GetValue<bool>() && ignitedmg > target.Health && hasIgnite &&
                 !CombatHelper.CheckCriticalBuffs(target) &&
                 ((target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target) &&
                   (!Q.IsReady() || Q.ManaCost < player.Mana)) || player.HealthPercent < 35))
@@ -275,7 +274,7 @@ namespace UnderratedAIO.Champions
                     R.Cast();
                 }
                 if (config.Item("userDmg", true).GetValue<bool>() &&
-                    Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken >= player.Health / 100f * 0.4f)
+                    Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken >= player.Health * 0.2f)
                 {
                     R.Cast();
                 }
