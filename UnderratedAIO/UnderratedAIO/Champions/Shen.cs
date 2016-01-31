@@ -24,6 +24,7 @@ namespace UnderratedAIO.Champions
         private const int Width = 103;
         private const int Height = 8;
         public static Vector3 blade, bladeOnCast;
+        public static bool justW;
 
         private static readonly Render.Text Text = new Render.Text(
             0, 0, "", 11, new ColorBGRA(255, 0, 0, 255), "monospace");
@@ -127,9 +128,9 @@ namespace UnderratedAIO.Champions
                     color = Color.LimeGreen;
                 }
                 Drawing.DrawText(
-                    Drawing.Width * 0.8f, Drawing.Height * 0.1f + i, color, playername + "(" + champion + ")");
+                    Drawing.Width * 0.8f, Drawing.Height * 0.15f + i, color, playername + "(" + champion + ")");
                 Drawing.DrawText(
-                    Drawing.Width * 0.9f, Drawing.Height * 0.1f + i, color,
+                    Drawing.Width * 0.9f, Drawing.Height * 0.15f + i, color,
                     ((int) hero.Health).ToString() + " (" + percent.ToString() + "%)");
                 i += 20f;
             }
@@ -204,7 +205,7 @@ namespace UnderratedAIO.Champions
                     {
                         W.Cast();
                     }
-                    if (data.AADamageTaken >= 50 && config.Item("autow", true).GetValue<bool>())
+                    if (data.AADamageTaken >= ally.Health * 0.2f && config.Item("autow", true).GetValue<bool>())
                     {
                         W.Cast();
                     }
@@ -234,7 +235,7 @@ namespace UnderratedAIO.Champions
         {
             var minionsHP = ObjectManager.Get<Obj_AI_Minion>().Where(m => m.IsValidTarget(400)).Sum(m => m.Health);
 
-            if (config.Item("useqLC", true).GetValue<bool>() && minionsHP > 300)
+            if (config.Item("useqLC", true).GetValue<bool>() && minionsHP > 300 && CheckQDef())
             {
                 Q.Cast();
             }
@@ -317,7 +318,7 @@ namespace UnderratedAIO.Champions
                           player.HealthPercent < 45 || player.CountEnemiesInRange(1000) == 1) &&
                          E.GetPrediction(target).Hitchance >= HitChance.High)
                 {
-                    E.Cast(target, config.Item("packets").GetValue<bool>());
+                    CastETarget(target);
                 }
             }
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
@@ -331,27 +332,91 @@ namespace UnderratedAIO.Champions
             {
                 HandleQ(target);
             }
+            if (config.Item("usew", true).GetValue<bool>())
+            {
+                foreach (var ally in HeroManager.Allies.Where(a => a.Distance(blade) < bladeRadius))
+                {
+                    var data = Program.IncDamages.GetAllyData(ally.NetworkId);
+                    if (data.AADamageTaken >= target.GetAutoAttackDamage(ally) - 10)
+                    {
+                        W.Cast();
+                    }
+                }
+            }
+        }
+
+        private static void CastETarget(Obj_AI_Hero target)
+        {
+            var pred = E.GetPrediction(target);
+            var poly = CombatHelper.GetPoly(pred.UnitPosition, E.Range, E.Width);
+            var enemiesBehind =
+                HeroManager.Enemies.Count(
+                    e =>
+                        e.NetworkId != target.NetworkId && e.IsValidTarget(E.Range) &&
+                        (poly.IsInside(E.GetPrediction(e).UnitPosition) || poly.IsInside(e.Position)) &&
+                        e.Position.Distance(player.Position) > player.Distance(pred.UnitPosition));
+            if (pred.Hitchance >= HitChance.High)
+            {
+                if (enemiesBehind > 0)
+                {
+                    E.Cast(
+                        player.ServerPosition.Extend(pred.CastPosition, E.Range),
+                        config.Item("packets").GetValue<bool>());
+                }
+                else
+                {
+                    if (poly.IsInside(pred.UnitPosition) && poly.IsInside(target.Position))
+                    {
+                        E.Cast(
+                            player.ServerPosition.Extend(
+                                pred.CastPosition,
+                                player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                            config.Item("packets").GetValue<bool>());
+                    }
+                    else
+                    {
+                        E.Cast(
+                            player.ServerPosition.Extend(
+                                pred.CastPosition,
+                                player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                            config.Item("packets").GetValue<bool>());
+                    }
+                }
+            }
         }
 
         private static void HandleQ(Obj_AI_Hero target)
         {
             Q.UpdateSourcePosition(blade);
             var pred = Q.GetPrediction(target);
-            var poly = CombatHelper.GetPoly(blade, player.Distance(blade), 150);
-            if ((pred.Hitchance >= HitChance.High && poly.IsInside(pred.UnitPosition)) || (target.Distance(blade) < 100) ||
-                (target.Distance(blade) < 500 && poly.IsInside(target.Position)) ||
-                player.Distance(target) < Orbwalking.GetRealAutoAttackRange(target))
+            var poly = CombatHelper.GetPoly(blade.Extend(player.Position, 30), player.Distance(blade), 150);
+            if (((pred.Hitchance >= HitChance.VeryHigh && poly.IsInside(pred.UnitPosition)) ||
+                 (target.Distance(blade) < 100) || (target.Distance(blade) < 500 && poly.IsInside(target.Position)) ||
+                 player.Distance(target) < Orbwalking.GetRealAutoAttackRange(target) || player.IsWindingUp) &&
+                CheckQDef())
             {
                 Q.Cast();
             }
         }
 
-        public static void CastEmin(Obj_AI_Base target, int min)
+        private static bool CheckQDef()
+        {
+            if (blade.CountAlliesInRange(bladeRadius) == 0 || !justW)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static void CastEmin(Obj_AI_Hero target, int min)
         {
             var MaxEnemy = player.CountEnemiesInRange(1580);
             if (MaxEnemy == 1)
             {
-                E.Cast(target);
+                CastETarget(target);
             }
             else
             {
@@ -374,13 +439,40 @@ namespace UnderratedAIO.Champions
         private static void FlashCombo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(EFlash.Range, TargetSelector.DamageType.Magical);
-            if (config.Item("usee", true).GetValue<bool>() && E.IsReady() &&
+            if (config.Item("usee", true).GetValue<bool>() && E.IsReady() && E.ManaCost < player.Mana &&
                 player.Distance(target.Position) < EFlash.Range && player.Distance(target.Position) > 480 &&
                 !((getPosToEflash(target.Position)).IsWall()))
             {
-                player.Spellbook.CastSpell(player.GetSpellSlot("SummonerFlash"), getPosToEflash(target.Position));
-
-                E.Cast(target.Position, config.Item("packets").GetValue<bool>());
+                var pred = E.GetPrediction(target);
+                var poly = CombatHelper.GetPoly(pred.UnitPosition, E.Range, E.Width);
+                var enemiesBehind =
+                    HeroManager.Enemies.Count(
+                        e =>
+                            e.NetworkId != target.NetworkId && e.IsValidTarget(E.Range) &&
+                            (poly.IsInside(E.GetPrediction(e).UnitPosition) || poly.IsInside(e.Position)) &&
+                            e.Position.Distance(player.Position) > player.Distance(pred.UnitPosition));
+                if (pred.Hitchance != HitChance.Low && pred.Hitchance != HitChance.Medium)
+                {
+                    Utility.DelayAction.Add(
+                        30, () =>
+                        {
+                            if (enemiesBehind > 0)
+                            {
+                                E.Cast(
+                                    player.ServerPosition.Extend(pred.CastPosition, E.Range),
+                                    config.Item("packets").GetValue<bool>());
+                            }
+                            else
+                            {
+                                E.Cast(
+                                    player.ServerPosition.Extend(
+                                        pred.CastPosition,
+                                        player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                                    config.Item("packets").GetValue<bool>());
+                            }
+                        });
+                    player.Spellbook.CastSpell(player.GetSpellSlot("SummonerFlash"), getPosToEflash(target.Position));
+                }
             }
             ItemHandler.UseItems(target, config);
         }
@@ -411,9 +503,24 @@ namespace UnderratedAIO.Champions
 
         private void Game_ProcessSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (sender.IsMe && (args.SData.Name == "ShenQ" || args.SData.Name == "ShenR"))
+            if (sender.IsMe)
             {
-                bladeOnCast = args.End;
+                if (args.SData.Name == "ShenQ" || args.SData.Name == "ShenR")
+                {
+                    bladeOnCast = args.End;
+                }
+                if (args.SData.Name == "ShenW")
+                {
+                    justW = true;
+                    Utility.DelayAction.Add(1750, () => { justW = false; });
+                }
+                if (args.SData.Name == "ShenE" && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+                {
+                    if (Q.IsReady() && CheckQDef() && blade.Distance(args.End) > bladeRadius / 2f)
+                    {
+                        Q.Cast();
+                    }
+                }
             }
         }
 
@@ -423,7 +530,7 @@ namespace UnderratedAIO.Champions
             Q.SetSkillshot(0.5f, 150f, 2500f, false, SkillshotType.SkillshotLine);
             W = new Spell(SpellSlot.W); //2500f
             E = new Spell(SpellSlot.E, 600);
-            E.SetSkillshot(0.5f, 50f, 1600f, false, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.5f, 95f, 1600f, false, SkillshotType.SkillshotLine);
             EFlash = new Spell(SpellSlot.E, 990);
             EFlash.SetSkillshot(
                 E.Instance.SData.SpellCastTime, E.Instance.SData.LineWidth, E.Speed, false, SkillshotType.SkillshotLine);
@@ -458,7 +565,7 @@ namespace UnderratedAIO.Champions
             // Combo Settings
             Menu menuC = new Menu("Combo ", "csettings");
             menuC.AddItem(new MenuItem("useq", "Use Q", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("usew", "Block AA from target", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useeflash", "Flash+E", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
@@ -478,7 +585,7 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
             // Misc Settings
             Menu menuU = new Menu("Misc ", "usettings");
-            menuU.AddItem(new MenuItem("autow", "Auto block AA with W", true)).SetValue(true);
+            menuU.AddItem(new MenuItem("autow", "Auto block high dmg AA", true)).SetValue(true);
             menuU.AddItem(new MenuItem("autowAgg", "W on aggro", true)).SetValue(new Slider(4, 1, 10));
             menuU.AddItem(new MenuItem("autotauntattower", "Auto taunt in tower range", true)).SetValue(true);
             menuU.AddItem(new MenuItem("useeagc", "Use E to anti gap closer", true)).SetValue(false);
