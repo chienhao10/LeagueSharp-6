@@ -527,13 +527,11 @@ namespace UnderratedAIO.Champions
         private static void InitShen()
         {
             Q = new Spell(SpellSlot.Q);
-            Q.SetSkillshot(0.5f, 150f, 2500f, false, SkillshotType.SkillshotLine);
             W = new Spell(SpellSlot.W); //2500f
             E = new Spell(SpellSlot.E, 600);
-            E.SetSkillshot(0.5f, 95f, 1600f, false, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.5f, 95f, 1250f, false, SkillshotType.SkillshotLine);
             EFlash = new Spell(SpellSlot.E, 990);
-            EFlash.SetSkillshot(
-                E.Instance.SData.SpellCastTime, E.Instance.SData.LineWidth, E.Speed, false, SkillshotType.SkillshotLine);
+            EFlash.SetSkillshot(0.75f, 95f, 1250f, false, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, float.MaxValue);
         }
 
