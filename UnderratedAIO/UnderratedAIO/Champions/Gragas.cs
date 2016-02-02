@@ -117,9 +117,9 @@ namespace UnderratedAIO.Champions
             Q.SetSkillshot(0.3f, 110f, 1000f, false, SkillshotType.SkillshotCircle);
             W = new Spell(SpellSlot.W, 0);
             E = new Spell(SpellSlot.E, 600);
-            E.SetSkillshot(0.3f, 50, 1000, true, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.5f, 50, 1200, true, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, 1050);
-            R.SetSkillshot(0.3f, 300, 1000, false, SkillshotType.SkillshotCircle);
+            R.SetSkillshot(0.25f, 300, 1750, false, SkillshotType.SkillshotCircle);
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -151,7 +151,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("autoQ", true).GetValue<bool>())
             {
-                if (Q.IsReady() && config.Item("useqH", true).GetValue<bool>() && savedQ != null)
+                if (Q.IsReady() && savedQ != null)
                 {
                     DetonateQ();
                 }
@@ -479,7 +479,7 @@ namespace UnderratedAIO.Champions
                 return;
             }
             var pred = Prediction.GetPrediction(target, target.Distance(player.ServerPosition) / R.Speed);
-            if (pred.Hitchance > HitChance.VeryHigh && !justE && !target.IsDashing())
+            if (pred.Hitchance >= HitChance.VeryHigh && !justE && !target.IsDashing())
             {
                 var cast = pred.UnitPosition.Extend(toVector3, -100);
                 if (player.Distance(cast) < R.Range && checkBuffs(target, player.Distance(cast)) &&
@@ -705,9 +705,9 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R 1v1", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("rtoally", "   To ally", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("rtoally", "   To ally", true)).SetValue(false);
             menuC.AddItem(new MenuItem("rtoq", "   To Q", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("rtoturret", "   To turret", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("rtoturret", "   To turret", true)).SetValue(false);
             menuC.AddItem(new MenuItem("rtokill", "   To kill", true)).SetValue(true);
             menuC.AddItem(new MenuItem("Rmin", "Use R teamfigh", true)).SetValue(new Slider(2, 1, 5));
             menuC.AddItem(new MenuItem("insec", "E-R combo to Q", true))
