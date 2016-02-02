@@ -61,7 +61,8 @@ namespace UnderratedAIO.Champions
                 return;
             }
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && config.Item("useq", true).GetValue<bool>() &&
-                args.EndPos.Distance(player.Position) > Q.Range)
+                args.EndPos.Distance(player.Position) > Q.Range &&
+                args.EndPos.Distance(player) > args.StartPos.Distance(player))
             {
                 Q.CastOnUnit(sender, config.Item("packets").GetValue<bool>());
             }
@@ -369,7 +370,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("useqSec", "Use Q to secure kills", true)).SetValue(false);
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useeStun", "Use E to stun", true)).SetValue(false);
-            menuC.AddItem(new MenuItem("useeAA", "Use E to block AA", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("useeAA", "Block AA from target", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
             menuC.AddItem(new MenuItem("userMin", "   Min enemies around", true)).SetValue(new Slider(2, 1, 5));
             menuC.AddItem(new MenuItem("userDmg", "   Use R before high damage", true)).SetValue(true);
