@@ -251,20 +251,27 @@ namespace UnderratedAIO.Champions
                          (Q.GetDamage(target) > target.Health) &&
                          (player.HealthPercent < 50 || player.CountAlliesInRange(900) > 0)))
                     {
-                        Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
-                        HandleECombo();
+                        if (Q.CastOnUnit(target, config.Item("packets").GetValue<bool>()))
+                        {
+                            HandleECombo();
+                        }
                     }
                     if ((player.CountEnemiesInRange(Q.Range) > 1 && config.Item("useqSec", true).GetValue<bool>() &&
                          Q.GetDamage(target) > target.Health) || player.HealthPercent < 35f ||
                         target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target))
                     {
-                        Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
-                        HandleECombo();
+                        if (Q.CastOnUnit(target, config.Item("packets").GetValue<bool>()))
+                        {
+                            HandleECombo();
+                        }
                     }
                 }
                 else
                 {
-                    Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                    if (Q.CastOnUnit(target, config.Item("packets").GetValue<bool>()))
+                    {
+                        HandleECombo();
+                    }
                 }
             }
             if (R.IsReady() && config.Item("user", true).GetValue<bool>())
@@ -288,7 +295,17 @@ namespace UnderratedAIO.Champions
             if (Eactive)
             {
                 if (E.IsReady() && target.IsValidTarget() && !target.MagicImmune &&
-                    Prediction.GetPrediction(target, 0.1f).UnitPosition.Distance(player.Position) >
+                    ((Prediction.GetPrediction(target, 0.1f).UnitPosition.Distance(player.Position) >
+                      Orbwalking.GetRealAutoAttackRange(target) && target.Distance(player.Position) <= E.Range) ||
+                     config.Item("useeStun", true).GetValue<bool>()))
+                {
+                    E.Cast();
+                }
+            }
+            else
+            {
+                if (config.Item("useeStun", true).GetValue<bool>() &&
+                    Prediction.GetPrediction(target, 0.1f).UnitPosition.Distance(player.Position) <
                     Orbwalking.GetRealAutoAttackRange(target) && target.Distance(player.Position) <= E.Range)
                 {
                     E.Cast();
@@ -304,7 +321,7 @@ namespace UnderratedAIO.Champions
                 {
                     justE = true;
                     Utility.DelayAction.Add(
-                        new Random().Next(10, 150), () =>
+                        new Random().Next(10, 60), () =>
                         {
                             E.Cast();
                             justE = false;
