@@ -243,7 +243,8 @@ namespace UnderratedAIO.Champions
 
         private static void Ulti()
         {
-            if (!R.IsReady() || PingCasted || player.IsDead)
+            if (!R.IsReady() || player.IsDead ||
+                (player.CountAlliesInRange(1300) > 0 && player.CountEnemiesInRange(1300) > 0))
             {
                 return;
             }
@@ -266,12 +267,13 @@ namespace UnderratedAIO.Champions
                     R.Cast(allyObj);
                     return;
                 }
-                else
+                if (!PingCasted)
                 {
+                    //ping
                     DrawHelper.popUp("Use R to help " + allyObj.ChampionName, 3000, Color.Red, Color.White, Color.Red);
+                    PingCasted = true;
+                    Utility.DelayAction.Add(5000, () => PingCasted = false);
                 }
-                PingCasted = true;
-                Utility.DelayAction.Add(5000, () => PingCasted = false);
             }
         }
 

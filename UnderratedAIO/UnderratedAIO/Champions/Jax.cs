@@ -33,6 +33,7 @@ namespace UnderratedAIO.Champions
 
         private void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
+            Obj_AI_Hero t = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Physical, true);
             if (!unit.IsMe || !W.IsReady() || !target.IsValidTarget() || !target.IsEnemy ||
                 (ObjectManager.Get<Obj_AI_Base>()
                     .Count(o => o.IsEnemy && o.Distance(player.Position) <= Orbwalking.GetRealAutoAttackRange(target)) ==
@@ -41,7 +42,7 @@ namespace UnderratedAIO.Champions
                 return;
             }
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && target is Obj_AI_Hero &&
-                config.Item("usew", true).GetValue<bool>())
+                config.Item("usew", true).GetValue<bool>() && t != null && target.NetworkId == t.NetworkId)
             {
                 W.Cast();
                 Orbwalking.ResetAutoAttackTimer();
