@@ -1191,7 +1191,7 @@ namespace AutoJungle
                     if (sender is Obj_AI_Turret && !_GameInfo.AttackedByTurret)
                     {
                         _GameInfo.AttackedByTurret = true;
-                        Utility.DelayAction.Add(4000, () => _GameInfo.AttackedByTurret = false);
+                        Utility.DelayAction.Add(2000, () => _GameInfo.AttackedByTurret = false);
                     }
                 }
             }
