@@ -173,8 +173,7 @@ namespace AutoJungle
 
         private static void CheckCamp()
         {
-            var nextMob =
-                _GameInfo.MonsterList.OrderBy(m => m.Index).FirstOrDefault(m => m.Index == _GameInfo.CurrentMonster);
+            MonsterInfo nextMob = GetNextMob();
             if (nextMob != null && !nextMob.IsAlive())
             {
                 //Console.WriteLine(nextMob.name + " skipped: " + (Environment.TickCount - nextMob.TimeAtDead / 1000f));
@@ -710,7 +709,8 @@ namespace AutoJungle
             {
                 return tempstate;
             }
-            else if (Environment.TickCount - GameStateChanging > 1300)
+            else if (Environment.TickCount - GameStateChanging > 1300 || _GameInfo.GameState == State.Retreat ||
+                     tempstate == State.FightIng)
             {
                 GameStateChanging = Environment.TickCount;
                 return tempstate;
@@ -1017,9 +1017,7 @@ namespace AutoJungle
                     return Vector3.Zero;
                     break;
                 default:
-                    var nextMob =
-                        _GameInfo.MonsterList.OrderBy(m => m.Index)
-                            .FirstOrDefault(m => m.Index == _GameInfo.CurrentMonster);
+                    MonsterInfo nextMob = GetNextMob();
                     if (nextMob != null)
                     {
                         return nextMob.Position;
@@ -1037,6 +1035,32 @@ namespace AutoJungle
                 Console.WriteLine("GetMovePosition: Can't get Position");
             }
             return Vector3.Zero;
+        }
+
+        private static MonsterInfo GetNextMob()
+        {
+            MonsterInfo nextMob = null;
+            if (!menu.Item("EnemyJungle").GetValue<Boolean>())
+            {
+                if (player.Team == GameObjectTeam.Chaos)
+                {
+                    nextMob =
+                        _GameInfo.MonsterList.OrderBy(m => m.Index)
+                            .FirstOrDefault(m => m.Index == _GameInfo.CurrentMonster && !m.ID.Contains("bteam"));
+                }
+                else
+                {
+                    nextMob =
+                        _GameInfo.MonsterList.OrderBy(m => m.Index)
+                            .FirstOrDefault(m => m.Index == _GameInfo.CurrentMonster && !m.ID.Contains("pteam"));
+                }
+            }
+            else
+            {
+                nextMob =
+                    _GameInfo.MonsterList.OrderBy(m => m.Index).FirstOrDefault(m => m.Index == _GameInfo.CurrentMonster);
+            }
+            return nextMob;
         }
 
         private static void ResetDamageTakenTimer()
@@ -1306,6 +1330,7 @@ namespace AutoJungle
             Menu menuJ = new Menu("Jungle settings", "jsettings");
             menuJ.AddItem(new MenuItem("HealtToBack", "Recall on HP(%)").SetValue(new Slider(35, 0, 100)));
             menuJ.AddItem(new MenuItem("UseTrinket", "Use Trinket")).SetValue(true);
+            menuJ.AddItem(new MenuItem("EnemyJungle", "Go into enemy jungle")).SetValue(true);
             menu.AddSubMenu(menuJ);
             Menu menuG = new Menu("Gank settings", "gsettings");
             menuG.AddItem(new MenuItem("GankLevel", "Min level to gank").SetValue(new Slider(5, 1, 18)));
