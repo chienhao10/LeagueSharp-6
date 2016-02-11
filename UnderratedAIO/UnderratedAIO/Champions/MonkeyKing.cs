@@ -74,8 +74,9 @@ namespace UnderratedAIO.Champions
                 case Orbwalking.OrbwalkingMode.LaneClear:
                     if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() &&
                         config.Item("minmana", true).GetValue<Slider>().Value < player.ManaPercent &&
-                        target.Health <
-                        player.GetAutoAttackDamage((Obj_AI_Base) target) + Q.GetDamage((Obj_AI_Base) target))
+                        (target.Health <
+                         player.GetAutoAttackDamage((Obj_AI_Base) target) + Q.GetDamage((Obj_AI_Base) target) ||
+                         target.Health > player.GetAutoAttackDamage((Obj_AI_Base) target, true) * 4))
                     {
                         Q.Cast(config.Item("packets").GetValue<bool>());
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
