@@ -60,6 +60,7 @@ namespace UnderratedAIO.Champions
                     if (config.Item("useq", true).GetValue<bool>() && Q.IsReady() && target is Obj_AI_Hero)
                     {
                         Q.Cast(config.Item("packets").GetValue<bool>());
+                        Orbwalking.ResetAutoAttackTimer();
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
                     }
                     break;
@@ -68,6 +69,7 @@ namespace UnderratedAIO.Champions
                         config.Item("minmanaH", true).GetValue<Slider>().Value < player.ManaPercent)
                     {
                         Q.Cast(config.Item("packets").GetValue<bool>());
+                        Orbwalking.ResetAutoAttackTimer();
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
                     }
                     break;
@@ -79,6 +81,7 @@ namespace UnderratedAIO.Champions
                          target.Health > player.GetAutoAttackDamage((Obj_AI_Base) target, true) * 4))
                     {
                         Q.Cast(config.Item("packets").GetValue<bool>());
+                        Orbwalking.ResetAutoAttackTimer();
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
                     }
                     break;
