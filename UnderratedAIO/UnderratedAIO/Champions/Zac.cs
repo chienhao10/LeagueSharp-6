@@ -66,7 +66,7 @@ namespace UnderratedAIO.Champions
             Q.SetSkillshot(0.55f, 120, float.MaxValue, false, SkillshotType.SkillshotLine);
             W = new Spell(SpellSlot.W, 320);
             E = new Spell(SpellSlot.E);
-            E.SetSkillshot(0, 230, 1500, false, SkillshotType.SkillshotCircle);
+            E.SetSkillshot(0.75f, 230, 1500, false, SkillshotType.SkillshotCircle);
             E.SetCharged("ZacE", "ZacE", 295, eRanges[0], eChannelTimes[0]);
             R = new Spell(SpellSlot.R, 300);
         }
@@ -169,6 +169,7 @@ namespace UnderratedAIO.Champions
                 if (blob != null && Orbwalking.CanMove(300) && !Orbwalking.CanAttack() && !player.IsWindingUp)
                 {
                     orbwalker.SetMovement(false);
+                    Orbwalking.Move = false;
                     player.IssueOrder(GameObjectOrder.MoveTo, blob.Position);
                 }
             }
@@ -241,6 +242,7 @@ namespace UnderratedAIO.Champions
 
             if (rActive)
             {
+                Orbwalking.Attack = false;
                 return;
             }
 
