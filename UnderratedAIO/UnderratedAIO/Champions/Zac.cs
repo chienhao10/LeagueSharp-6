@@ -77,11 +77,15 @@ namespace UnderratedAIO.Champions
             {
                 orbwalker.SetAttack(false);
                 orbwalker.SetMovement(false);
+                Orbwalking.Move = false;
+                Orbwalking.Attack = false;
             }
             else
             {
                 orbwalker.SetAttack(true);
                 orbwalker.SetMovement(true);
+                Orbwalking.Move = true;
+                Orbwalking.Attack = true;
             }
             switch (orbwalker.ActiveMode)
             {
