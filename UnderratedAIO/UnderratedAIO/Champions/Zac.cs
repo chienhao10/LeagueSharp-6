@@ -242,6 +242,7 @@ namespace UnderratedAIO.Champions
 
             if (rActive)
             {
+                orbwalker.SetAttack(false);
                 Orbwalking.Attack = false;
                 return;
             }
