@@ -187,9 +187,9 @@ namespace UnderratedAIO.Champions
             Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
 
             var bladeObj =
-                ObjectManager.Get<Obj_AI_Minion>()
+                ObjectManager.Get<Obj_AI_Base>()
                     .Where(
-                        o => (o.Name == "ShenThingUnit" || o.Name == "ShenArrowVfxHostMinion") && o.Team == player.Team)
+                        o => (o.Name == "ShenSpiritUnit" || o.Name == "ShenArrowVfxHostMinion") && o.Team == player.Team)
                     .OrderBy(o => o.Distance(bladeOnCast))
                     .FirstOrDefault();
             if (bladeObj != null)
@@ -270,7 +270,7 @@ namespace UnderratedAIO.Champions
                 if (!PingCasted)
                 {
                     //ping
-                    DrawHelper.popUp("Use R to help " + allyObj.ChampionName, 3000, Color.Red, Color.White, Color.Red);
+                    DrawHelper.popUp("Use R to help " + allyObj.ChampionName, 3000, Color.White, Color.Black, Color.Red);
                     PingCasted = true;
                     Utility.DelayAction.Add(5000, () => PingCasted = false);
                 }
@@ -507,7 +507,7 @@ namespace UnderratedAIO.Champions
         {
             if (sender.IsMe)
             {
-                if (args.SData.Name == "ShenQ" || args.SData.Name == "ShenR")
+                if (args.Slot == SpellSlot.Q || args.Slot == SpellSlot.R)
                 {
                     bladeOnCast = args.End;
                 }
@@ -531,7 +531,7 @@ namespace UnderratedAIO.Champions
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W); //2500f
             E = new Spell(SpellSlot.E, 600);
-            E.SetSkillshot(0.5f, 95f, 1250f, false, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.25f, 95f, 1250f, false, SkillshotType.SkillshotLine);
             EFlash = new Spell(SpellSlot.E, 990);
             EFlash.SetSkillshot(0.75f, 95f, 1250f, false, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, float.MaxValue);
