@@ -47,7 +47,7 @@ namespace UnderratedAIO.Champions
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear && !(target is Obj_AI_Hero) &&
                 config.Item("usewLC", true).GetValue<bool>() &&
                 MinionManager.GetMinions(Orbwalking.GetRealAutoAttackRange(target), MinionTypes.All, MinionTeam.NotAlly)
-                    .Any(m => m.Health > player.GetAutoAttackDamage((Obj_AI_Base) target, true)))
+                    .Count(m => m.Health > player.GetAutoAttackDamage((Obj_AI_Base) target, true)) > 0)
             {
                 W.Cast();
                 Orbwalking.ResetAutoAttackTimer();
