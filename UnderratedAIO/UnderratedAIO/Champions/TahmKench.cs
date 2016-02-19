@@ -51,11 +51,11 @@ namespace UnderratedAIO.Champions
 
             Q.SetSkillshot(0.5f, 80, 2000, true, SkillshotType.SkillshotLine);
 
-            W = new Spell(SpellSlot.W, 250);
-
             WSkillShot = new Spell(SpellSlot.W, 900);
             WSkillShot.SetSkillshot(0.5f, 80, 900, true, SkillshotType.SkillshotLine);
 
+            W = new Spell(SpellSlot.W, 250);
+            W.SetTargetted(0.5f, float.MaxValue);
             E = new Spell(SpellSlot.E);
             R = new Spell(SpellSlot.R, 1700);
         }
@@ -81,7 +81,6 @@ namespace UnderratedAIO.Champions
                     Clear();
                     break;
                 case Orbwalking.OrbwalkingMode.LastHit:
-                    Console.WriteLine(player.GetBuffCount("talentreaperdisplay"));
                     break;
                 default:
                     break;
@@ -146,13 +145,13 @@ namespace UnderratedAIO.Champions
                             lastWtarget = Team.Ally;
                             W.CastOnUnit(allies[i], true);
                         }
-                        if (config.Item("targetedCC" + allies[i].ChampionName, true).GetValue<bool>() &&
-                            allyData.TargetedCC)
+                        if (config.Item("targetedCC" + allies[i].ChampionName, true).GetValue<bool>() && allyData.AnyCC)
                         {
                             lastWtarget = Team.Ally;
                             W.CastOnUnit(allies[i], true);
                         }
                         if (config.Item("ontargetedCC" + allies[i].ChampionName, true).GetValue<bool>() &&
+                            allyData.DamageTaken > 50 &&
                             (allies[i].HasBuffOfType(BuffType.Knockup) || allies[i].HasBuffOfType(BuffType.Fear) ||
                              allies[i].HasBuffOfType(BuffType.Flee) || allies[i].HasBuffOfType(BuffType.Stun) ||
                              allies[i].HasBuffOfType(BuffType.Snare)))
@@ -214,7 +213,7 @@ namespace UnderratedAIO.Champions
         {
             if (target.GetBuffCount("TahmKenchPDebuffCounter") == 3 && !CombatHelper.CheckCriticalBuffs(target) &&
                 !target.HasBuffOfType(BuffType.Stun) && !target.HasBuffOfType(BuffType.Snare) && !Q.CanCast(target) &&
-                !justQ)
+                !justQ && !Program.IncDamages.GetEnemyData(target.NetworkId).IncSkillShot)
             {
                 orbwalker.SetMovement(false);
                 if (Orbwalking.CanMove(100) && Game.CursorPos.Distance(target.Position) < 300)
@@ -412,11 +411,19 @@ namespace UnderratedAIO.Champions
                     justQ = true;
                     Utility.DelayAction.Add(500, () => justQ = false);
                 }
-                if (args.SData.Name == "tahmkenchw")
+                if (args.Slot == SpellSlot.W)
                 {
                     if (args.Target != null)
                     {
-                        Console.WriteLine(args.Target.Name);
+                        Console.WriteLine("----");
+                        Console.WriteLine("Tahm ate :" + args.Target.Name);
+                        Console.WriteLine("----");
+                    }
+                    else
+                    {
+                        Console.WriteLine("----");
+                        Console.WriteLine("Tahm ate : null");
+                        Console.WriteLine("----");
                     }
                 }
             }

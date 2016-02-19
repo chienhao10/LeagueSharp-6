@@ -243,8 +243,7 @@ namespace UnderratedAIO.Champions
 
         private static void Ulti()
         {
-            if (!R.IsReady() || player.IsDead ||
-                (player.CountAlliesInRange(1300) > 0 && player.CountEnemiesInRange(1300) > 0))
+            if (!R.IsReady() || player.IsDead)
             {
                 return;
             }
@@ -254,14 +253,15 @@ namespace UnderratedAIO.Champions
                     .Where(
                         i =>
                             i.IsAlly && !i.IsMe && !i.IsDead &&
-                            ((Checkinrange(i) &&
-                              ((i.Health * 100 / i.MaxHealth) <= config.Item("atpercent", true).GetValue<Slider>().Value) ||
-                              Program.IncDamages.GetAllyData(i.NetworkId).DamageTaken > i.Health) ||
-                             (CombatHelper.CheckCriticalBuffs(i) && i.CountEnemiesInRange(600) < 1))))
+                            ((((Program.IncDamages.GetAllyData(i.NetworkId).DamageTaken > i.Health ||
+                                i.Health * 100 / i.MaxHealth <= config.Item("atpercent", true).GetValue<Slider>().Value) &&
+                               player.CountEnemiesInRange(700) > 0) ||
+                              Program.IncDamages.GetAllyData(i.NetworkId).SkillShotDamage > i.Health))))
+
             {
                 if (config.Item("user", true).GetValue<bool>() &&
                     orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo && R.IsReady() &&
-                    player.CountEnemiesInRange((int) E.Range) < 1 &&
+                    player.CountEnemiesInRange(EFlash.Range + 50) < 1 &&
                     !config.Item("ult" + allyObj.SkinName).GetValue<bool>())
                 {
                     R.Cast(allyObj);
@@ -275,15 +275,6 @@ namespace UnderratedAIO.Champions
                     Utility.DelayAction.Add(5000, () => PingCasted = false);
                 }
             }
-        }
-
-        private static bool Checkinrange(Obj_AI_Hero i)
-        {
-            if (i.CountEnemiesInRange(750) >= 1 && i.CountEnemiesInRange(750) < 3)
-            {
-                return true;
-            }
-            return false;
         }
 
         private static void Harass()
@@ -441,19 +432,18 @@ namespace UnderratedAIO.Champions
         private static void FlashCombo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(EFlash.Range, TargetSelector.DamageType.Magical);
-            if (config.Item("usee", true).GetValue<bool>() && E.IsReady() && E.ManaCost < player.Mana &&
-                player.Distance(target.Position) < EFlash.Range && player.Distance(target.Position) > 480 &&
-                !((getPosToEflash(target.Position)).IsWall()))
+            if (E.IsReady() && E.ManaCost < player.Mana && player.Distance(target.Position) < EFlash.Range &&
+                player.Distance(target.Position) > 480 && !((getPosToEflash(target.Position)).IsWall()))
             {
-                var pred = E.GetPrediction(target);
-                var poly = CombatHelper.GetPoly(pred.UnitPosition, E.Range, E.Width);
+                var pred = EFlash.GetPrediction(target);
+                var poly = CombatHelper.GetPolyFromVector(getPosToEflash(target.Position), pred.UnitPosition, E.Width);
                 var enemiesBehind =
                     HeroManager.Enemies.Count(
                         e =>
                             e.NetworkId != target.NetworkId && e.IsValidTarget(E.Range) &&
                             (poly.IsInside(E.GetPrediction(e).UnitPosition) || poly.IsInside(e.Position)) &&
                             e.Position.Distance(player.Position) > player.Distance(pred.UnitPosition));
-                if (pred.Hitchance != HitChance.Low && pred.Hitchance != HitChance.Medium)
+                if (pred.Hitchance >= HitChance.High)
                 {
                     Utility.DelayAction.Add(
                         30, () =>
@@ -533,7 +523,7 @@ namespace UnderratedAIO.Champions
             E = new Spell(SpellSlot.E, 600);
             E.SetSkillshot(0.25f, 95f, 1250f, false, SkillshotType.SkillshotLine);
             EFlash = new Spell(SpellSlot.E, 990);
-            EFlash.SetSkillshot(0.75f, 95f, 1250f, false, SkillshotType.SkillshotLine);
+            EFlash.SetSkillshot(0.25f, 95f, 2500f, false, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, float.MaxValue);
         }
 

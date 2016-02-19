@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Drawing.Printing;
 using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using SharpDX.Multimedia;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
@@ -156,6 +153,10 @@ namespace UnderratedAIO.Champions
 
         private void AfterAttack(AttackableUnit unit, AttackableUnit targetO)
         {
+            if (!(targetO is Obj_AI_Hero))
+            {
+                return;
+            }
             Obj_AI_Hero targ = (Obj_AI_Hero) targetO;
             List<Vector3> passivePositions = GetPassivePositions(targetO);
             bool rapid = player.GetAutoAttackDamage(targ) * 3 + ComboDamage(targ) > targ.Health ||
@@ -167,7 +168,7 @@ namespace UnderratedAIO.Champions
             {
                 E.Cast(config.Item("packets").GetValue<bool>());
             }
-            if (unit.IsMe && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
+            if (unit.IsMe && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && Q.IsReady() &&
                 (config.Item("RapidAttack", true).GetValue<KeyBind>().Active || rapid) && !Orbwalking.CanAttack() &&
                 passivePositions.Any())
             {
@@ -236,10 +237,16 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
+            var data = Program.IncDamages.GetAllyData(player.NetworkId);
+            if (config.Item("usewCC", true).GetValue<bool>() && W.IsReady() && data.AnyCC)
+            {
+                Console.WriteLine("asdafwfq");
+                W.Cast(target.Position, config.Item("packets").GetValue<bool>());
+            }
             var closestPassive = GetClosestPassivePosition(target);
             if (closestPassive.IsValid() && config.Item("MoveToVitals", true).GetValue<bool>() &&
-                Orbwalking.CanMove(300) && !Orbwalking.CanAttack() && Game.CursorPos.Distance(target.Position) < 350 &&
-                !player.IsWindingUp)
+                Orbwalking.CanMove(300) && !Orbwalking.CanAttack() && !player.IsWindingUp &&
+                Game.CursorPos.Distance(target.Position) < 350)
             {
                 orbwalker.SetMovement(false);
                 player.IssueOrder(
@@ -309,62 +316,6 @@ namespace UnderratedAIO.Champions
                     Orbwalking.ResetAutoAttackTimer();
                 }
             }
-            if (config.Item("usewCC", true).GetValue<bool>())
-            {
-                if (spellName == "CurseofTheSadMummy")
-                {
-                    if (player.Distance(hero.Position) <= 600f)
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-                if (CombatHelper.IsFacing(target, player.Position) &&
-                    (spellName == "EnchantedCrystalArrow" || spellName == "rivenizunablade" ||
-                     spellName == "EzrealTrueshotBarrage" || spellName == "JinxR" || spellName == "sejuaniglacialprison"))
-                {
-                    if (player.Distance(hero.Position) <= W.Range - 60)
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-                if (spellName == "InfernalGuardian" || spellName == "UFSlash" ||
-                    (spellName == "RivenW" && player.HealthPercent < 25))
-                {
-                    if (player.Distance(args.End) <= 270f)
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-                if (spellName == "BlindMonkRKick" || spellName == "SyndraR" || spellName == "VeigarPrimordialBurst" ||
-                    spellName == "AlZaharNetherGrasp" || spellName == "LissandraR")
-                {
-                    if (args.Target.IsMe)
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-                if (spellName == "TristanaR" || spellName == "ViR")
-                {
-                    if (args.Target.IsMe || player.Distance(args.Target.Position) <= 100f)
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-                if (spellName == "GalioIdolOfDurand")
-                {
-                    if (player.Distance(hero.Position) <= 600f)
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-                if (target != null && target.IsMe)
-                {
-                    if (CombatHelper.isTargetedCC(spellName) && spellName != "NasusW" && spellName != "ZedUlt")
-                    {
-                        W.Cast(TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical));
-                    }
-                }
-            }
         }
 
         private void Clear()
@@ -385,7 +336,7 @@ namespace UnderratedAIO.Champions
                 W.Cast(bestPositionW.Position, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("useeLC", true).GetValue<bool>() &&
-                Environment.Minion.countMinionsInrange(player.Position, Q.Range) > 3)
+                Environment.Minion.countMinionsInrange(player.Position, Q.Range) >= 2)
             {
                 E.Cast(config.Item("packets").GetValue<bool>());
             }

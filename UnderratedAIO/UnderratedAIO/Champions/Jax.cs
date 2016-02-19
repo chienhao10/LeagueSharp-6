@@ -34,10 +34,7 @@ namespace UnderratedAIO.Champions
         private void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             Obj_AI_Hero t = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Physical, true);
-            if (!unit.IsMe || !W.IsReady() || !target.IsValidTarget() || !target.IsEnemy ||
-                (ObjectManager.Get<Obj_AI_Base>()
-                    .Count(o => o.IsEnemy && o.Distance(player.Position) <= Orbwalking.GetRealAutoAttackRange(target)) ==
-                 1 && player.GetAutoAttackDamage((Obj_AI_Base) target, true) > target.Health))
+            if (!unit.IsMe || !W.IsReady() || !target.IsValidTarget() || !target.IsEnemy)
             {
                 return;
             }
@@ -48,7 +45,9 @@ namespace UnderratedAIO.Champions
                 Orbwalking.ResetAutoAttackTimer();
             }
             if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear && !(target is Obj_AI_Hero) &&
-                config.Item("usewLC", true).GetValue<bool>())
+                config.Item("usewLC", true).GetValue<bool>() &&
+                MinionManager.GetMinions(Orbwalking.GetRealAutoAttackRange(target), MinionTypes.All, MinionTeam.NotAlly)
+                    .Any(m => m.Health > player.GetAutoAttackDamage((Obj_AI_Base) target, true)))
             {
                 W.Cast();
                 Orbwalking.ResetAutoAttackTimer();
@@ -129,10 +128,10 @@ namespace UnderratedAIO.Champions
                 pos = player.Position.Extend(pos, 600);
             }
 
-            var ward = GetWard(pos);
-            if (ward != null)
+            var jumpObj = GetJumpObj(pos);
+            if (jumpObj != null)
             {
-                Q.CastOnUnit(ward);
+                Q.CastOnUnit(jumpObj);
             }
             else
             {
@@ -146,7 +145,7 @@ namespace UnderratedAIO.Champions
                     Utility.DelayAction.Add(
                         150, () =>
                         {
-                            var predWard = GetWard(pos);
+                            var predWard = GetJumpObj(pos);
                             if (predWard != null && Q.IsReady())
                             {
                                 Q.CastOnUnit(predWard);
@@ -156,15 +155,14 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        public Obj_AI_Minion GetWard(Vector3 pos)
+        public Obj_AI_Base GetJumpObj(Vector3 pos)
         {
             return
-                ObjectManager.Get<Obj_AI_Minion>()
+                ObjectManager.Get<Obj_AI_Base>()
                     .Where(
                         obj =>
-                            (((obj.Name.Contains("Ward") || obj.Name.Contains("ward") || obj.Name.Contains("Trinket")) &&
-                              obj.IsAlly) || (!obj.IsAlly && obj.MaxHealth > 5)) &&
-                            player.Distance(obj.ServerPosition) <= 600 && pos.Distance(obj.ServerPosition) <= 100)
+                            obj.IsValidTarget(600, false) && pos.Distance(obj.ServerPosition) <= 100 &&
+                            (obj is Obj_AI_Minion || obj is Obj_AI_Hero))
                     .OrderBy(obj => obj.Distance(pos))
                     .FirstOrDefault();
         }
@@ -283,7 +281,8 @@ namespace UnderratedAIO.Champions
                     R.Cast();
                 }
                 if (config.Item("userDmg", true).GetValue<bool>() &&
-                    Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken >= player.Health * 0.2f)
+                    Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken >= player.Health * 0.3f &&
+                    player.Distance(target) < 450f)
                 {
                     R.Cast();
                 }

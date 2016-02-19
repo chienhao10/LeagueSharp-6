@@ -185,10 +185,10 @@ namespace UnderratedAIO.Helpers
 
             if (config.Item("Zhonya").GetValue<bool>())
             {
-                if ((config.Item("Zhonyadmg").GetValue<Slider>().Value / 100f * player.Health <=
-                     Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken ||
-                     Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken > player.Health) ||
-                    (Danger() && player.HealthPercent < 30))
+                if (((config.Item("Zhonyadmg").GetValue<Slider>().Value / 100f * player.Health <=
+                      Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken ||
+                      Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken > player.Health) ||
+                     (Danger() && player.HealthPercent < 30)) && player.IsValidTarget(10, false))
                 {
                     if (Items.HasItem(Zhonya.Id) && Items.CanUseItem(Zhonya.Id))
                     {
@@ -291,13 +291,13 @@ namespace UnderratedAIO.Helpers
 
         public static void castHydra(Obj_AI_Hero target)
         {
-            if (target != null && player.Distance(target) < hydra.Range && !player.IsWindingUp)
+            if (target != null && player.Distance(target) < hydra.Range)
             {
-                if (Items.HasItem(tiamat.Id) && Items.CanUseItem(tiamat.Id))
+                if (Items.HasItem(tiamat.Id) && Items.CanUseItem(tiamat.Id) && !Orbwalking.CanAttack())
                 {
                     Items.UseItem(tiamat.Id);
                 }
-                if (Items.HasItem(hydra.Id) && Items.CanUseItem(hydra.Id))
+                if (Items.HasItem(hydra.Id) && Items.CanUseItem(hydra.Id) && player.IsWindingUp)
                 {
                     Items.UseItem(hydra.Id);
                 }

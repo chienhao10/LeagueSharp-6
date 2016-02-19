@@ -108,7 +108,7 @@ namespace UnderratedAIO.Champions
             {
                 cmbdmg += R.GetDamage(target) * 15;
             }
-            var bonusDmg = Environment.Hero.GetAdOverFive(target);
+            var bonusDmg = Environment.Hero.GetAdOverTime(player, target, 5);
             if ((config.Item("user").GetValue<bool>() && player.Distance(target) < player.AttackRange + 50 &&
                  cmbdmg + bonusDmg > target.Health && target.Health > bonusDmg + 200 && player.HealthPercent < 50) ||
                 (config.Item("usertf").GetValue<Slider>().Value <= player.CountEnemiesInRange(600) &&

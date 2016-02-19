@@ -56,17 +56,6 @@ namespace UnderratedAIO.Champions
             {
                 lastBox = System.Environment.TickCount;
             }
-            if (args == null || hero == null)
-            {
-                return;
-            }
-            if (config.Item("userCC", true).GetValue<bool>() && hero is Obj_AI_Hero && hero.IsEnemy &&
-                player.Distance(hero) < Q.Range &&
-                CombatHelper.isDangerousSpell(
-                    args.SData.Name, args.Target as Obj_AI_Hero, hero as Obj_AI_Hero, args.End, float.MaxValue))
-            {
-                R.Cast();
-            }
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -155,6 +144,12 @@ namespace UnderratedAIO.Champions
             if (ShacoClone && !GhostDelay && config.Item("autoMoveClone", true).GetValue<bool>())
             {
                 moveClone();
+            }
+            var data = Program.IncDamages.GetAllyData(player.NetworkId);
+            if (config.Item("userCC", true).GetValue<bool>() && R.IsReady() && player.Distance(target) < Q.Range &&
+                data.AnyCC)
+            {
+                R.Cast();
             }
         }
 

@@ -5,6 +5,7 @@ using System.Net;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using SharpDX.Direct3D9;
 using Collision = LeagueSharp.Common.Collision;
 
 namespace UnderratedAIO.Helpers
@@ -12,28 +13,6 @@ namespace UnderratedAIO.Helpers
     public class CombatHelper
     {
         public static Obj_AI_Hero player = ObjectManager.Player;
-
-        public static List<string> dotsHighDmg =
-            new List<string>(
-                new string[]
-                {
-                    "karthusfallenonecastsound", "CaitlynAceintheHole", "zedulttargetmark", "timebombenemybuff",
-                    "VladimirHemoplague"
-                });
-
-        public static List<string> dotsMedDmg =
-            new List<string>(
-                new string[]
-                {
-                    "summonerdot", "cassiopeiamiasmapoison", "cassiopeianoxiousblastpoison", "bantamtraptarget",
-                    "explosiveshotdebuff", "swainbeamdamage", "SwainTorment", "AlZaharMaleficVisions",
-                    "fizzmarinerdoombomb"
-                });
-
-        public static List<string> dotsSmallDmg =
-            new List<string>(
-                new string[]
-                { "deadlyvenom", "toxicshotparticle", "MordekaiserChildrenOfTheGrave", "dariushemo", "brandablaze" });
 
         private static List<string> defSpells = new List<string>(new string[] { "summonerheal", "summonerbarrier" });
 
@@ -45,20 +24,6 @@ namespace UnderratedAIO.Helpers
                     "XenZhaoThrust", "XenZhaoThrust2", "XenZhaoThrust3", "RenektonExecute", "RenektonSuperExecute",
                     "MasterYiDoubleStrike", "Parley"
                 });
-
-        public static List<string> TargetedCC =
-            new List<string>(
-                new string[]
-                {
-                    "TristanaR", "BlindMonkRKick", "AlZaharNetherGrasp", "VayneCondemn", "JayceThunderingBlow", "Headbutt",
-                    "Drain", "BlindingDart", "RunePrison", "IceBlast", "Dazzle", "Fling", "MaokaiUnstableGrowth",
-                    "MordekaiserChildrenOfTheGrave", "ZedUlt", "LuluW", "PantheonW", "ViR", "JudicatorReckoning",
-                    "IreliaEquilibriumStrike", "InfiniteDuress", "SkarnerImpale", "SowTheWind", "PuncturingTaunt",
-                    "UrgotSwap2", "NasusW", "NocturneUnspeakableHorror", "Terrify"
-                });
-
-        public static List<string> TargetedDangerous =
-            new List<string>(new string[] { "VolibearW", "Feast", "VeigarPrimordialBurst" });
 
         public static List<string> invulnerable =
             new List<string>(
@@ -346,42 +311,50 @@ namespace UnderratedAIO.Helpers
 
         public static bool CheckCriticalBuffs(Obj_AI_Hero i)
         {
-            foreach (BuffInstance buff in i.Buffs)
+            double dmg = 0;
+            foreach (var buff in i.Buffs)
             {
-                if (i.Health <= 6 * player.Level && dotsSmallDmg.Contains(buff.Name))
+                BuffData b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name);
+                if (b != null)
                 {
-                    return true;
-                }
-                if (i.Health <= 12 * player.Level && dotsMedDmg.Contains(buff.Name))
-                {
-                    return true;
-                }
-                if (i.Health <= 25 * player.Level && dotsHighDmg.Contains(buff.Name))
-                {
-                    return true;
+                    dmg += b.GetdTotalBuffDamage(i, buff);
                 }
             }
-            return false;
+
+            return dmg > i.Health;
+        }
+
+        public static bool CheckCriticalBuffsNextSec(Obj_AI_Hero i)
+        {
+            double dmg = 0;
+            foreach (var buff in i.Buffs)
+            {
+                BuffData b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name);
+                if (b != null)
+                {
+                    dmg += b.GetDamageAfterTime(i, buff, 1f);
+                }
+            }
+            return dmg > i.Health;
+        }
+
+        public static float BuffRemainingDamage(Obj_AI_Hero i)
+        {
+            double dmg = 0;
+            foreach (var buff in i.Buffs)
+            {
+                BuffData b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name);
+                if (b != null)
+                {
+                    dmg += b.GetDamageRemainingDamage(i, buff);
+                }
+            }
+            return (float) dmg;
         }
 
         public static bool CheckBuffs(Obj_AI_Hero i)
         {
-            foreach (BuffInstance buff in i.Buffs)
-            {
-                if (dotsSmallDmg.Contains(buff.Name))
-                {
-                    return true;
-                }
-                if (dotsMedDmg.Contains(buff.Name))
-                {
-                    return true;
-                }
-                if (dotsHighDmg.Contains(buff.Name))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return i.Buffs.Any(buff => BuffsList.Any(b => b.BuffName == buff.Name));
         }
 
         public static float getIncDmg()
@@ -414,6 +387,28 @@ namespace UnderratedAIO.Helpers
             var pos4 =
                 (POS.To2D() + (POS.To2D() - player.ServerPosition.To2D()).Normalized() -
                  direction.Perpendicular() * widht / 2f).To3D();
+            var poly = new Geometry.Polygon();
+            poly.Add(pos1);
+            poly.Add(pos3);
+            poly.Add(pos2);
+            poly.Add(pos4);
+            return poly;
+        }
+
+        public static Geometry.Polygon GetPolyFromVector(Vector3 from, Vector3 to, float width)
+        {
+            var POS = to.Extend(from, from.Distance(to));
+            var direction = (POS.To2D() - to.To2D()).Normalized();
+
+            var pos1 = (to.To2D() - direction.Perpendicular() * width / 2f).To3D();
+
+            var pos2 =
+                (POS.To2D() + (POS.To2D() - to.To2D()).Normalized() + direction.Perpendicular() * width / 2f).To3D();
+
+            var pos3 = (to.To2D() + direction.Perpendicular() * width / 2f).To3D();
+
+            var pos4 =
+                (POS.To2D() + (POS.To2D() - to.To2D()).Normalized() - direction.Perpendicular() * width / 2f).To3D();
             var poly = new Geometry.Polygon();
             poly.Add(pos1);
             poly.Add(pos3);
@@ -688,11 +683,6 @@ namespace UnderratedAIO.Helpers
             return false;
         }
 
-        public static bool isTargetedCC(string Spellname, bool highDmgToo = true)
-        {
-            return TargetedCC.Contains(Spellname) || (TargetedDangerous.Contains(Spellname) && highDmgToo);
-        }
-
         public static bool IsPossibleToReachHim(Obj_AI_Hero target, float moveSpeedBuff, float duration)
         {
             var distance = player.Distance(target);
@@ -787,67 +777,154 @@ namespace UnderratedAIO.Helpers
             return nowToo ? enemies.Count(h => h.Distance(pos) < range) : enemies.Count();
         }
 
-        public static bool isDangerousSpell(string spellName,
-            Obj_AI_Hero target,
-            Obj_AI_Hero sender,
-            Vector3 end,
-            float spellRange,
-            bool highDmg = true)
+        public static List<string> dotsHighDmg =
+            new List<string>(
+                new string[]
+                {
+                    "karthusfallenonecastsound", "CaitlynAceintheHole", "zedulttargetmark", "timebombenemybuff",
+                    "VladimirHemoplague"
+                });
+
+        public static List<BuffData> BuffsList = new List<BuffData>()
         {
-            if (spellName == "CurseofTheSadMummy")
+            new BuffData("Twitch", "deadlyvenom", SpellSlot.Unknown, 6),
+            new BuffData("Teemo", "toxicshotparticle", SpellSlot.Unknown, 4),
+            new BuffData("Mordekaiser", "MordekaiserChildrenOfTheGrave", SpellSlot.Unknown, 10),
+            new BuffData("Darius", "dariushemo", SpellSlot.Unknown, 5),
+            new BuffData("Brand", "brandablaze", SpellSlot.Unknown, 4),
+            new BuffData("-", "summonerdot", SpellSlot.Unknown, 5),
+            new BuffData("Cassiopeia", "cassiopeiamiasmapoison", SpellSlot.W, 2, -1, 0, 2),
+            new BuffData("Cassiopeia", "cassiopeianoxiousblastpoison", SpellSlot.Q, 3),
+            new BuffData("Teemo", "bantamtraptarget", SpellSlot.R, 4),
+            new BuffData("Tristana", "tristanaechargesound", SpellSlot.E, 1, 3.9f),
+            new BuffData("Swain", "swainbeamdamage", SpellSlot.Q, 3),
+            new BuffData("Swain", "SwainTorment", SpellSlot.Unknown, 4),
+            new BuffData("Malzahar", "AlZaharMaleficVisions", SpellSlot.E, 8, 4),
+            new BuffData("Fizz", "fizzmarinerdoombomb", SpellSlot.R, 1, 1.5f),
+            new BuffData("Karthus", "karthusfallenonecastsound", SpellSlot.R, 1, 2f),
+            new BuffData("Caitlyn", "CaitlynAceintheHole", SpellSlot.R, 1, 1f),
+            new BuffData("Zed", "zedulttargetmark", SpellSlot.R, 1, 2f),
+            new BuffData("Zilean", "zileanqenemybomb", SpellSlot.R, 1, 2f),
+            new BuffData("Vladimir", "VladimirHemoplague", SpellSlot.R, 1, 4f)
+        };
+    }
+
+    public class BuffData
+    {
+        public string ChampionName;
+        public string BuffName;
+        public SpellSlot Slot;
+        public int Stacks;
+        public float Time;
+        public int Stage;
+        public int Multiplier;
+
+        public BuffData(string championName,
+            string buffName,
+            SpellSlot slot,
+            int stacks,
+            float time = -1,
+            int stage = 0,
+            int multiplier = 1)
+        {
+            ChampionName = championName;
+            BuffName = buffName;
+            Slot = slot;
+            Stacks = stacks;
+            Time = time < 0 ? stacks : time;
+            Stage = stage;
+            Multiplier = multiplier;
+        }
+
+        public double GetdTotalBuffDamage(Obj_AI_Base target, BuffInstance buff)
+        {
+            var caster = buff.Caster as Obj_AI_Hero;
+            var SpelLevel = caster.Spellbook.GetSpell(Slot).Level;
+            if (Slot != SpellSlot.Unknown)
             {
-                if (player.Distance(sender.Position) <= 600f)
+                return Damage.GetSpellDamage(caster, target, Slot, Stage) * Multiplier;
+            }
+            if (BuffName == "toxicshotparticle")
+            {
+                var dmg = new double[] { 24, 48, 72, 96, 120 }[SpelLevel - 1] + 0.4 * caster.TotalMagicalDamage;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Magical, dmg);
+            }
+            if (BuffName == "deadlyvenom")
+            {
+                return GetBuffDamage(12, 4, 6, SpelLevel) * buff.Count;
+            }
+            if (BuffName == "MordekaiserChildrenOfTheGrave")
+            {
+                var dmg = (new double[] { 18.75, 22.5, 26.25 }[SpelLevel - 1] / 100 + 0.03 / 100) *
+                          caster.TotalMagicalDamage * target.MaxHealth;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Magical, dmg);
+            }
+            if (BuffName == "dariushemo")
+            {
+                var dmg = (9 + SpelLevel + caster.FlatPhysicalDamageMod * 0.3d) * buff.Count;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Physical, dmg);
+            }
+            if (BuffName == "brandablaze")
+            {
+                var dmg = target.MaxHealth * 0.08d;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Magical, dmg);
+            }
+            if (BuffName == "summonerdot")
+            {
+                return caster.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+            }
+            if (BuffName == "tristanaechargesound")
+            {
+                var dmg = Damage.GetSpellDamage(caster, target, Slot, Stage) * buff.Count;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Physical, dmg);
+            }
+            if (BuffName == "swainbeamdamage")
+            {
+                var dmg = Damage.GetSpellDamage(caster, target, Slot, Stage) * 3;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Magical, dmg);
+            }
+            if (BuffName == "SwainTorment")
+            {
+                var dmg = new double[] { 81, 128, 176, 228, 282 }[SpelLevel - 1] +
+                          new double[] { 0.86, 0.89, 0.92, 0.93, 0.96 }[SpelLevel - 1] * caster.TotalMagicalDamage;
+                return Damage.CalcDamage(caster, target, Damage.DamageType.Magical, dmg);
+            }
+            return 0;
+        }
+
+        public double GetDamageRemainingDamage(Obj_AI_Base target, BuffInstance buff)
+        {
+            var damage = GetdTotalBuffDamage(target, buff);
+            return damage / Stacks * Math.Ceiling(CombatHelper.GetBuffTime(buff));
+        }
+
+        public double GetDamageAfterTime(Obj_AI_Base target, BuffInstance buff, float time)
+        {
+            var damage = GetdTotalBuffDamage(target, buff);
+            var nextStackCount = 1 * Math.Max(1, time);
+            if (Stacks != Time && Stacks < Time)
+            {
+                Console.WriteLine(
+                    "\t \t " + (buff.EndTime - buff.StartTime - Time + time) + " > " + CombatHelper.GetBuffTime(buff));
+                if (buff.EndTime - buff.StartTime - Time + time > CombatHelper.GetBuffTime(buff))
                 {
-                    return true;
+                    nextStackCount = 1;
+                }
+                else
+                {
+                    nextStackCount = 0;
                 }
             }
-            if (CombatHelper.IsFacing(target, player.Position) &&
-                (spellName == "EnchantedCrystalArrow" || spellName == "rivenizunablade" ||
-                 spellName == "EzrealTrueshotBarrage" || spellName == "JinxR" || spellName == "sejuaniglacialprison"))
+            if (buff.Name == "tristanaechargesound" && buff.Count >= 3)
             {
-                if (player.Distance(sender.Position) <= spellRange - 60)
-                {
-                    return true;
-                }
+                nextStackCount = 1;
             }
-            if (spellName == "InfernalGuardian" || spellName == "UFSlash" ||
-                (spellName == "RivenW" && player.HealthPercent < 25))
-            {
-                if (player.Distance(end) <= 270f)
-                {
-                    return true;
-                }
-            }
-            if (spellName == "BlindMonkRKick" || spellName == "SyndraR" || spellName == "VeigarPrimordialBurst" ||
-                spellName == "AlZaharNetherGrasp" || spellName == "LissandraR")
-            {
-                if (target.IsMe)
-                {
-                    return true;
-                }
-            }
-            if (spellName == "TristanaR" || spellName == "ViR")
-            {
-                if (target.IsMe || player.Distance(target.Position) <= 100f)
-                {
-                    return true;
-                }
-            }
-            if (spellName == "GalioIdolOfDurand")
-            {
-                if (player.Distance(sender.Position) <= 600f)
-                {
-                    return true;
-                }
-            }
-            if (target != null && target.IsMe)
-            {
-                if (CombatHelper.isTargetedCC(spellName, highDmg) && spellName != "NasusW" && spellName != "ZedUlt")
-                {
-                    return true;
-                }
-            }
-            return false;
+            return damage / Stacks * nextStackCount;
+        }
+
+        public int GetBuffDamage(int init, int levels, int inc, int casterLevel)
+        {
+            return init + (casterLevel - 1) / levels * inc;
         }
     }
 

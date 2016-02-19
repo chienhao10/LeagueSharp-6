@@ -5,6 +5,7 @@ using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
 using UnderratedAIO.Helpers;
+using UnderratedAIO.Helpers.SkillShot;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
 
 namespace UnderratedAIO.Champions
@@ -40,13 +41,17 @@ namespace UnderratedAIO.Champions
             if (config.Item("Enabledcomm").GetValue<bool>())
             {
                 autoLeveler.enabled = true;
-
                 switch (orbwalker.ActiveMode)
                 {
                     case Orbwalking.OrbwalkingMode.Combo:
                         Combo();
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
+                        Console.WriteLine(player.GetBuffCount("talentreaperdisplay"));
+                        foreach (var i in player.InventoryItems)
+                        {
+                            Console.WriteLine(i.IData.TranslatedDisplayName + ": " + (int) i.Id);
+                        }
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         break;
@@ -76,7 +81,8 @@ namespace UnderratedAIO.Champions
             }
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
-            if (config.Item("useIgnite").GetValue<bool>() && ignitedmg > target.Health && hasIgnite)
+            if (config.Item("useIgnite").GetValue<bool>() && ignitedmg > target.Health && hasIgnite &&
+                player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
             {
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
             }
@@ -113,7 +119,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(autolvlM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("Enabledcomm", "Enable Utilies")).SetValue(true);
-            config.AddItem(new MenuItem("Enabledorb", "Enable OrbWalker")).SetValue(true);
+            config.AddItem(new MenuItem("Enabledorb", "Enable OrbWalker", true)).SetValue(true);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

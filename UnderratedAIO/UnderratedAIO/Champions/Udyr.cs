@@ -21,9 +21,7 @@ namespace UnderratedAIO.Champions
         public static AutoLeveler autoLeveler;
         public static Spell Q, W, E, R, R2;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
-        public static bool justR2, IncSpell;
-        public static float DamageTaken;
-        public static float DamageTakenTime;
+        public static bool justR2;
         public static Stance stance;
 
         internal enum Stance
@@ -109,34 +107,6 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = args.Target as Obj_AI_Hero;
-            if (target != null)
-            {
-                if (sender.IsValid && !sender.IsDead && sender.IsEnemy && target.IsValid && target.IsMe)
-                {
-                    if (((config.Item("usewLC", true).GetValue<bool>() &&
-                          orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear) ||
-                         (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
-                          config.Item("usew", true).GetValue<bool>())))
-                    {
-                        /*var ShieldBuff = new Int32[] { 60, 100, 140, 180, 220 }[W.Level - 1] +
-                                            0.5 * player.FlatMagicDamageMod;*/
-                        if (Orbwalking.IsAutoAttack(args.SData.Name))
-                        {
-                            var dmg = (float) sender.GetAutoAttackDamage(player, true);
-                            DamageTaken += dmg;
-                        }
-                        else
-                        {
-                            if (W.IsReady())
-                            {
-                                IncSpell = true;
-                                Utility.DelayAction.Add(300, () => IncSpell = false);
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -157,11 +127,6 @@ namespace UnderratedAIO.Champions
                     break;
             }
             Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-            if (System.Environment.TickCount - DamageTakenTime > 3000)
-            {
-                DamageTakenTime = System.Environment.TickCount;
-                DamageTaken = 0f;
-            }
         }
 
         private void Harass()
@@ -241,32 +206,31 @@ namespace UnderratedAIO.Champions
 
         private double DangerLevel()
         {
-            var cons = 30 + player.Level * 5;
-            var cons2 = 30 + player.Level * 15;
-            var health = player.HealthPercent;
-            if (DamageTaken > cons && health > 50)
+            var damageTaken = Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken;
+            var shield = getShield();
+            if (damageTaken > player.Health)
             {
-                return 2;
+                return 5;
             }
-            if (DamageTaken > cons && health < 50)
-            {
-                return 2.5;
-            }
-            if (DamageTaken > cons2 && health > 50)
-            {
-                return 3;
-            }
-            if (DamageTaken > cons2 && health < 50)
-            {
-                return 3.5;
-            }
-            if (DamageTaken > cons && IncSpell)
+            if (damageTaken > player.Health * 0.6f)
             {
                 return 4;
             }
-            if (DamageTaken > cons2 && IncSpell)
+            if (damageTaken > player.Health * 0.4f)
             {
-                return 5;
+                return 3.5;
+            }
+            if (damageTaken > shield)
+            {
+                return 3;
+            }
+            if (damageTaken > shield / 1.4f && damageTaken > 60)
+            {
+                return 2.5;
+            }
+            if (damageTaken > shield / 2f)
+            {
+                return 2;
             }
             return 1;
         }
@@ -276,16 +240,33 @@ namespace UnderratedAIO.Champions
             Obj_AI_Hero target = TargetSelector.GetTarget(600, TargetSelector.DamageType.Physical);
             if (target == null)
             {
+                var t2 =
+                    HeroManager.Enemies.Where(
+                        e => e.Distance(player) > player.MoveSpeed * 2.3 && e.Distance(player) < player.MoveSpeed * 2.6)
+                        .OrderBy(e => e.Distance(player))
+                        .FirstOrDefault();
+                if (W.IsReady() && t2 != null)
+                {
+                    castW();
+                }
                 return;
             }
             if (config.Item("useItems").GetValue<bool>())
             {
                 ItemHandler.UseItems(target, config);
             }
+            var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+            bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
+            if (config.Item("useIgnite", true).GetValue<bool>() && ignitedmg > target.Health && hasIgnite &&
+                (player.HealthPercent < 35 || player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target) + 50))
+            {
+                player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
+            }
             if (DontChangeStance(target))
             {
                 return;
             }
+            var isInRange = Orbwalking.GetRealAutoAttackRange(target) > player.Distance(target);
             if (W.IsReady() && CheckDmg(target) < target.Health && player.HealthPercent < 25)
             {
                 castW();
@@ -303,40 +284,9 @@ namespace UnderratedAIO.Champions
             var dist = player.Distance(target);
             var inSpellrange = dist < 300;
 
-            if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && inSpellrange && DangerLevel() > 2.5f)
+            if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && DangerLevel() >= 2.5f)
             {
                 castW();
-            }
-
-            if (Q.GetDamage(target) > GetRDmagage(target) && inSpellrange)
-            {
-                if (config.Item("useq", true).GetValue<bool>() && Q.IsReady())
-                {
-                    castQ();
-                }
-                if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && DangerLevel() >= 2.5f)
-                {
-                    castW();
-                }
-                if (config.Item("user", true).GetValue<bool>() && R.IsReady())
-                {
-                    castR();
-                }
-            }
-            else if (inSpellrange)
-            {
-                if (config.Item("user", true).GetValue<bool>() && R.IsReady())
-                {
-                    castR();
-                }
-                if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && DangerLevel() >= 2.5f)
-                {
-                    castW();
-                }
-                if (config.Item("useq", true).GetValue<bool>() && Q.IsReady())
-                {
-                    castQ();
-                }
             }
             if (config.Item("usee", true).GetValue<bool>() && E.IsReady() && CanStun(target) &&
                 ((!inSpellrange && player.ManaPercent < 55) || player.ManaPercent > 55) &&
@@ -345,12 +295,33 @@ namespace UnderratedAIO.Champions
                     new float[5] { 2f, 2.25f, 2.5f, 2.75f, 3f }[Q.Level - 1]) && !justR2)
             {
                 E.Cast(config.Item("packets").GetValue<bool>());
+                return;
             }
-            var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
-            bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
-            if (config.Item("useIgnite", true).GetValue<bool>() && ignitedmg > target.Health && hasIgnite)
+            if ((target.Health > R.GetDamage(target) || player.Mana < Q.ManaCost * 2) && isInRange)
             {
-                player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
+                if (config.Item("useq", true).GetValue<bool>() && Q.IsReady())
+                {
+                    castQ();
+                    return;
+                }
+                if (config.Item("user", true).GetValue<bool>() && R.IsReady())
+                {
+                    castR();
+                    return;
+                }
+            }
+            else
+            {
+                if (config.Item("user", true).GetValue<bool>() && R.IsReady())
+                {
+                    castR();
+                    return;
+                }
+                if (config.Item("useq", true).GetValue<bool>() && Q.IsReady())
+                {
+                    castQ();
+                    return;
+                }
             }
         }
 
@@ -369,7 +340,7 @@ namespace UnderratedAIO.Champions
 
         private void castW()
         {
-            if (!player.HasBuff("udyrturtleactivation") && player.HealthPercent < 90)
+            if (!player.HasBuff("udyrturtleactivation"))
             {
                 W.Cast(config.Item("packets").GetValue<bool>());
             }
@@ -381,6 +352,16 @@ namespace UnderratedAIO.Champions
             {
                 R.Cast(config.Item("packets").GetValue<bool>());
             }
+        }
+
+
+        private float getShield()
+        {
+            if (!W.IsReady())
+            {
+                return 0;
+            }
+            return new float[5] { 60, 100, 140, 180, 220 }[W.Level - 1] + player.TotalMagicalDamage / 2;
         }
 
         private void Game_OnDraw(EventArgs args)
@@ -420,9 +401,13 @@ namespace UnderratedAIO.Champions
                        new double[5] { 40, 80, 120, 160, 200 }[R.Level - 1] + 0.45 * (double) player.FlatMagicDamageMod);
         }
 
-        private static bool DontChangeStance(Obj_AI_Base target)
+        private bool DontChangeStance(Obj_AI_Base target)
         {
             var killable = CheckDmg(target) > target.Health;
+            if (DangerLevel() > 2.5)
+            {
+                return false;
+            }
             switch (stance)
             {
                 case Stance.Tiger:
@@ -439,14 +424,15 @@ namespace UnderratedAIO.Champions
                     }
                     break;
                 case Stance.Bear:
-                    if (!E.IsReady() && target is Obj_AI_Hero && CanStun(target))
+                    if (!E.IsReady() && target is Obj_AI_Hero && CanStun(target) &&
+                        !Program.IncDamages.GetAllyData(player.NetworkId).AnyCC)
                     {
                         return true;
                     }
                     break;
                 case Stance.Phoenix:
                     if (R.IsReady() && (player.GetBuff("UdyrPhoenixStance").Count == 3 || justR2) &&
-                        (target == null || (target != null && target.Position.Distance(player.Position) < 300)))
+                        (target == null || target.Position.Distance(player.Position) < 300))
                     {
                         return true;
                     }

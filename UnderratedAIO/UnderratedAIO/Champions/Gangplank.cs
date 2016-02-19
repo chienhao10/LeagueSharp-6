@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
@@ -42,6 +40,7 @@ namespace UnderratedAIO.Champions
             GameObject.OnDelete += GameObject_OnDelete;
         }
 
+
         private void GameObject_OnDelete(GameObject sender, EventArgs args)
         {
             for (int i = 0; i < savedBarrels.Count; i++)
@@ -67,17 +66,28 @@ namespace UnderratedAIO.Champions
             return savedBarrels.Select(b => b.barrel).Where(b => b.IsValid);
         }
 
-        private bool KillableBarrel(Obj_AI_Base targetB, bool melee = false)
+        private bool KillableBarrel(Obj_AI_Base targetB,
+            bool melee = false,
+            Obj_AI_Hero sender = null,
+            float missileTravelTime = -1)
         {
             if (targetB.Health < 2)
             {
                 return true;
             }
+            if (sender == null)
+            {
+                sender = player;
+            }
+            if (missileTravelTime == -1)
+            {
+                missileTravelTime = GetQTime(targetB);
+            }
             var barrel = savedBarrels.FirstOrDefault(b => b.barrel.NetworkId == targetB.NetworkId);
             if (barrel != null)
             {
                 var time = targetB.Health * getEActivationDelay() * 1000;
-                if (System.Environment.TickCount - barrel.time + (melee ? player.AttackDelay : GetQTime(targetB)) * 1000 >
+                if (System.Environment.TickCount - barrel.time + (melee ? sender.AttackDelay : missileTravelTime) * 1000 >
                     time)
                 {
                     return true;
@@ -130,19 +140,19 @@ namespace UnderratedAIO.Champions
                     HeroManager.Enemies.Where(
                         e =>
                             ((e.UnderTurret(true) &&
-                              e.HealthPercent < config.Item("Rhealt", true).GetValue<Slider>().Value * 0.75f) ||
+                              e.MaxHealth / 100 * config.Item("Rhealt", true).GetValue<Slider>().Value * 0.75f >
+                              e.Health - Program.IncDamages.GetEnemyData(e.NetworkId).DamageTaken) ||
                              (!e.UnderTurret(true) &&
-                              e.HealthPercent < config.Item("Rhealt", true).GetValue<Slider>().Value)) &&
+                              e.MaxHealth / 100 * config.Item("Rhealt", true).GetValue<Slider>().Value >
+                              e.Health - Program.IncDamages.GetEnemyData(e.NetworkId).DamageTaken)) &&
                             e.HealthPercent > config.Item("RhealtMin", true).GetValue<Slider>().Value &&
                             e.IsValidTarget() && e.Distance(player) > 1500))
                 {
                     var pred = Program.IncDamages.GetEnemyData(enemy.NetworkId);
-                    if (pred != null && pred.DamageTaken > 50 && pred.DamageTaken < enemy.Health &&
-                        enemy.Health - pred.DamageTaken <
-                        config.Item("Rhealt", true).GetValue<Slider>().Value / 100f * enemy.MaxHealth)
+                    if (pred != null && pred.DamageTaken < enemy.Health)
                     {
-                        var ally = HeroManager.Allies.OrderBy(a => a.Health)
-                            .FirstOrDefault(a => enemy.Distance(a) < 700);
+                        var ally =
+                            HeroManager.Allies.OrderBy(a => a.Health).FirstOrDefault(a => enemy.Distance(a) < 1000);
                         if (ally != null)
                         {
                             var pos = Prediction.GetPrediction(enemy, 0.75f);
@@ -200,6 +210,13 @@ namespace UnderratedAIO.Champions
                         if (threeBarrel)
                         {
                             Utility.DelayAction.Add(801, () => E.Cast(middle.Extend(cp, BarrelConnectionRange)));
+                        }
+                        else
+                        {
+                            if (Orbwalking.CanMove(100))
+                            {
+                                Orbwalking.MoveTo(Game.CursorPos);
+                            }
                         }
                     }
                 }
@@ -909,6 +926,29 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
+            if (sender.IsEnemy && sender is Obj_AI_Hero && sender.Distance(player) < E.Range)
+            {
+                var targetBarrels =
+                    savedBarrels.Where(
+                        b =>
+                            b.barrel.NetworkId == args.Target.NetworkId &&
+                            KillableBarrel(
+                                b.barrel, sender.IsMelee, (Obj_AI_Hero) sender,
+                                sender.Distance(b.barrel) / args.SData.MissileSpeed));
+                foreach (var barrelData in targetBarrels)
+                {
+                    if (barrelData.barrel.Distance(player) < Orbwalking.GetRealAutoAttackRange(barrelData.barrel) &&
+                        Orbwalking.CanAttack() && !justQ)
+                    {
+                        player.IssueOrder(GameObjectOrder.AttackUnit, barrelData.barrel);
+                    }
+                    else
+                    {
+                        savedBarrels.Remove(barrelData);
+                        Console.WriteLine("Barrel removed");
+                    }
+                }
+            }
         }
 
         private IEnumerable<Vector3> GetBarrelPoints(Vector3 point)
@@ -930,7 +970,6 @@ namespace UnderratedAIO.Champions
             }
             return 2f;
         }
-
 
         private void InitMenu()
         {

@@ -390,9 +390,7 @@ namespace UnderratedAIO.Champions
                 }
             }
             if (config.Item("usew", true).GetValue<bool>() && sender is Obj_AI_Hero && sender.IsEnemy &&
-                player.Distance(sender) < Q.Range &&
-                CombatHelper.isDangerousSpell(
-                    args.SData.Name, args.Target as Obj_AI_Hero, sender as Obj_AI_Hero, args.End, float.MaxValue))
+                player.Distance(sender) < Q.Range && Program.IncDamages.GetAllyData(player.NetworkId).AnyCC)
             {
                 W.Cast();
             }

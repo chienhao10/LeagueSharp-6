@@ -100,8 +100,15 @@ namespace UnderratedAIO.Champions
                     break;
             }
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
-            if (data != null && data.DamageCount >= config.Item("wMinAggro", true).GetValue<Slider>().Value &&
+            if (data != null && !activatedW && config.Item("AshieldB", true).GetValue<bool>() &&
+                data.DamageCount >= config.Item("wMinAggro", true).GetValue<Slider>().Value &&
                 player.ManaPercent > config.Item("minmanaAgg", true).GetValue<Slider>().Value)
+            {
+                W.Cast(config.Item("packets").GetValue<bool>());
+            }
+            if (data != null && !activatedW && config.Item("AshieldB", true).GetValue<bool>() && W.IsReady() &&
+                (data.DamageTaken > player.Health ||
+                 data.DamageTaken > getWShield() / 100f * config.Item("AshieldDmg", true).GetValue<Slider>().Value))
             {
                 W.Cast(config.Item("packets").GetValue<bool>());
             }
@@ -259,9 +266,9 @@ namespace UnderratedAIO.Champions
             {
                 ItemHandler.UseItems(target, config, ComboDamage(target));
             }
+            var data = Program.IncDamages.GetAllyData(player.NetworkId);
             if (!activatedW && W.IsReady() && config.Item("usew", true).GetValue<bool>())
             {
-                var data = Program.IncDamages.GetAllyData(player.NetworkId);
                 if (data.DamageTaken > player.Health ||
                     (data.DamageTaken > getWShield() / 100 * config.Item("shieldDmg", true).GetValue<Slider>().Value) ||
                     (target.Distance(player) < W.Range && config.Item("usewir", true).GetValue<bool>()))
@@ -311,16 +318,26 @@ namespace UnderratedAIO.Champions
             {
                 castQ(target);
             }
+            if (!activatedW && W.IsReady() && data.AnyCC)
+            {
+                W.Cast(config.Item("packets").GetValue<bool>());
+            }
+
+            if (config.Item("userCC", true).GetValue<bool>() && player.Distance(target) < Q.Range &&
+                HeroManager.Enemies.FirstOrDefault(e => e.Distance(Game.CursorPos) < 300) != null && data.AnyCC)
+            {
+                R.Cast(Game.CursorPos, config.Item("packets").GetValue<bool>());
+            }
         }
 
         private void checkCastedQ(Obj_AI_Base target)
         {
-            if (justQ && target.Distance(player) > Q.Range)
+            if ((justQ && target.Distance(player) > Q.Range) || !target.IsValidTarget())
             {
                 return;
             }
             var poly = GetPoly(lastQPos);
-            var heroes = HeroManager.Enemies.Where(e => poly.IsInside(e.Position));
+            var heroes = HeroManager.Enemies.Where(e => poly.IsInside(e.Position) && e.IsValidTarget());
             var objAiHeroes = heroes as IList<Obj_AI_Hero> ?? heroes.ToList();
             if (objAiHeroes.Any())
             {
@@ -330,7 +347,8 @@ namespace UnderratedAIO.Champions
                 if ((escaping > 0 &&
                      (objAiHeroes.Count() == 1 ||
                       (objAiHeroes.Count() >= 2 && System.Environment.TickCount - qStart > 1000))) ||
-                    data.DamageTaken > player.Health)
+                    data.DamageTaken > player.Health || Program.IncDamages.GetAllyData(player.NetworkId).AnyCC ||
+                    Program.IncDamages.GetEnemyData(target.NetworkId).DamageTaken > target.Health)
                 {
                     Q.Cast(target.Position, true);
                 }
@@ -458,21 +476,6 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
-            if (!activatedW && W.IsReady() && args.Target is Obj_AI_Hero && sender is Obj_AI_Hero &&
-                CombatHelper.isDangerousSpell(
-                    args.SData.Name, (Obj_AI_Hero) args.Target, (Obj_AI_Hero) sender, args.End, W.Range, true))
-            {
-                W.Cast(config.Item("packets").GetValue<bool>());
-            }
-
-            if (config.Item("userCC", true).GetValue<bool>() && sender is Obj_AI_Hero && sender.IsEnemy &&
-                player.Distance(sender) < Q.Range &&
-                CombatHelper.isDangerousSpell(
-                    args.SData.Name, args.Target as Obj_AI_Hero, sender as Obj_AI_Hero, args.End, float.MaxValue, false) &&
-                HeroManager.Enemies.FirstOrDefault(e => e.Distance(Game.CursorPos) < 300) != null)
-            {
-                R.Cast(Game.CursorPos, config.Item("packets").GetValue<bool>());
-            }
         }
 
         private void InitMenu()
@@ -527,7 +530,9 @@ namespace UnderratedAIO.Champions
 
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM.AddItem(new MenuItem("usewgc", "Use W gapclosers", true)).SetValue(false);
-            menuM.AddItem(new MenuItem("wMinAggro", "Auto W on aggro", true)).SetValue(new Slider(3, 1, 8));
+            menuM.AddItem(new MenuItem("AshieldB", "Auto W", true)).SetValue(false);
+            menuM.AddItem(new MenuItem("wMinAggro", "   On aggro", true)).SetValue(new Slider(3, 1, 8));
+            menuM.AddItem(new MenuItem("AshieldDmg", "   Min dmg in shield %", true)).SetValue(new Slider(100, 1, 100));
             menuM.AddItem(new MenuItem("minmanaAgg", "   Min mana", true)).SetValue(new Slider(50, 1, 100));
             menuM.AddItem(new MenuItem("NoRlock", "Disable camera lock", true)).SetValue(false);
             menuM = Jungle.addJungleOptions(menuM);

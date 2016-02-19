@@ -119,19 +119,20 @@ namespace UnderratedAIO.Helpers
                 return bestPos;
             }
 
-            public static float GetAdOverFive(Obj_AI_Hero hero)
+            public static float GetAdOverTime(Obj_AI_Hero source, Obj_AI_Hero target, int times)
             {
                 double basicDmg = 0;
-                int attacks = (int) Math.Floor(hero.AttackSpeedMod * 5);
+                int attacks = (int) Math.Floor(source.AttackSpeedMod * times);
                 for (int i = 0; i < attacks; i++)
                 {
-                    if (hero.Crit > 0)
+                    if (source.Crit > 0)
                     {
-                        basicDmg += hero.GetAutoAttackDamage(player) * (1 + hero.Crit / attacks);
+                        basicDmg += source.GetAutoAttackDamage(target, true) - source.GetAutoAttackDamage(target) +
+                                    source.GetAutoAttackDamage(target) * (1 + source.Crit / attacks);
                     }
                     else
                     {
-                        basicDmg += hero.GetAutoAttackDamage(player);
+                        basicDmg += source.GetAutoAttackDamage(target, true);
                     }
                 }
                 return (float) basicDmg;

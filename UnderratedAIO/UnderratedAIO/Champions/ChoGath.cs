@@ -222,7 +222,6 @@ namespace UnderratedAIO.Champions
             if (config.Item("selected", true).GetValue<bool>())
             {
                 target = CombatHelper.SetTarget(target, TargetSelector.GetSelectedTarget());
-                orbwalker.ForceTarget(target);
             }
             var combodmg = ComboDamage(target);
             if (config.Item("useItems").GetValue<bool>())
@@ -251,38 +250,41 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useq", true).GetValue<bool>() && Q.IsReady())
             {
-                if (config.Item("useqfaster", true).GetValue<bool>())
+                int qHit = config.Item("qHit", true).GetValue<Slider>().Value;
+                var hitC = HitChance.VeryHigh;
+                switch (qHit)
                 {
-                    if (target.IsValidTarget(Q.Range) && Q.CanCast(target))
-                    {
-                        var nextpos = target.Position.Extend(target.ServerPosition, target.MoveSpeed * 0.7f);
-                        if (target.HasBuff("OdinCaptureChanner"))
-                        {
-                            nextpos = target.Position;
-                        }
-                        Q.Cast(nextpos, config.Item("packets").GetValue<bool>());
-                    }
+                    case 1:
+                        hitC = HitChance.Low;
+                        break;
+                    case 2:
+                        hitC = HitChance.Medium;
+                        break;
+                    case 3:
+                        hitC = HitChance.High;
+                        break;
+                    case 4:
+                        hitC = HitChance.VeryHigh;
+                        break;
                 }
-                else
+                var pred = Q.GetPrediction(target);
+                if (pred.Hitchance >= hitC)
                 {
-                    int qHit = config.Item("qHit", true).GetValue<Slider>().Value;
-                    var hitC = HitChance.High;
-                    switch (qHit)
+                    if (target.IsMoving)
                     {
-                        case 1:
-                            hitC = HitChance.Low;
-                            break;
-                        case 2:
-                            hitC = HitChance.Medium;
-                            break;
-                        case 3:
-                            hitC = HitChance.High;
-                            break;
-                        case 4:
-                            hitC = HitChance.VeryHigh;
-                            break;
+                        if (pred.CastPosition.Distance(target.ServerPosition) > 250f)
+                        {
+                            Q.Cast(target.Position.Extend(pred.CastPosition, 250f));
+                        }
+                        else
+                        {
+                            Q.Cast(pred.CastPosition);
+                        }
                     }
-                    Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                    else
+                    {
+                        Q.CastIfHitchanceEquals(target, hitC);
+                    }
                 }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.CanCast(target))
@@ -371,7 +373,7 @@ namespace UnderratedAIO.Champions
         private static void InitChoGath()
         {
             Q = new Spell(SpellSlot.Q, 950);
-            Q.SetSkillshot(0.5f, 175f, 625f, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(1.2f, 175f, float.MaxValue, false, SkillshotType.SkillshotCircle);
             W = new Spell(SpellSlot.W, 650);
             W.SetSkillshot(0.25f, 250f, float.MaxValue, false, SkillshotType.SkillshotCone);
             E = new Spell(SpellSlot.E, 500);
@@ -411,8 +413,7 @@ namespace UnderratedAIO.Champions
             // Combo Settings
             Menu menuC = new Menu("Combo ", "csettings");
             menuC.AddItem(new MenuItem("useq", "Use Q", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("qHit", "Q hitChance", true).SetValue(new Slider(3, 1, 4)));
-            menuC.AddItem(new MenuItem("useqfaster", "Use faster Q prediction", true)).SetValue(false);
+            menuC.AddItem(new MenuItem("qHit", "Q hitChance", true).SetValue(new Slider(4, 1, 4)));
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);

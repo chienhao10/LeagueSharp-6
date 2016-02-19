@@ -62,6 +62,11 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
+            var data = Program.IncDamages.GetAllyData(player.NetworkId);
+            if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && data.AnyCC)
+            {
+                W.Cast();
+            }
             var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
             var cmbdmg = ComboDamage(target) + ItemHandler.GetItemsDamage(target);
             if (config.Item("useItems").GetValue<bool>())
@@ -100,7 +105,7 @@ namespace UnderratedAIO.Champions
                   target.HealthPercent < 60) ||
                  (dist < rRanges[R.Level - 1] && dist > 900 &&
                   target.CountAlliesInRange(2000) >= target.CountEnemiesInRange(2000) &&
-                  cmbdmg + Environment.Hero.GetAdOverFive(target) > target.Health &&
+                  cmbdmg + Environment.Hero.GetAdOverTime(player, target, 5) > target.Health &&
                   (target.Health > Q.GetDamage(target) || !Q.IsReady())) ||
                  (player.HealthPercent < 40 && target.HealthPercent < 40 && target.CountAlliesInRange(1000) == 1 &&
                   target.CountEnemiesInRange(1000) == 1)))
@@ -109,7 +114,7 @@ namespace UnderratedAIO.Champions
                 lastR = System.Environment.TickCount;
             }
             if (config.Item("user", true).GetValue<bool>() && !lastR.Equals(0) && R.CanCast(target) &&
-                ((cmbdmg * 1.6 + Environment.Hero.GetAdOverFive(target) > target.Health ||
+                ((cmbdmg * 1.6 + Environment.Hero.GetAdOverTime(player, target, 5) > target.Health ||
                   R.GetDamage(target) > target.Health ||
                   (qTrailOnMe && eBuff(target) && target.MoveSpeed > player.MoveSpeed && dist > 360 &&
                    target.HealthPercent < 60))))
@@ -214,50 +219,6 @@ namespace UnderratedAIO.Champions
             if (!(sender is Obj_AI_Base))
             {
                 return;
-            }
-
-            if (config.Item("usew", true).GetValue<bool>() && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
-                W.IsReady())
-            {
-                SpellData spell = args.SData;
-                string spellName = spell.Name;
-                Obj_AI_Hero target = args.Target as Obj_AI_Hero;
-                if (target != null && target.IsMe)
-                {
-                    if (CombatHelper.isTargetedCC(spellName))
-                    {
-                        W.Cast(config.Item("packets").GetValue<bool>());
-                    }
-                }
-                if (sender.Distance(player) < 600 && spellName == "GalioIdolOfDurand")
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
-                if (sender.Distance(player) < 450 && spellName == "LissandraW")
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
-                if (sender.Distance(player) < 250 && spellName == "MaokaiTrunkLine")
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
-                if (sender.Distance(player) < 600 && spellName == "SoulShackles")
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
-                if (sender.Distance(player) < 260 && spellName == "RivenMartyr")
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
-                if (sender.Distance(player) < 550 && spellName == "CurseoftheSadMummy")
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
-                if (sender.Distance(player) < 600 && spellName == "CassiopeiaPetrifyingGaze" && player.IsFacing(sender) &&
-                    sender.IsFacing(player))
-                {
-                    W.Cast(config.Item("packets").GetValue<bool>());
-                }
             }
         }
 

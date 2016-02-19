@@ -8,6 +8,7 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
 using UnderratedAIO.Helpers;
+using UnderratedAIO.Helpers.SkillShot;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
 
@@ -195,7 +196,6 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = getTarget();
-            Obj_AI_Hero Rtarget = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -232,11 +232,11 @@ namespace UnderratedAIO.Champions
             }
             if (R.IsReady() && !justJumped)
             {
-                var dist = player.Distance(Rtarget);
+                var dist = player.Distance(target);
                 if (config.Item("user", true).GetValue<bool>() && !justQ && !Q.CanCast(target) && !justW &&
-                    !W.CanCast(target) && !CombatHelper.CheckCriticalBuffs(Rtarget) &&
+                    !W.CanCast(target) && !CombatHelper.CheckCriticalBuffs(target) &&
                     config.Item("usermin", true).GetValue<Slider>().Value < dist && 3000 > dist &&
-                    Rtarget.Health < R.GetDamage(Rtarget) * 0.7 && target.CountAlliesInRange(600) < 1)
+                    target.Health < R.GetDamage(target) * 0.7 && target.CountAlliesInRange(600) < 1)
                 {
                     R.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
                 }
@@ -289,13 +289,13 @@ namespace UnderratedAIO.Champions
             switch (config.Item("DmgType", true).GetValue<StringList>().SelectedIndex)
             {
                 case 0:
-                    return TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+                    return TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
                     break;
                 case 1:
-                    return TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+                    return TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
                     break;
                 default:
-                    return TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+                    return TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
                     break;
             }
         }

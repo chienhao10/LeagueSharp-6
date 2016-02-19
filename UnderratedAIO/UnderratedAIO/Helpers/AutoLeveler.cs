@@ -10,21 +10,24 @@ using SharpDX;
 
 namespace UnderratedAIO.Helpers
 {
-    class AutoLeveler
+    internal class AutoLeveler
     {
         private static Menu configMenu;
         public static AutoLevel autoLevel;
-        public bool enabled=true;
+        public bool enabled = true;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
 
         public AutoLeveler(Menu config)
         {
             configMenu = config;
-            config.AddItem(new MenuItem(player.ChampionName+"order", "Skill order", true)).SetValue(new StringList(new[] { "Q->W->E", "Q->E->W", "W->Q->E", "W->E->Q", "E->Q->W", "E->W->Q" }, 0));
+            config.AddItem(new MenuItem(player.ChampionName + "order", "Skill order", true))
+                .SetValue(new StringList(new[] { "Q->W->E", "Q->E->W", "W->Q->E", "W->E->Q", "E->Q->W", "E->W->Q" }, 0));
             config.AddItem(new MenuItem(player.ChampionName + "Enabled", "Enabled")).SetValue(false);
             config.AddItem(new MenuItem("Test", "Test Only"));
-            autoLevel = new AutoLevel(GetTree(configMenu.Item(player.ChampionName + "order", true).GetValue<StringList>().SelectedIndex));
-            Game.OnUpdate +=Game_OnUpdate;
+            autoLevel =
+                new AutoLevel(
+                    GetTree(configMenu.Item(player.ChampionName + "order", true).GetValue<StringList>().SelectedIndex));
+            Game.OnUpdate += Game_OnUpdate;
         }
 
 
@@ -33,11 +36,12 @@ namespace UnderratedAIO.Helpers
             get { return enabled; }
             set { enabled = value; }
         }
+
         private int[] GetTree(int p)
         {
             switch (p)
             {
-                case 0:         //lvl  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18  
+                case 0: //lvl  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18  
                     return new int[] { 0, 1, 2, 0, 0, 3, 0, 1, 0, 1, 3, 1, 1, 2, 2, 3, 2, 2 };
                     break;
                 case 1:
@@ -63,7 +67,8 @@ namespace UnderratedAIO.Helpers
         {
             if (enabled && configMenu.Item(player.ChampionName + "Enabled").GetValue<bool>())
             {
-                AutoLevel.UpdateSequence(GetTree(configMenu.Item(player.ChampionName + "order", true).GetValue<StringList>().SelectedIndex));
+                AutoLevel.UpdateSequence(
+                    GetTree(configMenu.Item(player.ChampionName + "order", true).GetValue<StringList>().SelectedIndex));
                 AutoLevel.Enable();
             }
             else

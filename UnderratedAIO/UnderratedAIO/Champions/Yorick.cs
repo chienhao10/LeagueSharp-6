@@ -217,7 +217,7 @@ namespace UnderratedAIO.Champions
                             (i.Health * 100 / i.MaxHealth) <= config.Item("atpercenty").GetValue<Slider>().Value &&
                             i.IsAlly && player.Distance(i) < R.Range &&
                             !config.Item("ulty" + i.SkinName).GetValue<bool>())
-                    .OrderByDescending(i => Environment.Hero.GetAdOverFive(i))
+                    .OrderByDescending(i => Environment.Hero.GetAdOverTime(player, i, 5))
                     .FirstOrDefault();
             if (!Yorickghost && ally != null && config.Item("user").GetValue<bool>() && R.IsInRange(ally) && R.IsReady())
             {
