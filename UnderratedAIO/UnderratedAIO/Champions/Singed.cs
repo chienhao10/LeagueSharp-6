@@ -219,6 +219,11 @@ namespace UnderratedAIO.Champions
                     W.Cast(targ, config.Item("packets").GetValue<bool>());
                 }
             }
+            if (config.Item("singedFlee", true).GetValue<KeyBind>().Active)
+            {
+                Orbwalking.MoveTo(Game.CursorPos);
+                CastQ();
+            }
         }
 
         private void Throw()
@@ -521,6 +526,10 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Cast E to interrupt spells", true)).SetValue(true);
             menuM.AddItem(new MenuItem("GapCloser", "Throw back gapclosers", true)).SetValue(true);
             menuM.AddItem(new MenuItem("OnDash", "Cast E on escape dash", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("singedFlee", "Flee", true))
+                .SetValue(new KeyBind("F".ToCharArray()[0], KeyBindType.Press))
+                .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
+            menuC.AddItem(new MenuItem("targRange", "Target indicator", true)).SetValue(new Slider(300, 20, 600));
             menuM = Jungle.addJungleOptions(menuM);
 
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
