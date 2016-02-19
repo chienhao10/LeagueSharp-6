@@ -363,12 +363,6 @@ namespace UnderratedAIO.Champions
 
             damage += ItemHandler.GetItemsDamage(hero);
 
-            if ((Items.HasItem(ItemHandler.Bft.Id) && Items.CanUseItem(ItemHandler.Bft.Id)) ||
-                (Items.HasItem(ItemHandler.Dfg.Id) && Items.CanUseItem(ItemHandler.Dfg.Id)))
-            {
-                damage = (float) (damage * 1.2);
-            }
-
             var ignitedmg = player.GetSummonerSpellDamage(hero, Damage.SummonerSpell.Ignite);
             if (player.Spellbook.CanUseSpell(player.GetSpellSlot("summonerdot")) == SpellState.Ready &&
                 hero.Health < damage + ignitedmg)
