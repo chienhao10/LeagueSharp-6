@@ -21,16 +21,16 @@ namespace UnderratedAIO.Champions
         {
             InitMenu();
             Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Underrated AIO Common</font>");
-            Drawing.OnDraw += Game_OnDraw;
-            Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();
+            Game.OnUpdate += Game_OnGameUpdate;
+            Drawing.OnDraw += Game_OnDraw;
             Console.WriteLine(ObjectManager.Player.ChampionName);
         }
 
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            if (config.Item("Enabledorb").GetValue<bool>())
+            if (config.Item("Enabledorb", true).GetValue<bool>())
             {
                 orbwalker.Enabled = true;
             }
@@ -47,11 +47,6 @@ namespace UnderratedAIO.Champions
                         Combo();
                         break;
                     case Orbwalking.OrbwalkingMode.Mixed:
-                        Console.WriteLine(player.GetBuffCount("talentreaperdisplay"));
-                        foreach (var i in player.InventoryItems)
-                        {
-                            Console.WriteLine(i.IData.TranslatedDisplayName + ": " + (int) i.Id);
-                        }
                         break;
                     case Orbwalking.OrbwalkingMode.LaneClear:
                         break;
