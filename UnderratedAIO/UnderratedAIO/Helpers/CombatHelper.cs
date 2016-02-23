@@ -311,44 +311,29 @@ namespace UnderratedAIO.Helpers
 
         public static bool CheckCriticalBuffs(Obj_AI_Hero i)
         {
-            double dmg = 0;
-            foreach (var buff in i.Buffs)
-            {
-                BuffData b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name);
-                if (b != null)
-                {
-                    dmg += b.GetdTotalBuffDamage(i, buff);
-                }
-            }
+            double dmg = (from buff in i.Buffs
+                let b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name)
+                where b != null
+                select b.GetdTotalBuffDamage(i, buff)).Sum();
 
             return dmg > i.Health;
         }
 
         public static bool CheckCriticalBuffsNextSec(Obj_AI_Hero i)
         {
-            double dmg = 0;
-            foreach (var buff in i.Buffs)
-            {
-                BuffData b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name);
-                if (b != null)
-                {
-                    dmg += b.GetDamageAfterTime(i, buff, 1f);
-                }
-            }
+            double dmg = (from buff in i.Buffs
+                let b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name)
+                where b != null
+                select b.GetDamageAfterTime(i, buff, 1f)).Sum();
             return dmg > i.Health;
         }
 
         public static float BuffRemainingDamage(Obj_AI_Hero i)
         {
-            double dmg = 0;
-            foreach (var buff in i.Buffs)
-            {
-                BuffData b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name);
-                if (b != null)
-                {
-                    dmg += b.GetDamageRemainingDamage(i, buff);
-                }
-            }
+            double dmg = (from buff in i.Buffs
+                let b = BuffsList.FirstOrDefault(bd => bd.BuffName == buff.Name)
+                where b != null
+                select b.GetDamageRemainingDamage(i, buff)).Sum();
             return (float) dmg;
         }
 

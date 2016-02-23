@@ -54,7 +54,7 @@ namespace UnderratedAIO.Champions
             WSkillShot = new Spell(SpellSlot.W, 900);
             WSkillShot.SetSkillshot(0.5f, 80, 900, true, SkillshotType.SkillshotLine);
 
-            W = new Spell(SpellSlot.W, 250);
+            W = new Spell(SpellSlot.W, 235);
             W.SetTargetted(0.5f, float.MaxValue);
             E = new Spell(SpellSlot.E);
             R = new Spell(SpellSlot.R, 1700);
@@ -222,7 +222,7 @@ namespace UnderratedAIO.Champions
                 }
 
                 lastWtarget = Team.Enemy;
-                W.CastOnUnit(target, true);
+                W.CastOnUnit(target);
             }
         }
 

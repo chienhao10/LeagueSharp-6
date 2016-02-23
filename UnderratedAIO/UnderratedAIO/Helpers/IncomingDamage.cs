@@ -19,7 +19,7 @@ namespace UnderratedAIO.Helpers
         public List<IncData> IncomingDamagesAlly = new List<IncData>();
         public List<IncData> IncomingDamagesEnemy = new List<IncData>();
         public float Globalreset;
-        public bool enabled;
+        public bool enabled, skillShotChecked;
         //public List<Skillshot> SkillShots = new List<Skillshot>();
 
         public IncData GetAllyData(int networkId)
@@ -84,68 +84,77 @@ namespace UnderratedAIO.Helpers
 
         private void CheckSkillShots()
         {
-            for (int i = 0; i < SkillshotDetector.ActiveSkillshots.Count; i++)
+            if (!skillShotChecked)
             {
-                foreach (var Hero in
-                    HeroManager.AllHeroes.OrderBy(h => h.Distance(SkillshotDetector.ActiveSkillshots[i].Caster)))
+                skillShotChecked = true;
+                Utility.DelayAction.Add(70, () => skillShotChecked = false);
+                for (int i = 0; i < SkillshotDetector.ActiveSkillshots.Count; i++)
                 {
-                    SkillshotDetector.ActiveSkillshots[i].Game_OnGameUpdate();
-                    if (SkillshotDetector.ActiveSkillshots[i].Caster.NetworkId != Hero.NetworkId &&
-                        SkillshotDetector.ActiveSkillshots[i].Caster.Team != Hero.Team &&
-                        !SkillshotDetector.ActiveSkillshots[i].IsSafePath(
-                            0, -1, SkillshotDetector.ActiveSkillshots[i].SkillshotData.Delay, Hero).IsSafe &&
-                        Hero.IsValidTarget(1500, false, Hero.Position) &&
-                        SkillshotDetector.ActiveSkillshots[i].IsAboutToHit(
-                            350, Hero, SkillshotDetector.ActiveSkillshots[i].Caster) &&
-                        !CombatHelper.BuffsList.Any(
+                    if (
+                        CombatHelper.BuffsList.Any(
                             b =>
                                 SkillshotDetector.ActiveSkillshots[i].SkillshotData.Slot == b.Slot &&
                                 ((Obj_AI_Hero) SkillshotDetector.ActiveSkillshots[i].Caster).ChampionName ==
                                 b.ChampionName))
                     {
-                        var data =
-                            IncomingDamagesAlly.Concat(IncomingDamagesEnemy)
-                                .FirstOrDefault(h => h.Hero.NetworkId == Hero.NetworkId);
-                        var missileSpeed = (SkillshotDetector.ActiveSkillshots[i].Caster.Distance(Hero) /
-                                            SkillshotDetector.ActiveSkillshots[i].SkillshotData.MissileSpeed) +
-                                           SkillshotDetector.ActiveSkillshots[i].SkillshotData.Delay;
-                        missileSpeed = missileSpeed > 5f ? 5f : missileSpeed;
-                        var newData = new Dmg(
-                            Hero,
-                            (float)
-                                Damage.GetSpellDamage(
-                                    (Obj_AI_Hero) SkillshotDetector.ActiveSkillshots[i].Caster, Hero,
-                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.Slot), missileSpeed * 1.5f,
-                            false, false, SkillshotDetector.ActiveSkillshots[i]);
-                        if (data == null ||
-                            data.Damages.Any(
-                                d =>
-                                    d.SkillShot != null &&
-                                    d.SkillShot.Caster == SkillshotDetector.ActiveSkillshots[i].Caster &&
-                                    d.SkillShot.SkillshotData.SpellName ==
-                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName && d.Target == Hero))
+                        SkillshotDetector.ActiveSkillshots.RemoveAt(i);
+                        break;
+                    }
+                    foreach (var Hero in
+                        HeroManager.AllHeroes.Where(
+                            h =>
+                                h.Distance(SkillshotDetector.ActiveSkillshots[i].Caster) <
+                                SkillshotDetector.ActiveSkillshots[i].SkillshotData.Range)
+                            .OrderBy(h => h.Distance(SkillshotDetector.ActiveSkillshots[i].Caster)))
+                    {
+                        SkillshotDetector.ActiveSkillshots[i].Game_OnGameUpdate();
+                        if (SkillshotDetector.ActiveSkillshots[i].Caster.NetworkId != Hero.NetworkId &&
+                            SkillshotDetector.ActiveSkillshots[i].Caster.Team != Hero.Team &&
+                            !SkillshotDetector.ActiveSkillshots[i].IsSafePath(
+                                0, -1, SkillshotDetector.ActiveSkillshots[i].SkillshotData.Delay, Hero).IsSafe &&
+                            Hero.IsValidTarget(1500, false, Hero.Position) &&
+                            SkillshotDetector.ActiveSkillshots[i].IsAboutToHit(
+                                350, Hero, SkillshotDetector.ActiveSkillshots[i].Caster))
                         {
-                            continue;
-                        }
-                        if (data != null && data.Hero != Hero)
-                        {
-                            if (
-                                SkillshotDetector.ActiveSkillshots[i].SkillshotData.CollisionObjects.Count(
-                                    c => c != CollisionObjectTypes.YasuoWall) > 0)
+                            var data =
+                                IncomingDamagesAlly.Concat(IncomingDamagesEnemy)
+                                    .FirstOrDefault(h => h.Hero.NetworkId == Hero.NetworkId);
+                            var missileSpeed = (SkillshotDetector.ActiveSkillshots[i].Caster.Distance(Hero) /
+                                                SkillshotDetector.ActiveSkillshots[i].SkillshotData.MissileSpeed) +
+                                               SkillshotDetector.ActiveSkillshots[i].SkillshotData.Delay / 1000f;
+                            missileSpeed = missileSpeed > 5f ? 5f : missileSpeed;
+                            var newData = new Dmg(
+                                Hero,
+                                (float)
+                                    Damage.GetSpellDamage(
+                                        (Obj_AI_Hero) SkillshotDetector.ActiveSkillshots[i].Caster, Hero,
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.Slot), missileSpeed * 1.5f,
+                                false, false, SkillshotDetector.ActiveSkillshots[i]);
+                            if (data == null ||
+                                data.Damages.Any(
+                                    d =>
+                                        d.SkillShot != null &&
+                                        d.SkillShot.Caster == SkillshotDetector.ActiveSkillshots[i].Caster &&
+                                        d.SkillShot.SkillshotData.SpellName ==
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName &&
+                                        d.Target == Hero))
                             {
-                                data.Damages.Add(newData);
-                                /*Console.WriteLine(
-                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " -> " + Hero.Name +
-                                    " - " + SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);*/
-                                SkillshotDetector.ActiveSkillshots.RemoveAt(i);
-                                break;
+                                continue;
                             }
-                            else
+                            if (data != null && data.Hero != Hero)
                             {
-                                data.Damages.Add(newData);
-                                /* Console.WriteLine(
-                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " -> " + Hero.Name +
-                                    " - " + SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);*/
+                                if (
+                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.CollisionObjects.Count(
+                                        c => c != CollisionObjectTypes.YasuoWall) > 0)
+                                {
+                                    data.Damages.Add(newData);
+                                    SkillshotDetector.ActiveSkillshots.RemoveAt(i);
+                                    break;
+                                }
+                                else
+                                {
+                                    data.Damages.Add(newData);
+                                }
                             }
                         }
                     }
