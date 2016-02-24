@@ -146,8 +146,8 @@ namespace UnderratedAIO.Champions
                 moveClone();
             }
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
-            if (config.Item("userCC", true).GetValue<bool>() && R.IsReady() && player.Distance(target) < Q.Range &&
-                data.AnyCC)
+            if (config.Item("userCC", true).GetValue<bool>() && R.IsReady() && target != null &&
+                player.Distance(target) < Q.Range && data.AnyCC)
             {
                 R.Cast();
             }
