@@ -114,7 +114,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(autolvlM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("Enabledcomm", "Enable Utilies")).SetValue(true);
-            config.AddItem(new MenuItem("Enabledorb", "Enable OrbWalker", true)).SetValue(true);
+            config.AddItem(new MenuItem("Enabledorb", "Enable OrbWalker", true)).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
