@@ -128,8 +128,8 @@ namespace UnderratedAIO.Helpers
                                 (float)
                                     Damage.GetSpellDamage(
                                         (Obj_AI_Hero) SkillshotDetector.ActiveSkillshots[i].Caster, Hero,
-                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.Slot), missileSpeed * 1.5f,
-                                false, false, SkillshotDetector.ActiveSkillshots[i]);
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.Slot), missileSpeed, false,
+                                false, SkillshotDetector.ActiveSkillshots[i]);
                             if (data == null ||
                                 data.Damages.Any(
                                     d =>
@@ -148,12 +148,20 @@ namespace UnderratedAIO.Helpers
                                         c => c != CollisionObjectTypes.YasuoWall) > 0)
                                 {
                                     data.Damages.Add(newData);
+                                    Console.WriteLine(
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " -> " +
+                                        Hero.Name + " - " +
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);
                                     SkillshotDetector.ActiveSkillshots.RemoveAt(i);
                                     break;
                                 }
                                 else
                                 {
                                     data.Damages.Add(newData);
+                                    Console.WriteLine(
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " -> " +
+                                        Hero.Name + " - " +
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);
                                 }
                             }
                         }
@@ -203,7 +211,7 @@ namespace UnderratedAIO.Helpers
                         {
                             var missileSpeed = (sender.Distance(target) / args.SData.MissileSpeed) +
                                                args.SData.SpellCastTime;
-                            missileSpeed = missileSpeed > 1f ? 0.8f : missileSpeed * 1.5f;
+                            missileSpeed = missileSpeed > 1f ? 0.8f : missileSpeed;
                             if (Orbwalking.IsAutoAttack(args.SData.Name))
                             {
                                 var dmg =
@@ -306,7 +314,11 @@ namespace UnderratedAIO.Helpers
 
         public bool IsAboutToDie
         {
-            get { return Hero.Health < DamageTaken || CombatHelper.CheckCriticalBuffsNextSec(Hero); }
+            get
+            {
+                return (Hero.Health < DamageTaken ||
+                        CombatHelper.CheckCriticalBuffsNextSec(Hero) && !CombatHelper.IsInvulnerable2(Hero));
+            }
         }
 
         public IncData(Obj_AI_Hero _hero)

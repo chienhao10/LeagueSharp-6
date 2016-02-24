@@ -751,6 +751,12 @@ namespace UnderratedAIO.Helpers
             }
         }
 
+
+        public static bool IsInvulnerable2(Obj_AI_Hero unit)
+        {
+            return invulnerable.Any(s => unit.HasBuff(s));
+        }
+
         #endregion
 
         internal static int CountEnemiesInRangeAfterTime(Vector3 pos, float range, float delay, bool nowToo)
@@ -787,7 +793,7 @@ namespace UnderratedAIO.Helpers
             new BuffData("Malzahar", "AlZaharMaleficVisions", SpellSlot.E, 8, 4),
             new BuffData("Fizz", "fizzmarinerdoombomb", SpellSlot.R, 1, 1.5f),
             new BuffData("Karthus", "karthusfallenonecastsound", SpellSlot.R, 1, 2f),
-            new BuffData("Caitlyn", "CaitlynAceintheHole", SpellSlot.R, 1, 1f),
+            new BuffData("Caitlyn", "CaitlynAceintheHole", SpellSlot.R, 1, 1.1f),
             new BuffData("Zed", "zedulttargetmark", SpellSlot.R, 1, 2f),
             new BuffData("Zilean", "zileanqenemybomb", SpellSlot.R, 1, 2f),
             new BuffData("Vladimir", "VladimirHemoplague", SpellSlot.R, 1, 4f)
