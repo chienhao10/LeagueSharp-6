@@ -113,6 +113,21 @@ namespace AutoJungle
 
                     Console.WriteLine("Jax loaded");
                     break;
+                case "XinZhao":
+                    Hero = ObjectManager.Player;
+                    Type = BuildType.AS;
+
+                    Q = new Spell(SpellSlot.Q);
+                    W = new Spell(SpellSlot.W);
+                    E = new Spell(SpellSlot.E, 600);
+                    R = new Spell(SpellSlot.R, 450f);
+
+                    Autolvl = new AutoLeveler(new int[] { 0, 1, 2, 0, 0, 3, 0, 2, 0, 2, 3, 2, 2, 1, 1, 3, 1, 1 });
+
+                    JungleClear = XinJungleClear;
+                    Combo = XinCombo;
+                    Console.WriteLine("Xin Zhao loaded");
+                    break;
                 default:
                     Console.WriteLine(ObjectManager.Player.ChampionName + " not supported");
                     break;
@@ -143,6 +158,75 @@ namespace AutoJungle
                 (targetHero.Distance(Hero) > Orbwalking.GetRealAutoAttackRange(targetHero) || Hero.HealthPercent < 40))
             {
                 Q.CastOnUnit(targetHero);
+            }
+            Hero.IssueOrder(GameObjectOrder.AttackUnit, targetHero);
+            return false;
+        }
+
+        private bool XinJungleClear()
+        {
+            var targetMob = Program._GameInfo.Target;
+            var structure = Helpers.CheckStructure();
+            if (structure != null)
+            {
+                Hero.IssueOrder(GameObjectOrder.AttackUnit, structure);
+                return false;
+            }
+            if (targetMob == null)
+            {
+                return false;
+            }
+            if (W.IsReady() && targetMob.IsValidTarget(300) && (Hero.ManaPercent > 60 || Hero.HealthPercent < 50))
+            {
+                W.Cast();
+            }
+            ItemHandler.UseItemsJungle();
+            if (Q.IsReady() && targetMob.IsValidTarget(300))
+            {
+                Q.Cast();
+            }
+            if (E.IsReady() && E.CanCast(targetMob) && (Hero.ManaPercent > 60 || Hero.HealthPercent < 50))
+            {
+                E.CastOnUnit(targetMob);
+            }
+            if (Hero.IsWindingUp)
+            {
+                return false;
+            }
+            Hero.IssueOrder(GameObjectOrder.AttackUnit, targetMob);
+            return false;
+        }
+
+        private bool XinCombo()
+        {
+            var targetHero = Program._GameInfo.Target;
+            if (targetHero == null)
+            {
+                return false;
+            }
+            if (R.IsReady() && Hero.Distance(targetHero) < R.Range && targetHero.HasBuff("xenzhaointimidate") &&
+                targetHero.Health > R.GetDamage(targetHero) + Hero.GetAutoAttackDamage(targetHero, true) * 4)
+            {
+                R.Cast();
+            }
+            if (W.IsReady() && targetHero.IsValidTarget(300))
+            {
+                W.Cast();
+            }
+            ItemHandler.UseItemsCombo(targetHero, !E.IsReady());
+            if (Hero.IsWindingUp)
+            {
+                return false;
+            }
+            if (Q.IsReady() && targetHero.Distance(Hero) < Orbwalking.GetRealAutoAttackRange(targetHero) + 50)
+            {
+                Q.Cast();
+            }
+            if (E.IsReady() && E.CanCast(targetHero) &&
+                (Hero.HealthPercent < 40 || targetHero.Distance(Hero) > Orbwalking.GetRealAutoAttackRange(targetHero) ||
+                 Prediction.GetPrediction(targetHero, 1f).UnitPosition.UnderTurret(true)))
+            {
+                E.CastOnUnit(targetHero);
             }
             Hero.IssueOrder(GameObjectOrder.AttackUnit, targetHero);
             return false;
