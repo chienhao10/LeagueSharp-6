@@ -12,7 +12,7 @@ using LeagueSharp.Common;
 using System.Net;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
-using System.Web.Script.Serialization;
+using System.Web;
 using System.Windows.Forms;
 using Menu = LeagueSharp.Common.Menu;
 using MenuItem = LeagueSharp.Common.MenuItem;
@@ -443,10 +443,14 @@ namespace ChatTranslator
             {
                 key = yandexApiKeys[keyIndex];
             }
+            text = text.Replace("\"", "");
+            text = text.Replace("\'", "");
+            text = HttpUtility.UrlEncode(text);
             strServerURL = yandexUrl + key + "&lang=" + lang + "&text=" + text;
             url = string.Format(strServerURL, fromCulture, toCulture, text.Replace(' ', '+'));
             byte[] bytessss = Encoding.Default.GetBytes(url);
             url = Encoding.UTF8.GetString(bytessss);
+            Console.WriteLine(url);
             string html = "";
             Uri uri = new Uri(url);
             try
