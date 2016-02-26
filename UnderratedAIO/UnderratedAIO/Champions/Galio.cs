@@ -8,6 +8,7 @@ using System.Text;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
@@ -184,11 +185,17 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
-                Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    Q.SPredictionCast(target, hitC);
+                else
+                    Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("useeH", true).GetValue<bool>() && E.CanCast(target))
             {
-                E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    E.SPredictionCast(target, hitC);
+                else
+                    E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
             }
         }
 
@@ -266,11 +273,17 @@ namespace UnderratedAIO.Champions
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) &&
                 player.Distance(target) < config.Item("useqRange", true).GetValue<Slider>().Value)
             {
-                Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    Q.SPredictionCast(target, hitC);
+                else
+                    Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target))
             {
-                E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    E.SPredictionCast(target, hitC);
+                else
+                    E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
             }
         }
 
@@ -462,6 +475,7 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

@@ -4,6 +4,7 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
@@ -108,7 +109,10 @@ namespace UnderratedAIO.Champions
                 ((dist < config.Item("useeMaxRange").GetValue<Slider>().Value &&
                   dist > config.Item("useeMinRange").GetValue<Slider>().Value) || target.Health < ComboDamage(target)))
             {
-                E.Cast(target, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    E.SPredictionCast(target, HitChance.High);
+                else
+                    E.Cast(target, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("user").GetValue<bool>() && R.CanCast(target) &&
                 (!config.Item("ult" + target.SkinName).GetValue<bool>() || player.CountEnemiesInRange(1500) == 1) &&
@@ -159,7 +163,10 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useeH").GetValue<bool>() && E.CanCast(target))
             {
-                E.Cast(target, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    E.SPredictionCast(target, HitChance.High);
+                else
+                    E.Cast(target, config.Item("packets").GetValue<bool>());
             }
         }
 
@@ -222,7 +229,7 @@ namespace UnderratedAIO.Champions
             Q = new Spell(SpellSlot.Q, 325);
             W = new Spell(SpellSlot.W);
             E = new Spell(SpellSlot.E, 985);
-            E.SetSkillshot(0.5f, 60, 1200, false, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.25f, 70, 1500, false, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, 325);
         }
 
@@ -302,6 +309,7 @@ namespace UnderratedAIO.Champions
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddItem(new MenuItem("Interrupt", "Use R interrupt")).SetValue(true);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
 
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

@@ -6,10 +6,12 @@ using System.Text;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
+using Prediction = LeagueSharp.Common.Prediction;
 
 namespace UnderratedAIO.Champions
 {
@@ -485,21 +487,28 @@ namespace UnderratedAIO.Champions
 
         private void CastE(Obj_AI_Hero target, bool edge = true, int minHits = 1)
         {
-            if (player.CountEnemiesInRange(E.Range + 175) <= 1)
+            if (Program.IsSPrediction)
             {
-                var targE = E.GetPrediction(target);
-                var pos = targE.CastPosition;
-                if (pos.IsValid() && pos.Distance(player.Position) < E.Range && targE.Hitchance >= HitChance.VeryHigh)
-                {
-                    E.Cast(edge ? pos.Extend(player.Position, 375) : pos, config.Item("packets").GetValue<bool>());
-                }
+                E.SPredictionCastRing(target, 80, HitChance.High, edge);
             }
             else
             {
-                var targE = getBestEVector3(target, minHits);
-                if (targE != Vector3.Zero)
+                if (player.CountEnemiesInRange(E.Range + 175) <= 1)
                 {
-                    E.Cast(targE, config.Item("packets").GetValue<bool>());
+                    var targE = E.GetPrediction(target);
+                    var pos = targE.CastPosition;
+                    if (pos.IsValid() && pos.Distance(player.Position) < E.Range && targE.Hitchance >= HitChance.VeryHigh)
+                    {
+                        E.Cast(edge ? pos.Extend(player.Position, 375) : pos, config.Item("packets").GetValue<bool>());
+                    }
+                }
+                else
+                {
+                    var targE = getBestEVector3(target, minHits);
+                    if (targE != Vector3.Zero)
+                    {
+                        E.Cast(targE, config.Item("packets").GetValue<bool>());
+                    }
                 }
             }
         }
@@ -515,11 +524,20 @@ namespace UnderratedAIO.Champions
 
         private void CastQHero(Obj_AI_Hero target)
         {
-            var targQ = Q.GetPrediction(target, true);
-            var collision = Q.GetCollision(player.Position.To2D(), new List<Vector2>() { targQ.CastPosition.To2D() });
-            if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && collision.Count < 2)
+            if (Program.IsSPrediction)
             {
-                Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                var pred = Q.GetSPrediction(target);
+                if (pred.CollisionResult.Units.Count < 2)
+                    Q.Cast(pred.CastPosition, config.Item("packets").GetValue<bool>());
+            }
+            else
+            {
+                var targQ = Q.GetPrediction(target, true);
+                var collision = Q.GetCollision(player.Position.To2D(), new List<Vector2>() { targQ.CastPosition.To2D() });
+                if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && collision.Count < 2)
+                {
+                    Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                }
             }
         }
 
@@ -778,6 +796,7 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

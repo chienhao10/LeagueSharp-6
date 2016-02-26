@@ -4,6 +4,7 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using SharpDX.Direct3D9;
 using UnderratedAIO.Helpers;
@@ -109,10 +110,17 @@ namespace UnderratedAIO.Champions
 
         private void CastR(Obj_AI_Hero target)
         {
-            var pred = R.GetPrediction(target);
-            if (pred.Hitchance >= HitChance.High)
+            if (Program.IsSPrediction)
             {
-                R.Cast(player.Position.Extend(pred.CastPosition, R.Range), config.Item("packets").GetValue<bool>());
+                R.SPredictionCast(target, HitChance.High);
+            }
+            else
+            {
+                var pred = R.GetPrediction(target);
+                if (pred.Hitchance >= HitChance.High)
+                {
+                    R.Cast(player.Position.Extend(pred.CastPosition, R.Range), config.Item("packets").GetValue<bool>());
+                }
             }
         }
 
@@ -376,6 +384,7 @@ namespace UnderratedAIO.Champions
 
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM.AddItem(new MenuItem("useegc", "Use E gapclosers", true)).SetValue(false);
+            menuM.AddSubMenu(Program.SPredictionMenu);
             Menu menuE = new Menu("Auto E ", "Esettings");
             menuE.AddItem(new MenuItem("autoECC", "Before CC", true)).SetValue(true);
             menuE.AddItem(new MenuItem("autoEdmg", "Before Damage in % Health", true)).SetValue(new Slider(20, 1, 100));

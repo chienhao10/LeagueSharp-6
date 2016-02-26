@@ -5,10 +5,12 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
+using Prediction = LeagueSharp.Common.Prediction;
 
 namespace UnderratedAIO.Champions
 {
@@ -63,9 +65,15 @@ namespace UnderratedAIO.Champions
         {
             if (E.CanCast(target) && config.Item("useEint", true).GetValue<bool>())
             {
-                if (E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
+                if (Program.IsSPrediction)
                 {
-                    return;
+                    if (E.SPredictionCast(target, HitChance.High))
+                        return;
+                }
+                else
+                {
+                    if (E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
+                        return;
                 }
             }
             if (R.CanCast(target) && config.Item("useRint", true).GetValue<bool>())
@@ -206,7 +214,10 @@ namespace UnderratedAIO.Champions
             }
             if (Q.CanCast(target) && config.Item("useqH", true).GetValue<bool>() && savedQ == null && SimpleQ)
             {
-                Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    Q.SPredictionCast(target, HitChance.High);
+                else
+                    Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>());
             }
             if (Q.IsReady() && config.Item("useqH", true).GetValue<bool>() && savedQ != null &&
                 target.Distance(savedQ.position) < QExplosionRange)
@@ -329,9 +340,15 @@ namespace UnderratedAIO.Champions
             var rqCombo = R.GetDamage(target) + getQdamage(target) + (hasIgnite ? ignitedmg : 0);
             if (Q.CanCast(target) && config.Item("useq", true).GetValue<bool>() && savedQ == null && SimpleQ)
             {
-                if (Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>()))
+                if (Program.IsSPrediction)
                 {
-                    return;
+                    if (Q.SPredictionCast(target, HitChance.High))
+                        return;
+                }
+                else
+                {
+                    if (Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>()))
+                        return;
                 }
             }
             if (Q.IsReady() && config.Item("useq", true).GetValue<bool>() && savedQ != null &&
@@ -555,7 +572,10 @@ namespace UnderratedAIO.Champions
         {
             if (cmbdmg < 0f)
             {
-                E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    E.SPredictionCast(target, HitChance.High);
+                else
+                    E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
                 return;
             }
             if (R.IsReady() && target.Health > cmbdmg - R.GetDamage(target) &&
@@ -565,7 +585,10 @@ namespace UnderratedAIO.Champions
             }
             else
             {
-                E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    E.SPredictionCast(target, HitChance.High);
+                else
+                    E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
             }
         }
 
@@ -743,6 +766,7 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
