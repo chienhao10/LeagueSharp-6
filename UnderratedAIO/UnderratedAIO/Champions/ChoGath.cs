@@ -4,6 +4,7 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
@@ -267,29 +268,39 @@ namespace UnderratedAIO.Champions
                         hitC = HitChance.VeryHigh;
                         break;
                 }
-                var pred = Q.GetPrediction(target);
-                if (pred.Hitchance >= hitC)
+                if (Program.IsSPrediction)
                 {
-                    if (target.IsMoving)
+                    Q.SPredictionCast(target, hitC);
+                }
+                else
+                {
+                    var pred = Q.GetPrediction(target);
+                    if (pred.Hitchance >= hitC)
                     {
-                        if (pred.CastPosition.Distance(target.ServerPosition) > 250f)
+                        if (target.IsMoving)
                         {
-                            Q.Cast(target.Position.Extend(pred.CastPosition, 250f));
+                            if (pred.CastPosition.Distance(target.ServerPosition) > 250f)
+                            {
+                                Q.Cast(target.Position.Extend(pred.CastPosition, 250f));
+                            }
+                            else
+                            {
+                                Q.Cast(pred.CastPosition);
+                            }
                         }
                         else
                         {
-                            Q.Cast(pred.CastPosition);
+                            Q.CastIfHitchanceEquals(target, hitC);
                         }
-                    }
-                    else
-                    {
-                        Q.CastIfHitchanceEquals(target, hitC);
                     }
                 }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.CanCast(target))
             {
-                W.Cast(target, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    W.SPredictionCast(target, HitChance.High);
+                else
+                    W.Cast(target, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("UseFlashC", true).GetValue<bool>() && !flashRblock && R.IsReady() && hasFlash &&
                 !CombatHelper.CheckCriticalBuffs(target) && player.GetSpell(SpellSlot.R).ManaCost <= player.Mana &&
@@ -448,6 +459,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("useRSJ", "Use R+Smite", true)).SetValue(false);
             menuM.AddItem(new MenuItem("priorizeSmite", "Use smite if possible", true)).SetValue(false);
             menuM.AddItem(new MenuItem("useFlashJ", "Use Flash+R to steal buffs", true)).SetValue(true);
+            menuM.AddSubMenu(Program.SPredictionMenu);
 
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using UnderratedAIO.Helpers;
 using Color = System.Drawing.Color;
@@ -253,7 +254,10 @@ namespace UnderratedAIO.Champions
                 var hits = Q.GetHitCount(HitChance.High);
                 if (target.CountEnemiesInRange(Q.Width) >= hits)
                 {
-                    Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    if (Program.IsSPrediction)
+                        Q.SPredictionCast(target, HitChance.High);
+                    else
+                        Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
                 }
             }
             bool hasIgnite = me.Spellbook.CanUseSpell(me.GetSpellSlot("SummonerDot")) == SpellState.Ready;
@@ -385,6 +389,7 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(sulti);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
+            config.AddSubMenu(Program.SPredictionMenu);
             config.AddToMainMenu();
         }
     }

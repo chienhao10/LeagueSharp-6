@@ -4,6 +4,7 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using SharpDX.Direct3D9;
 using UnderratedAIO.Helpers;
@@ -352,11 +353,17 @@ namespace UnderratedAIO.Champions
             if (player.Distance(target) <= Orbwalking.GetRealAutoAttackRange(target) && !Orbwalking.CanAttack() &&
                 Orbwalking.CanMove(100) && target.GetBuffCount("TahmKenchPDebuffCounter") != 2)
             {
-                Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    Q.SPredictionCast(target, hitChance);
+                else
+                    Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
             }
             else if (player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
             {
-                Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    Q.SPredictionCast(target, hitChance);
+                else
+                    Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
             }
         }
 
@@ -510,6 +517,7 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

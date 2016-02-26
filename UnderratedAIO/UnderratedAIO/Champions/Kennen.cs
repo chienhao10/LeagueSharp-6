@@ -6,6 +6,7 @@ using System.Runtime.Remoting.Messaging;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using SharpDX.Win32;
 using UnderratedAIO.Helpers;
@@ -270,7 +271,10 @@ namespace UnderratedAIO.Champions
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) && Orbwalking.CanMove(100) &&
                 !target.IsDashing())
             {
-                Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                if (Program.IsSPrediction)
+                    Q.SPredictionCast(target, HitChance.High);
+                else
+                    Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
             {
@@ -462,6 +466,7 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
 
             Menu autoQ = new Menu("Auto Harass", "autoQ");
             autoQ.AddItem(

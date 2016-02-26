@@ -6,10 +6,12 @@ using System.Threading;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using UnderratedAIO.Helpers;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
+using Prediction = LeagueSharp.Common.Prediction;
 
 namespace UnderratedAIO.Champions
 {
@@ -271,32 +273,39 @@ namespace UnderratedAIO.Champions
 
         private void HandleR(Obj_AI_Base target, bool manual = false)
         {
-            var targE = R.GetPrediction(target);
-            if ((config.Item("user", true).GetValue<bool>() && player.CountEnemiesInRange(R.Range + 175) <= 1) || manual)
+            if (Program.IsSPrediction)
             {
-                if (target.IsMoving)
+                R.SPredictionCastVector(target as Obj_AI_Hero, 1000f, HitChance.High);
+            }
+            else
+            {
+                var targE = R.GetPrediction(target);
+                if ((config.Item("user", true).GetValue<bool>() && player.CountEnemiesInRange(R.Range + 175) <= 1) || manual)
                 {
-                    var pos = targE.CastPosition;
-                    if (pos.IsValid() && pos.Distance(player.Position) < R.Range + 1000 &&
-                        targE.Hitchance >= HitChance.VeryHigh)
+                    if (target.IsMoving)
                     {
-                        R.Cast(target.Position.Extend(pos, -target.MoveSpeed), pos);
+                        var pos = targE.CastPosition;
+                        if (pos.IsValid() && pos.Distance(player.Position) < R.Range + 1000 &&
+                            targE.Hitchance >= HitChance.VeryHigh)
+                        {
+                            R.Cast(target.Position.Extend(pos, -target.MoveSpeed), pos);
+                        }
+                    }
+                    else
+                    {
+                        R.Cast(target.Position.Extend(player.Position, 500), target.Position);
                     }
                 }
-                else
+                else if (targE.Hitchance >= HitChance.VeryHigh)
                 {
-                    R.Cast(target.Position.Extend(player.Position, 500), target.Position);
-                }
-            }
-            else if (targE.Hitchance >= HitChance.VeryHigh)
-            {
-                var pred = getBestRVector3(target, targE);
-                if (pred != Vector3.Zero &&
-                    CombatHelper.GetCollisionCount(
-                        target, target.Position.Extend(pred, 1000), R.Width, new[] { CollisionableObjects.Heroes, }) >=
-                    config.Item("Rmin", true).GetValue<Slider>().Value)
-                {
-                    R.Cast(target.Position.Extend(pred, -target.MoveSpeed), pred);
+                    var pred = getBestRVector3(target, targE);
+                    if (pred != Vector3.Zero &&
+                        CombatHelper.GetCollisionCount(
+                            target, target.Position.Extend(pred, 1000), R.Width, new[] { CollisionableObjects.Heroes, }) >=
+                        config.Item("Rmin", true).GetValue<Slider>().Value)
+                    {
+                        R.Cast(target.Position.Extend(pred, -target.MoveSpeed), pred);
+                    }
                 }
             }
         }
@@ -452,6 +461,7 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

@@ -6,6 +6,7 @@ using System.Linq;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
+using SPrediction;
 using SharpDX;
 using UnderratedAIO.Helpers;
 using UnderratedAIO.Helpers.SkillShot;
@@ -154,21 +155,35 @@ namespace UnderratedAIO.Champions
                 var canHArass = priortarg != null && !(priortarg is Obj_AI_Hero);
                 if (canHArass || (!canHArass && miniPred == null))
                 {
-                    var targQ = Q.GetPrediction(target);
-                    if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) &&
-                        targQ.Hitchance >= HitChance.High)
+                    if (Program.IsSPrediction)
                     {
-                        Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
+                        Q.SPredictionCast(target, HitChance.High);
+                    }
+                    else
+                    {
+                        var targQ = Q.GetPrediction(target);
+                        if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) &&
+                            targQ.Hitchance >= HitChance.High)
+                        {
+                            Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
+                        }
                     }
                 }
             }
             if (config.Item("usewH", true).GetValue<bool>() && W.IsReady())
             {
-                var tarPered = W.GetPrediction(target);
-                if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
-                    tarPered.Hitchance >= HitChance.High)
+                if (Program.IsSPrediction)
                 {
-                    W.Cast(tarPered.CastPosition, config.Item("packets").GetValue<bool>());
+                    W.SPredictionCast(target, HitChance.High);
+                }
+                else
+                {
+                    var tarPered = W.GetPrediction(target);
+                    if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
+                        tarPered.Hitchance >= HitChance.High)
+                    {
+                        W.Cast(tarPered.CastPosition, config.Item("packets").GetValue<bool>());
+                    }
                 }
             }
         }
@@ -213,21 +228,37 @@ namespace UnderratedAIO.Champions
             if (config.Item("useq", true).GetValue<bool>() && Q.IsReady() && Orbwalking.CanMove(100) &&
                 target.IsValidTarget() && !justJumped)
             {
-                var targQ = Q.GetPrediction(target);
-                if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && targQ.Hitchance >= HitChance.High)
+                if (Program.IsSPrediction)
                 {
-                    Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
+                    Q.SPredictionCast(target, HitChance.High);
                     return;
+                }
+                else
+                {
+                    var targQ = Q.GetPrediction(target);
+                    if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && targQ.Hitchance >= HitChance.High)
+                    {
+                        Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
+                        return;
+                    }
                 }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && Orbwalking.CanMove(100) && !justJumped &&
                 (cmbDmg + player.GetAutoAttackDamage(target) > target.Health || player.Mana > Q.Instance.ManaCost * 2))
             {
-                var tarPered = W.GetPrediction(target);
-                if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position))
+                if (Program.IsSPrediction)
                 {
-                    W.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    W.SPredictionCast(target, HitChance.High);
                     return;
+                }
+                else
+                {
+                    var tarPered = W.GetPrediction(target);
+                    if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position))
+                    {
+                        W.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                        return;
+                    }
                 }
             }
             if (R.IsReady() && !justJumped)
@@ -487,6 +518,7 @@ namespace UnderratedAIO.Champions
                 .SetValue(new Slider(1, 1, 100));
             menuLH.AddItem(new MenuItem("minmanaLH", "Keep X% mana", true)).SetValue(new Slider(1, 1, 100));
             config.AddSubMenu(menuLH);
+            //Misc
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = Jungle.addJungleOptions(menuM);
 
@@ -495,6 +527,8 @@ namespace UnderratedAIO.Champions
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
+            menuM.AddSubMenu(Program.SPredictionMenu);
+            //Auto Harass
             Menu autoQ = new Menu("Auto Harass", "autoQ");
             autoQ.AddItem(
                 new MenuItem("EzAutoQ", "Auto Q toggle", true).SetShared()
