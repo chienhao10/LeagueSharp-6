@@ -450,7 +450,6 @@ namespace ChatTranslator
             url = string.Format(strServerURL, fromCulture, toCulture, text.Replace(' ', '+'));
             byte[] bytessss = Encoding.Default.GetBytes(url);
             url = Encoding.UTF8.GetString(bytessss);
-            Console.WriteLine(url);
             string html = "";
             Uri uri = new Uri(url);
             try
