@@ -65,6 +65,15 @@ namespace UnderratedAIO.Helpers
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            try
+            {
+                //Remove the detected skillshots that have expired.
+                SkillshotDetector.ActiveSkillshots.RemoveAll(s => !s.IsActive);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
             if (ObjectManager.Player.IsDead)
             {
                 resetAllData();
@@ -119,9 +128,9 @@ namespace UnderratedAIO.Helpers
                             var data =
                                 IncomingDamagesAlly.Concat(IncomingDamagesEnemy)
                                     .FirstOrDefault(h => h.Hero.NetworkId == Hero.NetworkId);
-                            var missileSpeed = (SkillshotDetector.ActiveSkillshots[i].Caster.Distance(Hero) /
-                                                SkillshotDetector.ActiveSkillshots[i].SkillshotData.MissileSpeed) +
-                                               SkillshotDetector.ActiveSkillshots[i].SkillshotData.Delay / 1000f;
+                            var missileSpeed =
+                                (SkillshotDetector.ActiveSkillshots[i].GetMissilePosition(0).Distance(Hero) /
+                                 SkillshotDetector.ActiveSkillshots[i].SkillshotData.MissileSpeed);
                             missileSpeed = missileSpeed > 5f ? 5f : missileSpeed;
                             var newData = new Dmg(
                                 Hero,
@@ -134,10 +143,12 @@ namespace UnderratedAIO.Helpers
                                 data.Damages.Any(
                                     d =>
                                         d.SkillShot != null &&
-                                        d.SkillShot.Caster == SkillshotDetector.ActiveSkillshots[i].Caster &&
+                                        d.SkillShot.Caster.NetworkId ==
+                                        SkillshotDetector.ActiveSkillshots[i].Caster.NetworkId &&
                                         d.SkillShot.SkillshotData.SpellName ==
                                         SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName &&
-                                        d.Target == Hero))
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.PossibleTargets.Any(
+                                            h => h == Hero.NetworkId)))
                             {
                                 continue;
                             }
@@ -147,21 +158,25 @@ namespace UnderratedAIO.Helpers
                                     SkillshotDetector.ActiveSkillshots[i].SkillshotData.CollisionObjects.Count(
                                         c => c != CollisionObjectTypes.YasuoWall) > 0)
                                 {
-                                    data.Damages.Add(newData);
-                                    Console.WriteLine(
+                                    /* Console.WriteLine(
                                         SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " -> " +
                                         Hero.Name + " - " +
-                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);*/
+                                    data.Damages.Add(newData);
+                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.PossibleTargets.Add(
+                                        Hero.NetworkId);
                                     SkillshotDetector.ActiveSkillshots.RemoveAt(i);
                                     break;
                                 }
                                 else
                                 {
-                                    data.Damages.Add(newData);
-                                    Console.WriteLine(
-                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " -> " +
+                                    /*Console.WriteLine(
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.SpellName + " --> " +
                                         Hero.Name + " - " +
-                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);
+                                        SkillshotDetector.ActiveSkillshots[i].SkillshotData.IsDangerous);*/
+                                    data.Damages.Add(newData);
+                                    SkillshotDetector.ActiveSkillshots[i].SkillshotData.PossibleTargets.Add(
+                                        Hero.NetworkId);
                                 }
                             }
                         }
@@ -234,7 +249,7 @@ namespace UnderratedAIO.Helpers
                                             SpellDatabase.CcList.Any(
                                                 cc =>
                                                     cc.Slot == args.Slot &&
-                                                    cc.Champion.ChampionName == target.ChampionName)));
+                                                    cc.Champion.ChampionName == hero.ChampionName)));
                                 }
                             }
                         }

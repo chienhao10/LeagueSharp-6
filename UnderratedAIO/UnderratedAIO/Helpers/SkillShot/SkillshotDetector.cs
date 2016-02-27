@@ -43,22 +43,9 @@ namespace UnderratedAIO.Helpers.SkillShot
 
                 GameObject.OnCreate += GameObject_OnCreate;
                 GameObject.OnDelete += GameObject_OnDelete;
-                Game.OnUpdate += OnGameUpdate;
             }
         }
 
-        private static void OnGameUpdate(EventArgs args)
-        {
-            try
-            {
-                //Remove the detected skillshots that have expired.
-                ActiveSkillshots.RemoveAll(s => !s.IsActive);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
 
         /// <summary>
         ///     Returns true if the point is not inside the detected skillshots.

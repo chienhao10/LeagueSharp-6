@@ -131,15 +131,15 @@ namespace UnderratedAIO.Champions
                     }
                     if (CheckCasting(allies[i]) && !allies[i].IsInvulnerable)
                     {
-                        if (config.Item("EatUnderHealthP" + allies[i].ChampionName, true).GetValue<Slider>().Value >
-                            allies[i].HealthPercent && allyData.DamageTaken > 50 ||
-                            allyData.DamageTaken > allies[i].Health && allies[i].Spellbook.IsCastingSpell)
+                        if (((config.Item("EatUnderHealthP" + allies[i].ChampionName, true).GetValue<Slider>().Value >
+                              allies[i].HealthPercent && allyData.ProjectileDamageTaken > 50) ||
+                             allyData.ProjectileDamageTaken > allies[i].Health) && !allies[i].Spellbook.IsCastingSpell)
                         {
                             lastWtarget = Team.Ally;
                             W.CastOnUnit(allies[i], true);
                         }
 
-                        if (allyData.DamageTaken >
+                        if (allyData.ProjectileDamageTaken >
                             allies[i].Health *
                             config.Item("EatDamage" + allies[i].ChampionName, true).GetValue<Slider>().Value / 100)
                         {
@@ -152,7 +152,7 @@ namespace UnderratedAIO.Champions
                             W.CastOnUnit(allies[i], true);
                         }
                         if (config.Item("ontargetedCC" + allies[i].ChampionName, true).GetValue<bool>() &&
-                            allyData.DamageTaken > 50 &&
+                            allyData.ProjectileDamageTaken > 50 &&
                             (allies[i].HasBuffOfType(BuffType.Knockup) || allies[i].HasBuffOfType(BuffType.Fear) ||
                              allies[i].HasBuffOfType(BuffType.Flee) || allies[i].HasBuffOfType(BuffType.Stun) ||
                              allies[i].HasBuffOfType(BuffType.Snare)))
@@ -354,16 +354,24 @@ namespace UnderratedAIO.Champions
                 Orbwalking.CanMove(100) && target.GetBuffCount("TahmKenchPDebuffCounter") != 2)
             {
                 if (Program.IsSPrediction)
+                {
                     Q.SPredictionCast(target, hitChance);
+                }
                 else
+                {
                     Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
+                }
             }
             else if (player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
             {
                 if (Program.IsSPrediction)
+                {
                     Q.SPredictionCast(target, hitChance);
+                }
                 else
+                {
                     Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
+                }
             }
         }
 

@@ -831,6 +831,10 @@ namespace UnderratedAIO.Helpers
         {
             var caster = buff.Caster as Obj_AI_Hero;
             var SpelLevel = caster.Spellbook.GetSpell(Slot).Level;
+            if (caster.Spellbook.GetSpell(Slot).Level <= 0)
+            {
+                return 0;
+            }
             if (Slot != SpellSlot.Unknown)
             {
                 return Damage.GetSpellDamage(caster, target, Slot, Stage) * Multiplier;

@@ -236,7 +236,8 @@ namespace UnderratedAIO.Champions
                 else
                 {
                     var targQ = Q.GetPrediction(target);
-                    if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && targQ.Hitchance >= HitChance.High)
+                    if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) &&
+                        targQ.Hitchance >= HitChance.High)
                     {
                         Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
                         return;

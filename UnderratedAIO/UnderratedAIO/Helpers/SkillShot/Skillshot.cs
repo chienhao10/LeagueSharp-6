@@ -99,8 +99,10 @@ namespace UnderratedAIO.Helpers.SkillShot
         public string SpellName;
         public string ToggleParticleName = "";
         public SkillShotType Type;
+        public List<int> PossibleTargets = new List<int>();
         private int _radius;
         private int _range;
+
 
         public SkillshotData() {}
 
@@ -470,6 +472,10 @@ namespace UnderratedAIO.Helpers.SkillShot
         {
             if (SkillshotData.Type == SkillShotType.SkillshotMissileLine)
             {
+                if (!SkillshotData.IsDangerous)
+                {
+                    time = time / 2;
+                }
                 var missilePos = GetMissilePosition(0);
                 var missilePosAfterT = GetMissilePosition(time);
 
