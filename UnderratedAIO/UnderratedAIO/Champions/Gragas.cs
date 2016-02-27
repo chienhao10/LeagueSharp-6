@@ -68,12 +68,16 @@ namespace UnderratedAIO.Champions
                 if (Program.IsSPrediction)
                 {
                     if (E.SPredictionCast(target, HitChance.High))
+                    {
                         return;
+                    }
                 }
                 else
                 {
                     if (E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
+                    {
                         return;
+                    }
                 }
             }
             if (R.CanCast(target) && config.Item("useRint", true).GetValue<bool>())
@@ -185,7 +189,14 @@ namespace UnderratedAIO.Champions
                         Prediction.GetPrediction(target, 0.2f).UnitPosition.Distance(savedQ.position) <
                         500 + QExplosionRange / 2)
                     {
-                        E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                        if (Program.IsSPrediction)
+                        {
+                            E.SPredictionCast(target, HitChance.High);
+                        }
+                        else
+                        {
+                            E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                        }
                     }
                     if (savedQ != null && !SimpleQ /*&& target.Distance(qPos) > QExplosionRange*/&&
                         target.Distance(player) < R.Range - 100 &&
@@ -215,9 +226,13 @@ namespace UnderratedAIO.Champions
             if (Q.CanCast(target) && config.Item("useqH", true).GetValue<bool>() && savedQ == null && SimpleQ)
             {
                 if (Program.IsSPrediction)
+                {
                     Q.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>());
+                }
             }
             if (Q.IsReady() && config.Item("useqH", true).GetValue<bool>() && savedQ != null &&
                 target.Distance(savedQ.position) < QExplosionRange)
@@ -343,12 +358,16 @@ namespace UnderratedAIO.Champions
                 if (Program.IsSPrediction)
                 {
                     if (Q.SPredictionCast(target, HitChance.High))
+                    {
                         return;
+                    }
                 }
                 else
                 {
                     if (Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>()))
+                    {
                         return;
+                    }
                 }
             }
             if (Q.IsReady() && config.Item("useq", true).GetValue<bool>() && savedQ != null &&
@@ -573,9 +592,13 @@ namespace UnderratedAIO.Champions
             if (cmbdmg < 0f)
             {
                 if (Program.IsSPrediction)
+                {
                     E.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                }
                 return;
             }
             if (R.IsReady() && target.Health > cmbdmg - R.GetDamage(target) &&
@@ -586,9 +609,13 @@ namespace UnderratedAIO.Champions
             else
             {
                 if (Program.IsSPrediction)
+                {
                     E.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                }
             }
         }
 
