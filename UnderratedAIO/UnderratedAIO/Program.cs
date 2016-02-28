@@ -34,9 +34,9 @@ namespace UnderratedAIO
             try
             {
                 SPredictionMenu = SPrediction.Prediction.Initialize();
-                SPredictionMenu.Item("PREDICTONLIST")
-                    .SetValue(new StringList(new[] { "SPrediction", "Common Predicion" }, 1));
-                    //set default to common prediction
+                /* SPredictionMenu.Item("PREDICTONLIST")
+                    .SetValue(new StringList(new[] { "SPrediction", "Common Predicion" }, 1));*/
+                //set default to common prediction
                 var type = Type.GetType("UnderratedAIO.Champions." + player.ChampionName);
                 if (type != null)
                 {
