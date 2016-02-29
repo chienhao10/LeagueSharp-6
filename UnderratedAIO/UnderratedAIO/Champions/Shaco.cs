@@ -330,7 +330,7 @@ namespace UnderratedAIO.Champions
 
         private static bool ShacoClone
         {
-            get { return player.Spellbook.GetSpell(SpellSlot.R).Name == "hallucinateguide"; }
+            get { return player.Spellbook.GetSpell(SpellSlot.R).Name == "HallucinateGuide"; }
         }
 
         private static bool ShacoStealth
