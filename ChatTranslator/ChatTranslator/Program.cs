@@ -28,9 +28,9 @@ namespace ChatTranslator
         public static String[] fromArray = new String[]
         {
             "auto", "af", "sq", "ar", "hy", "az", "eu", "be", "bs", "bg", "ca", "zh", "hr", "cs", "da", "nl", "en", "et",
-            "fi", "fr", "gl", "ka", "de", "el", "ht", "hu", "is", "id", "ga", "it", "kk", "ko", "ky", "la", "lv", "lt",
-            "mk", "mg", "ms", "mt", "mn", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "tl",
-            "tg", "tt", "th", "tr", "uk", "uz", "vi", "cy", "he"
+            "fi", "fr", "gl", "ka", "de", "el", "ht", "hu", "is", "id", "ga", "it", "ja", "kk", "ko", "ky", "la", "lv",
+            "lt", "mk", "mg", "ms", "mt", "mn", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv",
+            "tl", "tg", "tt", "th", "tr", "uk", "uz", "vi", "cy", "he"
         };
 
         public static String[] fromArrayMenu = new String[]
@@ -38,18 +38,18 @@ namespace ChatTranslator
             "auto", "Afrikaans", "Albanian", "Arabic", "Armenian", "Azerbaijan", "Basque", "Belarusian", "Bosnian",
             "Bulgarian", "Catalan", "Chinese", "Croatian", "Czech", "Danish", "Dutch", "English", "Estonian", "Finish",
             "French", "Galician", "Georgian", "German", "Greek", "Haitian", "Hungarian", "Icelandic", "Indonesian",
-            "Irish", "Italian", "Kazakh", "Korean", "Kyrgyz", "Latin", "Latvian", "Lithuanian", "Macedonian", "Malagasy",
-            "Malay", "Maltese", "Mongolian", "Norwegian", "Persian", "Polish", "Portuguese", "Romanian", "Russian",
-            "Serbian", "Slovakian", "Slovenian", "Spanish", "Swahili", "Swedish", "Tagalog", "Tajik", "Tatar", "Thai",
-            "Turkish", "Ukrainian", "Uzbek", "Vietnamese", "Welsh", "Yiddish"
+            "Irish", "Italian", "Japanese", "Kazakh", "Korean", "Kyrgyz", "Latin", "Latvian", "Lithuanian", "Macedonian",
+            "Malagasy", "Malay", "Maltese", "Mongolian", "Norwegian", "Persian", "Polish", "Portuguese", "Romanian",
+            "Russian", "Serbian", "Slovakian", "Slovenian", "Spanish", "Swahili", "Swedish", "Tagalog", "Tajik", "Tatar",
+            "Thai", "Turkish", "Ukrainian", "Uzbek", "Vietnamese", "Welsh", "Yiddish"
         };
 
         public static String[] toArray = new String[]
         {
             "af", "sq", "ar", "hy", "az", "eu", "be", "bs", "bg", "ca", "zh", "hr", "cs", "da", "nl", "en", "et", "fi",
-            "fr", "gl", "ka", "de", "el", "ht", "hu", "is", "id", "ga", "it", "kk", "ko", "ky", "la", "lv", "lt", "mk",
-            "mg", "ms", "mt", "mn", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "tl", "tg",
-            "tt", "th", "tr", "uk", "uz", "vi", "cy", "he"
+            "fr", "gl", "ka", "de", "el", "ht", "hu", "is", "id", "ga", "it", "ja", "kk", "ko", "ky", "la", "lv", "lt",
+            "mk", "mg", "ms", "mt", "mn", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "tl",
+            "tg", "tt", "th", "tr", "uk", "uz", "vi", "cy", "he"
         };
 
         public static String[] toArrayMenu = new String[]
@@ -57,10 +57,10 @@ namespace ChatTranslator
             "Afrikaans", "Albanian", "Arabic", "Armenian", "Azerbaijan", "Basque", "Belarusian", "Bosnian", "Bulgarian",
             "Catalan", "Chinese", "Croatian", "Czech", "Danish", "Dutch", "English", "Estonian", "Finish", "French",
             "Galician", "Georgian", "German", "Greek", "Haitian", "Hungarian", "Icelandic", "Indonesian", "Irish",
-            "Italian", "Kazakh", "Korean", "Kyrgyz", "Latin", "Latvian", "Lithuanian", "Macedonian", "Malagasy", "Malay",
-            "Maltese", "Mongolian", "Norwegian", "Persian", "Polish", "Portuguese", "Romanian", "Russian", "Serbian",
-            "Slovakian", "Slovenian", "Spanish", "Swahili", "Swedish", "Tagalog", "Tajik", "Tatar", "Thai", "Turkish",
-            "Ukrainian", "Uzbek", "Vietnamese", "Welsh", "Yiddish"
+            "Italian", "Japanese", "Kazakh", "Korean", "Kyrgyz", "Latin", "Latvian", "Lithuanian", "Macedonian",
+            "Malagasy", "Malay", "Maltese", "Mongolian", "Norwegian", "Persian", "Polish", "Portuguese", "Romanian",
+            "Russian", "Serbian", "Slovakian", "Slovenian", "Spanish", "Swahili", "Swedish", "Tagalog", "Tajik", "Tatar",
+            "Thai", "Turkish", "Ukrainian", "Uzbek", "Vietnamese", "Welsh", "Yiddish"
         };
 
         public static String[] SpecChars = new String[] { "bg", "zh-CN", "zh-TW", "ru", "ko", "uk" };
@@ -443,13 +443,13 @@ namespace ChatTranslator
             {
                 key = yandexApiKeys[keyIndex];
             }
+            byte[] bytessss = Encoding.Default.GetBytes(text);
+            text = Encoding.UTF8.GetString(bytessss);
             text = text.Replace("\"", "");
             text = text.Replace("\'", "");
             text = HttpUtility.UrlEncode(text);
             strServerURL = yandexUrl + key + "&lang=" + lang + "&text=" + text;
             url = string.Format(strServerURL, fromCulture, toCulture, text.Replace(' ', '+'));
-            byte[] bytessss = Encoding.Default.GetBytes(url);
-            url = Encoding.UTF8.GetString(bytessss);
             string html = "";
             Uri uri = new Uri(url);
             try
