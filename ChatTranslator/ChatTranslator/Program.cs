@@ -443,8 +443,8 @@ namespace ChatTranslator
             {
                 key = yandexApiKeys[keyIndex];
             }
-            byte[] bytessss = Encoding.Default.GetBytes(text);
-            text = Encoding.UTF8.GetString(bytessss);
+            byte[] bytessss = Encoding.UTF8.GetBytes(text);
+            text = Encoding.Default.GetString(bytessss);
             text = text.Replace("\"", "");
             text = text.Replace("\'", "");
             text = HttpUtility.UrlEncode(text);
