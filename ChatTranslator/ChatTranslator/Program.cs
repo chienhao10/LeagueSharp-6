@@ -143,6 +143,7 @@ namespace ChatTranslator
                     }
                     test("hello");
                 });
+            Config.Item("Debug").SetValue(false);
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -266,6 +267,24 @@ namespace ChatTranslator
             return Encoding.Default.GetString(bytes);
         }
 
+        private static string setEncodingUni(string data)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            return Encoding.Unicode.GetString(bytes);
+        }
+
+        private static string setEncodingTo(string data, int cp)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            return Encoding.GetEncoding(cp).GetString(bytes);
+        }
+
+        private static string setEncodingFrom(string data, int cp)
+        {
+            byte[] bytes = Encoding.GetEncoding(cp).GetBytes(data);
+            return Encoding.UTF8.GetString(bytes);
+        }
+
         private static void InitText()
         {
             if (!File.Exists(path + fileName))
@@ -315,6 +334,7 @@ namespace ChatTranslator
                 {
                     Game.PrintChat(translated);
                 }
+                Debug(translated);
             }
             else
             {
@@ -415,6 +435,7 @@ namespace ChatTranslator
                 string to = toArray[Config.Item("OutTo").GetValue<StringList>().SelectedIndex];
                 string x = "";
                 x += await TranslateYandex(text, from, to, false);
+                Debug(x);
                 x = setEncodingDefault(x);
                 if (all)
                 {
@@ -425,6 +446,22 @@ namespace ChatTranslator
                     Game.Say(x);
                 }
             }
+        }
+
+        private static void Debug(string x)
+        {
+            if (!Config.Item("Debug").GetValue<bool>())
+            {
+                return;
+            }
+            Game.PrintChat("Your default Code Page is: " + Encoding.Default.CodePage);
+            Utility.DelayAction.Add(200, () => { Game.PrintChat("Code Page to 949: " + setEncodingTo(x, 949)); });
+            Utility.DelayAction.Add(300, () => { Game.PrintChat("Code Page to 932: " + setEncodingTo(x, 932)); });
+            Utility.DelayAction.Add(400, () => { Game.PrintChat("Code Page to UTF8: " + setEncodingUTF8(x)); });
+            Utility.DelayAction.Add(500, () => { Game.PrintChat("Code Page to Default: " + setEncodingDefault(x)); });
+            Utility.DelayAction.Add(600, () => { Game.PrintChat("Code Page to Unicode: " + setEncodingUni(x)); });
+            Utility.DelayAction.Add(700, () => { Game.PrintChat("Code Page 949 to UTF8: " + setEncodingFrom(x, 949)); });
+            Utility.DelayAction.Add(800, () => { Game.PrintChat("Code Page 932 to UTF8: " + setEncodingFrom(x, 932)); });
         }
 
         private static async Task<string> TranslateYandex(string text, string fromCulture, string toCulture, bool langs)
@@ -443,8 +480,8 @@ namespace ChatTranslator
             {
                 key = yandexApiKeys[keyIndex];
             }
-            byte[] bytessss = Encoding.UTF8.GetBytes(text);
-            text = Encoding.Default.GetString(bytessss);
+            byte[] bytessss = Encoding.Default.GetBytes(text);
+            text = Encoding.UTF8.GetString(bytessss);
             text = text.Replace("\"", "");
             text = text.Replace("\'", "");
             text = HttpUtility.UrlEncode(text);
@@ -631,6 +668,7 @@ namespace ChatTranslator
             position.AddItem(new MenuItem("Vertical", "Vertical").SetValue(new Slider(500, 1, 2000)));
             position.AddItem(new MenuItem("AutoShow", "Show on message").SetValue(true));
             position.AddItem(new MenuItem("Duration", "   Duration").SetValue(new Slider(3000, 1000, 8000)));
+            position.AddItem(new MenuItem("Debug", "Debug").SetValue(false));
             translator.AddSubMenu(position);
             translator.AddItem(new MenuItem("Check", "Check").SetValue(new KeyBind(32, KeyBindType.Press)));
             Config.AddSubMenu(translator);
