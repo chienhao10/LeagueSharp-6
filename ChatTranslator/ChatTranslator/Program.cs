@@ -457,6 +457,7 @@ namespace ChatTranslator
             Game.PrintChat("Your default Code Page is: " + Encoding.Default.CodePage);
             Utility.DelayAction.Add(200, () => { Game.PrintChat("Code Page to 949: " + setEncodingTo(x, 949)); });
             Utility.DelayAction.Add(300, () => { Game.PrintChat("Code Page to 932: " + setEncodingTo(x, 932)); });
+            Utility.DelayAction.Add(350, () => { Game.PrintChat("Code Page to 1250: " + setEncodingTo(x, 1250)); });
             Utility.DelayAction.Add(400, () => { Game.PrintChat("Code Page to UTF8: " + setEncodingUTF8(x)); });
             Utility.DelayAction.Add(500, () => { Game.PrintChat("Code Page to Default: " + setEncodingDefault(x)); });
             Utility.DelayAction.Add(600, () => { Game.PrintChat("Code Page to Unicode: " + setEncodingUni(x)); });
