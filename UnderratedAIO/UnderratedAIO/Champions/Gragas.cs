@@ -129,7 +129,7 @@ namespace UnderratedAIO.Champions
             Q.SetSkillshot(0.3f, 110f, 1000f, false, SkillshotType.SkillshotCircle);
             W = new Spell(SpellSlot.W, 0);
             E = new Spell(SpellSlot.E, 600);
-            E.SetSkillshot(0.5f, 50, 1200, true, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.5f, 250, 1200, true, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, 1050);
             R.SetSkillshot(0.25f, 300, 1750, false, SkillshotType.SkillshotCircle);
         }
@@ -788,7 +788,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("useRint", "Use R interrupt", true)).SetValue(false);
             menuM.AddItem(new MenuItem("usewgc", "Use W gapclosers", true)).SetValue(false);
             menuM.AddItem(new MenuItem("useegc", "Use E gapclosers", true)).SetValue(true);
-            menuM.AddItem(new MenuItem("autoQ", "Auto Q", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("autoQ", "Auto detonate Q", true)).SetValue(true);
             menuM = Jungle.addJungleOptions(menuM);
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
