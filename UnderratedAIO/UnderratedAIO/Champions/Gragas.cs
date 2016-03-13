@@ -21,8 +21,8 @@ namespace UnderratedAIO.Champions
         public static AutoLeveler autoLeveler;
         public static Spell Q, W, E, R;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
-        public static bool justQ, useIgnite, justE, canUlt;
-        public Vector3 qPos, lastpos;
+        public static bool justQ, useIgnite, justE, canUlt, justR;
+        public Vector3 qPos, rPos;
         public const int QExplosionRange = 300;
         public static GragasQ savedQ = null;
         public double[] Rwave = new double[] { 50, 70, 90 };
@@ -183,30 +183,47 @@ namespace UnderratedAIO.Champions
                     player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
                     return;
                 }
+                CastE(target);
                 if (savedQ != null)
                 {
-                    if (E.CanCast(target) &&
-                        Prediction.GetPrediction(target, 0.2f).UnitPosition.Distance(savedQ.position) <
-                        500 + QExplosionRange / 2)
-                    {
-                        if (Program.IsSPrediction)
-                        {
-                            E.SPredictionCast(target, HitChance.High);
-                        }
-                        else
-                        {
-                            E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
-                        }
-                    }
                     if (savedQ != null && !SimpleQ /*&& target.Distance(qPos) > QExplosionRange*/&&
                         target.Distance(player) < R.Range - 100 &&
                         target.Position.Distance(savedQ.position) < 550 + QExplosionRange / 2)
                     {
                         HandeR(target, savedQ.position, true);
                     }
-                    DetonateQ();
                 }
-                Orbwalking.Orbwalk(target, Game.CursorPos, 90, 90);
+                else
+                {
+                    castInsec(target);
+                }
+
+                Orbwalking.MoveTo(Game.CursorPos);
+                DetonateQ();
+            }
+        }
+
+        private void castInsec(Obj_AI_Hero target)
+        {
+            if (Q.IsReady())
+            {
+                var pred = R.GetPrediction(target);
+                if (R.IsReady() &&
+                    target.Buffs.Any(
+                        buff =>
+                            buff.Type == BuffType.Snare || buff.Type == BuffType.Stun ||
+                            buff.Type == BuffType.Suppression || buff.Type == BuffType.Knockup))
+                {
+                    if (pred.Hitchance >= HitChance.Medium &&
+                        pred.CastPosition.Distance(player.Position) < R.Range - 150)
+                    {
+                        R.Cast(pred.CastPosition.Extend(player.Position, -150));
+                    }
+                }
+                if (justR && rPos.IsValid())
+                {
+                    Q.Cast(rPos.Extend(pred.UnitPosition, 550 + QExplosionRange / 2f));
+                }
             }
         }
 
@@ -364,7 +381,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    if (Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>()))
+                    if (Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
                     {
                         return;
                     }
@@ -379,7 +396,7 @@ namespace UnderratedAIO.Champions
             {
                 if (E.CanCast(target))
                 {
-                    CastE(target, combodmg);
+                    CastE(target);
                 }
             }
             if (W.IsReady() && (!SimpleQ || !Q.IsReady()) && config.Item("usew", true).GetValue<bool>() &&
@@ -417,6 +434,13 @@ namespace UnderratedAIO.Champions
                         HandeR(target, savedQ.position, true);
                         return;
                     }
+                }
+
+                if (config.Item("rtoq", true).GetValue<bool>() && logic &&
+                    (target.Distance(qPos) > QExplosionRange ||
+                     (target.Health < rqCombo && target.Health > getQdamage(target))))
+                {
+                    castInsec(target);
                 }
                 if (config.Item("rtoally", true).GetValue<bool>() && logic &&
                     target.Health - rqCombo < target.MaxHealth * 0.5f)
@@ -587,9 +611,9 @@ namespace UnderratedAIO.Champions
             return false;
         }
 
-        private void CastE(Obj_AI_Hero target, float cmbdmg = -1f)
+        private void CastE(Obj_AI_Hero target)
         {
-            if (cmbdmg < 0f)
+            if (E.CanCast(target))
             {
                 if (Program.IsSPrediction)
                 {
@@ -597,24 +621,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
-                }
-                return;
-            }
-            if (R.IsReady() && target.Health > cmbdmg - R.GetDamage(target) &&
-                target.Health < cmbdmg + ItemHandler.GetItemsDamage(target))
-            {
-                //wait
-            }
-            else
-            {
-                if (Program.IsSPrediction)
-                {
-                    E.SPredictionCast(target, HitChance.High);
-                }
-                else
-                {
-                    E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, HitChance.High);
                 }
             }
         }
@@ -718,13 +725,27 @@ namespace UnderratedAIO.Champions
                 }
                 if (args.SData.Name == "GragasE")
                 {
-                    var dist = player.Distance(args.End);
                     if (!justE)
                     {
                         justE = true;
+                        var dist = player.Distance(args.End);
                         Utility.DelayAction.Add(
-                            (int) ((dist > E.Range ? E.Range : dist / E.Speed * 1000) - player.BoundingRadius),
+                            (int) Math.Min(((dist > E.Range ? E.Range : dist) / E.Speed * 1000f), 250),
                             () => justE = false);
+                    }
+                }
+                if (args.Slot == SpellSlot.R)
+                {
+                    if (!justR)
+                    {
+                        justR = true;
+                        rPos = args.End;
+                        Utility.DelayAction.Add(
+                            300, () =>
+                            {
+                                justR = false;
+                                rPos = Vector3.Zero;
+                            });
                     }
                 }
             }
