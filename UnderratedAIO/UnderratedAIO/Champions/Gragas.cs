@@ -205,7 +205,7 @@ namespace UnderratedAIO.Champions
 
         private void castInsec(Obj_AI_Hero target)
         {
-            if (Q.IsReady())
+            if (Q.IsReady() && SimpleQ)
             {
                 var pred = R.GetPrediction(target);
                 if (R.IsReady() &&
