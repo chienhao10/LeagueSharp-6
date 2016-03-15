@@ -475,7 +475,6 @@ namespace UnderratedAIO.Helpers
             {
                 localExtraWindup = 200;
             }
-
             return NoCancelChamps.Contains(_championName) ||
                    (Utils.GameTimeTickCount + Game.Ping / 2 >=
                     LastAATick + Player.AttackCastDelay * 1000 + extraWindup + localExtraWindup);
@@ -650,6 +649,11 @@ namespace UnderratedAIO.Helpers
                         Obj_AI_Hero tar = (Obj_AI_Hero) target;
                         var prediction = AutoAttack.GetPrediction((Obj_AI_Base) target);
                         var pos = prediction.UnitPosition;
+                        if (Player.ChampionName == "Nocturne" &&
+                            (tar.HasBuffOfType(BuffType.Fear) || tar.HasBuffOfType(BuffType.Flee)))
+                        {
+                            pos = tar.ServerPosition.Extend(Player.ServerPosition, GetRealAutoAttackRange(tar));
+                        }
                         if (Player.Distance(target) > target.BoundingRadius &&
                             !CombatHelper.IsFacing((Obj_AI_Base) target, Player.Position, 120f) && tar.IsMoving)
                         {

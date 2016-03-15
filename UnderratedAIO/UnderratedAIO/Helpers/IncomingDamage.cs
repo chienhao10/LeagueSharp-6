@@ -245,7 +245,7 @@ namespace UnderratedAIO.Helpers
                                         new Dmg(
                                             target,
                                             (float) Damage.GetSpellDamage(hero, (Obj_AI_Base) args.Target, args.Slot),
-                                            missileSpeed,
+                                            missileSpeed, false,
                                             SpellDatabase.CcList.Any(
                                                 cc =>
                                                     cc.Slot == args.Slot &&
@@ -296,10 +296,7 @@ namespace UnderratedAIO.Helpers
 
         public bool AnyCC
         {
-            get
-            {
-                return Damages.Any(d => d.TargetedCC || (d.SkillShot != null && d.SkillShot.SkillshotData.IsDangerous));
-            }
+            get { return AnyTargetedCC || AnySkillShotCC; }
         }
 
         public bool AnyTargetedCC
