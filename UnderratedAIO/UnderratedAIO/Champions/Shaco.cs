@@ -96,13 +96,11 @@ namespace UnderratedAIO.Champions
             {
                 var ksTarget =
                     HeroManager.Enemies.FirstOrDefault(
-                        h =>
-                            h.IsValidTarget() && !h.Buffs.Any(b => CombatHelper.invulnerable.Contains(b.Name)) &&
-                            h.Health < E.GetDamage(h));
+                        h => h.IsValidTarget() && !CombatHelper.IsInvulnerable2(h) && h.Health < E.GetDamage(h));
                 if (ksTarget != null)
                 {
                     if ((config.Item("ks", true).GetValue<bool>() || config.Item("ksq", true).GetValue<bool>()) &&
-                        E.CanCast(ksTarget) && player.Mana > E.Instance.ManaCost)
+                        E.CanCast(ksTarget))
                     {
                         E.Cast(ksTarget);
                     }
