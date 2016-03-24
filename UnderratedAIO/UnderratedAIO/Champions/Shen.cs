@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using SPrediction;
 using UnderratedAIO.Helpers;
 using Color = System.Drawing.Color;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
@@ -254,8 +256,9 @@ namespace UnderratedAIO.Champions
                         i =>
                             i.IsAlly && !i.IsMe && !i.IsDead &&
                             ((((Program.IncDamages.GetAllyData(i.NetworkId).DamageTaken > i.Health ||
-                                i.Health * 100 / i.MaxHealth <= config.Item("atpercent", true).GetValue<Slider>().Value) &&
-                               player.CountEnemiesInRange(700) > 0) ||
+                                (i.Health - Program.IncDamages.GetAllyData(i.NetworkId).DamageTaken) * 100f /
+                                i.MaxHealth <= config.Item("atpercent", true).GetValue<Slider>().Value) &&
+                               i.CountEnemiesInRange(700) > 0) ||
                               Program.IncDamages.GetAllyData(i.NetworkId).SkillShotDamage > i.Health))))
 
             {
@@ -340,39 +343,81 @@ namespace UnderratedAIO.Champions
 
         private static void CastETarget(Obj_AI_Hero target)
         {
-            var pred = E.GetPrediction(target);
-            var poly = CombatHelper.GetPoly(pred.UnitPosition, E.Range, E.Width);
-            var enemiesBehind =
-                HeroManager.Enemies.Count(
-                    e =>
-                        e.NetworkId != target.NetworkId && e.IsValidTarget(E.Range) &&
-                        (poly.IsInside(E.GetPrediction(e).UnitPosition) || poly.IsInside(e.Position)) &&
-                        e.Position.Distance(player.Position) > player.Distance(pred.UnitPosition));
-            if (pred.Hitchance >= HitChance.High)
+            if (Program.IsSPrediction)
             {
-                if (enemiesBehind > 0)
+                var pred = E.GetPrediction(target);
+                var poly = CombatHelper.GetPoly(pred.UnitPosition, E.Range, E.Width);
+                var enemiesBehind =
+                    HeroManager.Enemies.Count(
+                        e =>
+                            e.NetworkId != target.NetworkId && e.IsValidTarget(E.Range) &&
+                            (poly.IsInside(E.GetPrediction(e).UnitPosition) || poly.IsInside(e.Position)) &&
+                            e.Position.Distance(player.Position) > player.Distance(pred.UnitPosition));
+                if (pred.Hitchance >= HitChance.High)
                 {
-                    E.Cast(
-                        player.ServerPosition.Extend(pred.CastPosition, E.Range),
-                        config.Item("packets").GetValue<bool>());
-                }
-                else
-                {
-                    if (poly.IsInside(pred.UnitPosition) && poly.IsInside(target.Position))
+                    if (enemiesBehind > 0)
                     {
                         E.Cast(
-                            player.ServerPosition.Extend(
-                                pred.CastPosition,
-                                player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                            player.ServerPosition.Extend(pred.CastPosition, E.Range),
                             config.Item("packets").GetValue<bool>());
                     }
                     else
                     {
+                        if (poly.IsInside(pred.UnitPosition) && poly.IsInside(target.Position))
+                        {
+                            E.Cast(
+                                player.ServerPosition.Extend(
+                                    pred.CastPosition,
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                                config.Item("packets").GetValue<bool>());
+                        }
+                        else
+                        {
+                            E.Cast(
+                                player.ServerPosition.Extend(
+                                    pred.CastPosition,
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                                config.Item("packets").GetValue<bool>());
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var pred = E.GetSPrediction(target);
+                var poly = CombatHelper.GetPoly(pred.UnitPosition.To3D2(), E.Range, E.Width);
+                var enemiesBehind =
+                    HeroManager.Enemies.Count(
+                        e =>
+                            e.NetworkId != target.NetworkId && e.IsValidTarget(E.Range) &&
+                            (poly.IsInside(E.GetPrediction(e).UnitPosition) || poly.IsInside(e.Position)) &&
+                            e.Position.Distance(player.Position) > player.Distance(pred.UnitPosition));
+                if (pred.HitChance >= HitChance.High)
+                {
+                    if (enemiesBehind > 0)
+                    {
                         E.Cast(
-                            player.ServerPosition.Extend(
-                                pred.CastPosition,
-                                player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                            player.ServerPosition.Extend(pred.CastPosition.To3D2(), E.Range),
                             config.Item("packets").GetValue<bool>());
+                    }
+                    else
+                    {
+                        if (poly.IsInside(pred.UnitPosition) && poly.IsInside(target.Position))
+                        {
+                            E.Cast(
+                                player.ServerPosition.Extend(
+                                    pred.CastPosition.To3D2(),
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                                config.Item("packets").GetValue<bool>());
+                        }
+                        else
+                        {
+                            E.Cast(
+                                player.ServerPosition.Extend(
+                                    pred.CastPosition.To3D2(),
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
+                                config.Item("packets").GetValue<bool>());
+                        }
                     }
                 }
             }
@@ -420,9 +465,20 @@ namespace UnderratedAIO.Champions
                 {
                     for (int i = MaxEnemy; i > MinEnemy - 1; i--)
                     {
-                        if (E.CastIfWillHit(enemy, i))
+                        if (Program.IsSPrediction)
                         {
-                            return;
+                            var pred = E.GetSPrediction(enemy);
+                            if (E.SPredictionCast(enemy, HitChance.High, 0, (byte) i))
+                            {
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            if (E.CastIfWillHit(enemy, i))
+                            {
+                                return;
+                            }
                         }
                     }
                 }
@@ -432,8 +488,9 @@ namespace UnderratedAIO.Champions
         private static void FlashCombo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(EFlash.Range, TargetSelector.DamageType.Magical);
-            if (E.IsReady() && E.ManaCost < player.Mana && player.Distance(target.Position) < EFlash.Range &&
-                player.Distance(target.Position) > 480 && !((getPosToEflash(target.Position)).IsWall()))
+            if (target != null && E.IsReady() && E.ManaCost < player.Mana &&
+                player.Distance(target.Position) < EFlash.Range && player.Distance(target.Position) > 480 &&
+                !((getPosToEflash(target.Position)).IsWall()))
             {
                 var pred = EFlash.GetPrediction(target);
                 var poly = CombatHelper.GetPolyFromVector(getPosToEflash(target.Position), pred.UnitPosition, E.Width);
@@ -467,7 +524,9 @@ namespace UnderratedAIO.Champions
                 }
             }
             ItemHandler.UseItems(target, config);
+            Orbwalking.MoveTo(Game.CursorPos);
         }
+
 
         public static Vector3 getPosToEflash(Vector3 target)
         {
@@ -582,6 +641,7 @@ namespace UnderratedAIO.Champions
             menuU.AddItem(new MenuItem("useeint", "Use E to interrupt", true)).SetValue(true);
             menuU.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
             menuU.AddItem(new MenuItem("atpercent", "   Under % health", true)).SetValue(new Slider(20, 0, 100));
+            menuU.AddSubMenu(Program.SPredictionMenu);
             menuU = Jungle.addJungleOptions(menuU);
 
 
