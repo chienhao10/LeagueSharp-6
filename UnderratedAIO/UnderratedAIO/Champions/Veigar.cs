@@ -203,8 +203,7 @@ namespace UnderratedAIO.Champions
                         .ThenBy(hero => hero.Health)
                         .FirstOrDefault();
             }
-            if (config.Item("autoW", true).GetValue<bool>() && targ != null && W.IsReady() && !player.IsRecalling() &&
-                !Q.IsReady())
+            if (config.Item("autoW", true).GetValue<bool>() && targ != null && W.IsReady() && !player.IsRecalling())
             {
                 if ((((justQ && targ.Health > Q.GetDamage(targ) || targ.CountEnemiesInRange(W.Width) > 1)) || !justQ))
                 {
@@ -427,8 +426,8 @@ namespace UnderratedAIO.Champions
                 {
                     var Whit = wPos.IsValid() && System.Environment.TickCount - wTime > 700 &&
                                Prediction.GetPrediction(target, 0.55f).UnitPosition.Distance(wPos) < W.Width;
-                    var targetHP = HealthPrediction.GetHealthPrediction(target, 400);
-
+                    var targetHP = target.Health -
+                                   Program.IncDamages.GetEnemyData(target.NetworkId).ProjectileDamageTaken;
                     var killWithIgnite = hasIgnite && config.Item("useIgnite", true).GetValue<bool>() &&
                                          R.GetDamage(target) + ignitedmg > targetHP && targetHP > R.GetDamage(target);
 
@@ -497,7 +496,8 @@ namespace UnderratedAIO.Champions
                 {
                     var targE = E.GetPrediction(target);
                     var pos = targE.CastPosition;
-                    if (pos.IsValid() && pos.Distance(player.Position) < E.Range && targE.Hitchance >= HitChance.VeryHigh)
+                    if (pos.IsValid() && pos.Distance(player.Position) < E.Range &&
+                        targE.Hitchance >= HitChance.VeryHigh)
                     {
                         E.Cast(edge ? pos.Extend(player.Position, 375) : pos, config.Item("packets").GetValue<bool>());
                     }
@@ -528,12 +528,15 @@ namespace UnderratedAIO.Champions
             {
                 var pred = Q.GetSPrediction(target);
                 if (pred.CollisionResult.Units.Count < 2)
+                {
                     Q.Cast(pred.CastPosition, config.Item("packets").GetValue<bool>());
+                }
             }
             else
             {
                 var targQ = Q.GetPrediction(target, true);
-                var collision = Q.GetCollision(player.Position.To2D(), new List<Vector2>() { targQ.CastPosition.To2D() });
+                var collision = Q.GetCollision(
+                    player.Position.To2D(), new List<Vector2>() { targQ.CastPosition.To2D() });
                 if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && collision.Count < 2)
                 {
                     Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
