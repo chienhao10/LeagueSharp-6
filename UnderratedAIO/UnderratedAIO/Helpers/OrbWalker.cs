@@ -454,7 +454,10 @@ namespace UnderratedAIO.Helpers
 
                 return false;
             }
-
+            if (Player.IsWindingUp)
+            {
+                return false;
+            }
             return Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + Player.AttackDelay * 1000;
         }
 
@@ -465,11 +468,14 @@ namespace UnderratedAIO.Helpers
         /// <returns><c>true</c> if this instance can move the specified extra windup; otherwise, <c>false</c>.</returns>
         public static bool CanMove(float extraWindup, bool disableMissileCheck = false)
         {
+            if (Player.IsWindingUp)
+            {
+                return false;
+            }
             if (_missileLaunched && Orbwalker.MissileCheck && !disableMissileCheck)
             {
                 return true;
             }
-
             var localExtraWindup = 0;
             if (_championName == "Rengar" && (Player.HasBuff("rengarqbase") || Player.HasBuff("rengarqemp")))
             {
@@ -610,7 +616,6 @@ namespace UnderratedAIO.Helpers
             {
                 return;
             }
-
             try
             {
                 if (target.IsValidTarget() && CanAttack() && Attack)
@@ -871,6 +876,16 @@ namespace UnderratedAIO.Helpers
             ///     Enable or disable Orbwalker.
             /// </summary>
             public bool Enabled = true;
+
+            public static List<OrbWalkerBlackList> NetworkIDBlackList = new List<OrbWalkerBlackList>();
+
+            public static void AddToBlackList(int networkID)
+            {
+                if (NetworkIDBlackList.All(e => e.networkId != networkID))
+                {
+                    NetworkIDBlackList.Add(new OrbWalkerBlackList(networkID));
+                }
+            }
 
             /// <summary>
             ///     Initializes a new instance of the <see cref="Orbwalker" /> class.
@@ -1154,7 +1169,10 @@ namespace UnderratedAIO.Helpers
                 {
                     var MinionList =
                         ObjectManager.Get<Obj_AI_Minion>()
-                            .Where(minion => minion.IsValidTarget() && InAutoAttackRange(minion))
+                            .Where(
+                                minion =>
+                                    minion.IsValidTarget() && InAutoAttackRange(minion) &&
+                                    NetworkIDBlackList.All(n => n.networkId != minion.NetworkId))
                             .OrderByDescending(minion => minion.CharData.BaseSkinName.Contains("Siege"))
                             .ThenBy(minion => minion.CharData.BaseSkinName.Contains("Super"))
                             .ThenBy(minion => minion.Health)
@@ -1533,7 +1551,7 @@ namespace UnderratedAIO.Helpers
                     {
                         return;
                     }
-
+                    NetworkIDBlackList.RemoveAll(e => System.Environment.TickCount - e.time > 1000);
                     var target = GetTarget();
                     Orbwalk(
                         target, _orbwalkingPoint.To2D().IsValid() ? _orbwalkingPoint : Game.CursorPos,
@@ -1595,6 +1613,18 @@ namespace UnderratedAIO.Helpers
                         }
                     }
                 }
+            }
+        }
+
+        public class OrbWalkerBlackList
+        {
+            public int networkId;
+            public float time;
+
+            public OrbWalkerBlackList(int networkId)
+            {
+                this.networkId = networkId;
+                this.time = System.Environment.TickCount;
             }
         }
     }

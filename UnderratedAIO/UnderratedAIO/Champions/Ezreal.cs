@@ -378,11 +378,17 @@ namespace UnderratedAIO.Champions
                         if (minion.Distance(player) <= player.AttackRange && !Orbwalking.CanAttack() &&
                             Orbwalking.CanMove(100))
                         {
-                            Q.Cast(minion, config.Item("packets").GetValue<bool>());
+                            if (Q.Cast(minion, config.Item("packets").GetValue<bool>()).IsCasted())
+                            {
+                                Orbwalking.Orbwalker.AddToBlackList(minion.NetworkId);
+                            }
                         }
                         else if (minion.Distance(player) > player.AttackRange)
                         {
-                            Q.Cast(minion, config.Item("packets").GetValue<bool>());
+                            if (Q.Cast(minion, config.Item("packets").GetValue<bool>()).IsCasted())
+                            {
+                                Orbwalking.Orbwalker.AddToBlackList(minion.NetworkId);
+                            }
                         }
                     }
                 }

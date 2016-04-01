@@ -209,11 +209,17 @@ namespace UnderratedAIO.Champions
                     if (target.Distance(player) < Orbwalking.GetRealAutoAttackRange(target) && !Orbwalking.CanAttack() &&
                         Orbwalking.CanMove(100))
                     {
-                        Q.Cast(target, config.Item("packets").GetValue<bool>());
+                        if (Q.Cast(target, config.Item("packets").GetValue<bool>()).IsCasted())
+                        {
+                            Orbwalking.Orbwalker.AddToBlackList(target.NetworkId);
+                        }
                     }
                     else if (target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target))
                     {
-                        Q.Cast(target, config.Item("packets").GetValue<bool>());
+                        if (Q.Cast(target, config.Item("packets").GetValue<bool>()).IsCasted())
+                        {
+                            Orbwalking.Orbwalker.AddToBlackList(target.NetworkId);
+                        }
                     }
                 }
             }
@@ -272,9 +278,13 @@ namespace UnderratedAIO.Champions
                 !target.IsDashing())
             {
                 if (Program.IsSPrediction)
+                {
                     Q.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
             {
@@ -451,7 +461,7 @@ namespace UnderratedAIO.Champions
             menuClear.AddItem(new MenuItem("useeClear", "Use E", true)).SetValue(true);
             config.AddSubMenu(menuClear);
             // LastHitQ Settings
-            Menu menuLH = new Menu("LastHitQ ", "Lcsettings");
+            Menu menuLH = new Menu("Auto LastHit ", "Lcsettings");
             menuLH.AddItem(new MenuItem("useqLH", "Use Q", true)).SetValue(true);
             menuLH.AddItem(new MenuItem("usewLH", "Use W", true)).SetValue(true);
             config.AddSubMenu(menuLH);
