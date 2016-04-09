@@ -39,6 +39,15 @@ namespace UnderratedAIO.Champions
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
             Game.OnProcessPacket += Game_OnProcessPacket;
+            Game.OnWndProc += Game_OnWndProc;
+        }
+
+        private void Game_OnWndProc(WndEventArgs args)
+        {
+            if (args.Msg == (uint) WindowsMessages.WM_RBUTTONDOWN && Q.IsCharging)
+            {
+                Q.Cast(Game.CursorPos);
+            }
         }
 
         private void Game_OnProcessPacket(GamePacketEventArgs args)
