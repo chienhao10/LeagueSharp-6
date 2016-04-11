@@ -130,10 +130,10 @@ namespace UnderratedAIO.Champions
                 LastHitQ();
             }
             var targetW =
-                MinionManager.GetMinions(W.Range)
+                MinionManager.GetMinions(W.Range, MinionTypes.All, MinionTeam.NotAlly)
                     .FirstOrDefault(
                         m =>
-                            m.IsEnemy && m.HasBuff("kennenmarkofstorm") && m.Health < W.GetDamage(m, 1) &&
+                            m.HasBuff("kennenmarkofstorm") && m.Health < W.GetDamage(m, 1) &&
                             player.Distance(m) < W.Range);
             if (config.Item("usewLH", true).GetValue<bool>() && W.IsReady() && targetW != null)
             {
@@ -144,18 +144,14 @@ namespace UnderratedAIO.Champions
         private void Clear()
         {
             var targetW =
-                ObjectManager.Get<Obj_AI_Base>()
-                    .Where(m => m.IsEnemy && player.Distance(m) < W.Range && m.HasBuff("kennenmarkofstorm"));
+                MinionManager.GetMinions(W.Range, MinionTypes.All, MinionTeam.NotAlly)
+                    .Where(m => m.HasBuff("kennenmarkofstorm"));
             var targetE =
-                ObjectManager.Get<Obj_AI_Base>()
-                    .Where(
-                        m =>
-                            m.Health > 5 && m.IsEnemy && player.Distance(m) < W.Range &&
-                            Environment.Hero.countChampsAtrange(m.Position, 1000f) < 1 && !m.IsDead &&
-                            !(m is Obj_AI_Turret) && !m.HasBuff("kennenmarkofstorm") && !m.UnderTurret(true))
+                MinionManager.GetMinions(W.Range, MinionTypes.All, MinionTeam.NotAlly)
+                    .Where(m => m.Health > 5 && !m.IsDead && !m.HasBuff("kennenmarkofstorm") && !m.UnderTurret(true))
                     .OrderBy(m => player.Distance(m));
             if (config.Item("useeClear", true).GetValue<bool>() && E.IsReady() &&
-                ((targetE.FirstOrDefault() != null && Environment.Hero.countChampsAtrange(player.Position, 1200f) < 1 &&
+                ((targetE.FirstOrDefault() != null && player.Position.CountEnemiesInRange(1200f) < 1 &&
                   !player.HasBuff("KennenLightningRush") && targetE.Count() > 1) ||
                  (player.HasBuff("KennenLightningRush") && targetE.FirstOrDefault() == null)))
             {

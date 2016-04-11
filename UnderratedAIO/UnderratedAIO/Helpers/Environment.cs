@@ -14,14 +14,11 @@ namespace UnderratedAIO.Helpers
 
         public class Minion
         {
-            public static int countMinionsInrange(Obj_AI_Minion l, float p)
-            {
-                return ObjectManager.Get<Obj_AI_Minion>().Count(i => !i.IsDead && i.IsEnemy && l.Distance(i) < p);
-            }
-
             public static int countMinionsInrange(Vector3 l, float p)
             {
-                return ObjectManager.Get<Obj_AI_Base>().Count(i => !i.IsDead && i.IsEnemy && i.Distance(l) < p);
+                return
+                    MinionManager.GetMinions(l, p, MinionTypes.All, MinionTeam.NotAlly)
+                        .Count(i => !i.IsDead && i.IsEnemy && i.Distance(l) < p);
             }
 
             public static Vector3 bestVectorToAoeFarm(Vector3 center, float spellrange, float spellWidth, int hit = 0)
@@ -55,7 +52,7 @@ namespace UnderratedAIO.Helpers
             {
                 return
                     MinionManager.GetMinions(
-                        player.Position, player.AttackRange, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.None)
+                        player.Position, range, MinionTypes.All, MinionTeam.Enemy, MinionOrderTypes.None)
                         .Any(
                             minion =>
                                 HealthPrediction.GetHealthPrediction(minion, 3000) <=
@@ -65,27 +62,14 @@ namespace UnderratedAIO.Helpers
 
         public class Hero
         {
-            public static int countChampsAtrange(Vector3 l, float p)
-            {
-                return ObjectManager.Get<Obj_AI_Hero>().Count(i => !i.IsDead && i.IsEnemy && i.Distance(l) < p);
-            }
-
-            public static int countChampsAtrangeA(Vector3 l, float p)
-            {
-                return ObjectManager.Get<Obj_AI_Hero>().Count(i => !i.IsDead && i.IsAlly && i.Distance(l) < p);
-            }
-
             public static Obj_AI_Hero mostEnemyAtFriend(Obj_AI_Hero player,
                 float spellRange,
                 float spellWidth,
                 int min = 0)
             {
                 return
-                    ObjectManager.Get<Obj_AI_Hero>()
-                        .Where(
-                            i =>
-                                !i.IsDead && i.IsAlly && i.CountEnemiesInRange(spellWidth) >= min &&
-                                i.Distance(player) < spellRange)
+                    HeroManager.Allies.Where(
+                        i => !i.IsDead && i.CountEnemiesInRange(spellWidth) >= min && i.Distance(player) < spellRange)
                         .OrderBy(i => i.IsMe)
                         .ThenByDescending(i => i.CountEnemiesInRange(spellWidth))
                         .FirstOrDefault();
@@ -99,19 +83,19 @@ namespace UnderratedAIO.Helpers
                 int hits = 0;
                 foreach (var hero in heroes)
                 {
-                    if (countChampsAtrange(hero.Position, spellwidth) > hits)
+                    if (hero.Position.CountEnemiesInRange(spellwidth) > hits)
                     {
                         bestPos = hero.Position;
-                        hits = countChampsAtrange(hero.Position, spellwidth);
+                        hits = hero.Position.CountEnemiesInRange(spellwidth);
                     }
                     Vector3 newPos = new Vector3(hero.Position.X + 80, hero.Position.Y + 80, hero.Position.Z);
                     for (int i = 1; i < 4; i++)
                     {
                         var rotated = newPos.To2D().RotateAroundPoint(newPos.To2D(), 90 * i).To3D();
-                        if (countChampsAtrange(rotated, spellwidth) > hits && player.Distance(rotated) <= spellrange)
+                        if (rotated.CountEnemiesInRange(spellwidth) > hits && player.Distance(rotated) <= spellrange)
                         {
                             bestPos = newPos;
-                            hits = countChampsAtrange(rotated, spellwidth);
+                            hits = rotated.CountEnemiesInRange(spellwidth);
                         }
                     }
                 }

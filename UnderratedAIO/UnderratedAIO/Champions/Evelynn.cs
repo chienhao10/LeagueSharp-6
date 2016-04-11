@@ -77,7 +77,7 @@ namespace UnderratedAIO.Champions
         private void LastHit()
         {
             var target =
-                ObjectManager.Get<Obj_AI_Minion>()
+                MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly)
                     .Where(i => i.IsEnemy && !i.IsDead && Q.GetDamage(i) > i.Health)
                     .OrderBy(i => player.Distance(i))
                     .FirstOrDefault();
@@ -117,9 +117,8 @@ namespace UnderratedAIO.Champions
             {
                 E.CastOnUnit(target);
             }
-            var Ultpos =
-                Environment.Hero.bestVectorToAoeSpell(
-                    ObjectManager.Get<Obj_AI_Hero>().Where(i => (i.IsEnemy && R.CanCast(i))), R.Range, 250f);
+            var Ultpos = Environment.Hero.bestVectorToAoeSpell(
+                HeroManager.Enemies.Where(i => R.CanCast(i)), R.Range, 250f);
             if (config.Item("user", true).GetValue<bool>() && R.IsReady() &&
                 config.Item("useRmin", true).GetValue<Slider>().Value <= Ultpos.CountEnemiesInRange(250f) &&
                 R.Range > player.Distance(Ultpos))
@@ -152,8 +151,7 @@ namespace UnderratedAIO.Champions
                 Q.Cast();
             }
             var target =
-                ObjectManager.Get<Obj_AI_Minion>()
-                    .Where(i => i.Distance(player) < 600)
+                MinionManager.GetMinions(600, MinionTypes.All, MinionTeam.NotAlly)
                     .OrderByDescending(i => i.MaxHealth)
                     .FirstOrDefault();
             orbwalker.ForceTarget(target);

@@ -103,8 +103,7 @@ namespace UnderratedAIO.Champions
         {
             me.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
             foreach (var enemy in
-                ObjectManager.Get<Obj_AI_Hero>()
-                    .Where(i => i.IsEnemy && !i.IsDead && me.Distance(i) < R.Range)
+                HeroManager.Enemies.Where(i => !i.IsDead && me.Distance(i) < R.Range)
                     .OrderByDescending(l => l.CountEnemiesInRange(350f)))
             {
                 R.CastIfHitchanceEquals(enemy, HitChance.High, config.Item("packets").GetValue<bool>());
@@ -132,7 +131,10 @@ namespace UnderratedAIO.Champions
 
         private static void Clear()
         {
-            var minions = ObjectManager.Get<Obj_AI_Minion>().Where(m => m.IsValidTarget(400)).ToList();
+            var minions =
+                MinionManager.GetMinions(400, MinionTypes.All, MinionTeam.NotAlly)
+                    .Where(m => m.IsValidTarget(400))
+                    .ToList();
             if (minions.Count() > 2)
             {
                 if (Items.HasItem(3077) && Items.CanUseItem(3077))
@@ -153,7 +155,7 @@ namespace UnderratedAIO.Champions
             Q.SetSkillshot(
                 Q.Instance.SData.SpellCastTime, Q.Instance.SData.LineWidth, Q.Instance.SData.MissileSpeed, false,
                 SkillshotType.SkillshotLine);
-            var minionsSpells = ObjectManager.Get<Obj_AI_Minion>().Where(m => m.IsValidTarget(W.Range)).ToList();
+            var minionsSpells = MinionManager.GetMinions(W.Range, MinionTypes.All, MinionTeam.NotAlly);
             if (W.IsReady() && minionsSpells.Count() > 1 && config.Item("usewC", true).GetValue<bool>() &&
                 me.Spellbook.GetSpell(SpellSlot.W).ManaCost <= me.Mana)
             {
@@ -204,16 +206,14 @@ namespace UnderratedAIO.Champions
             else
             {
                 foreach (var enemy in
-                    ObjectManager.Get<Obj_AI_Hero>()
-                        .Where(
-                            i =>
-                                i.IsEnemy && i.IsValidTarget() && me.Distance(i) < R.Range &&
-                                me.Distance(i) >= config.Item("useRminr", true).GetValue<Slider>().Value &&
-                                !config.Item("ult" + i.SkinName, true).GetValue<bool>() &&
-                                Environment.Hero.countChampsAtrange(i.Position, 350f) >=
-                                config.Item("useRmin", true).GetValue<Slider>().Value &&
-                                target.Distance(i.Position) < 350f)
-                        .OrderByDescending(l => Environment.Hero.countChampsAtrange(l.Position, 350f)))
+                    HeroManager.Enemies.Where(
+                        i =>
+                            i.IsValidTarget() && me.Distance(i) < R.Range &&
+                            me.Distance(i) >= config.Item("useRminr", true).GetValue<Slider>().Value &&
+                            !config.Item("ult" + i.SkinName, true).GetValue<bool>() &&
+                            i.Position.CountEnemiesInRange(350f) >=
+                            config.Item("useRmin", true).GetValue<Slider>().Value && target.Distance(i.Position) < 350f)
+                        .OrderByDescending(l => l.Position.CountEnemiesInRange(350f)))
                 {
                     R.Cast(enemy, config.Item("packets").GetValue<bool>());
                     return;
@@ -255,9 +255,13 @@ namespace UnderratedAIO.Champions
                 if (target.CountEnemiesInRange(Q.Width) >= hits)
                 {
                     if (Program.IsSPrediction)
+                    {
                         Q.SPredictionCast(target, HitChance.High);
+                    }
                     else
+                    {
                         Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    }
                 }
             }
             bool hasIgnite = me.Spellbook.CanUseSpell(me.GetSpellSlot("SummonerDot")) == SpellState.Ready;

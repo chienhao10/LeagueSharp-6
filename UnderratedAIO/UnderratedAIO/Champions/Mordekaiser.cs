@@ -153,8 +153,7 @@ namespace UnderratedAIO.Champions
                           (config.Item("ultDef", true).GetValue<bool>() && !CombatHelper.HasDef(target)));
             if (canUlt &&
                 (player.Distance(target.Position) <= 400f ||
-                 (R.CanCast(target) && target.Health < 250f &&
-                  Environment.Hero.countChampsAtrangeA(target.Position, 600f) >= 1)) &&
+                 (R.CanCast(target) && target.Health < 250f && target.Position.CountAlliesInRange(600f) >= 1)) &&
                 R.GetDamage(target) * 0.8f > target.Health)
             {
                 R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
@@ -296,9 +295,6 @@ namespace UnderratedAIO.Champions
         {
             if (ghost != null)
             {
-                Console.WriteLine(
-                    Utils.GameTimeTickCount + " >= " + LastAATick + " + " + Game.Ping + " + " + 100 + " + " + "(" +
-                    ghost.AttackDelay + " - " + ghost.AttackCastDelay + ")" + " * " + 1000);
                 return Utils.GameTimeTickCount >=
                        LastAATick + Game.Ping + 100 + (ghost.AttackDelay - ghost.AttackCastDelay) * 1000;
             }
