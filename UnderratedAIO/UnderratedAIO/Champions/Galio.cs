@@ -76,24 +76,6 @@ namespace UnderratedAIO.Champions
             {
                 CastW(false);
             }
-            if (W.IsReady() &&
-                ((config.Item("AutoW", true).GetValue<bool>()) ||
-                 (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && config.Item("usew", true).GetValue<bool>())))
-            {
-                foreach (var i in
-                    Program.IncDamages.IncomingDamagesAlly.Where(
-                        i => i.Hero.IsValid && i.Hero.Distance(player) < W.Range)
-                        .OrderByDescending(i => TargetSelector.GetPriority(i.Hero)))
-                {
-                    var checkBuff = CombatHelper.CheckBuffs(i.Hero);
-                    if ((CheckAutoW() && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && checkBuff) ||
-                        (orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo && checkBuff))
-                    {
-                        W.Cast(i.Hero, config.Item("packets").GetValue<bool>());
-                        return;
-                    }
-                }
-            }
             if (rActive || justR)
             {
                 orbwalker.SetAttack(false);
@@ -186,16 +168,24 @@ namespace UnderratedAIO.Champions
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
                 if (Program.IsSPrediction)
+                {
                     Q.SPredictionCast(target, hitC);
+                }
                 else
+                {
                     Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("useeH", true).GetValue<bool>() && E.CanCast(target))
             {
                 if (Program.IsSPrediction)
+                {
                     E.SPredictionCast(target, hitC);
+                }
                 else
+                {
                     E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                }
             }
         }
 
@@ -274,26 +264,36 @@ namespace UnderratedAIO.Champions
                 player.Distance(target) < config.Item("useqRange", true).GetValue<Slider>().Value)
             {
                 if (Program.IsSPrediction)
+                {
                     Q.SPredictionCast(target, hitC);
+                }
                 else
+                {
                     Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target))
             {
                 if (Program.IsSPrediction)
+                {
                     E.SPredictionCast(target, hitC);
+                }
                 else
+                {
                     E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                }
             }
         }
 
         private void CastW(bool combo)
         {
-            foreach (var incDamage in
-                Program.IncDamages.IncomingDamagesAlly.Where(i => i.Hero.Distance(player) < W.Range && i.Hero.IsValid)
-                    .OrderByDescending(i => TargetSelector.GetPriority(i.Hero)))
+            foreach (var h in
+                HeroManager.Allies.Where(i => i.IsValid && i.Distance(player) < W.Range)
+                    .OrderByDescending(i => TargetSelector.GetPriority(i)))
             {
-                if ((incDamage.DamageCount >= config.Item("Wmin", true).GetValue<Slider>().Value ||
+                var incDamage = Program.IncDamages.GetAllyData(h.NetworkId);
+                if (incDamage != null &&
+                    (incDamage.DamageCount >= config.Item("Wmin", true).GetValue<Slider>().Value ||
                      CheckDamageToW(incDamage)) && (combo || (!combo && CheckAutoW())))
                 {
                     W.Cast(incDamage.Hero, config.Item("packets").GetValue<bool>());
