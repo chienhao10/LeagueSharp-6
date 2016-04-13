@@ -457,7 +457,7 @@ namespace UnderratedAIO.Champions
             menuClear.AddItem(new MenuItem("useeClear", "Use E", true)).SetValue(true);
             config.AddSubMenu(menuClear);
             // LastHitQ Settings
-            Menu menuLH = new Menu("Auto LastHit ", "Lcsettings");
+            Menu menuLH = new Menu("LastHit ", "Lcsettings");
             menuLH.AddItem(new MenuItem("useqLH", "Use Q", true)).SetValue(true);
             menuLH.AddItem(new MenuItem("usewLH", "Use W", true)).SetValue(true);
             config.AddSubMenu(menuLH);
