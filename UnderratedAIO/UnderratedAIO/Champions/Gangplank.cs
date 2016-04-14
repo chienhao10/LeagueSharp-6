@@ -129,7 +129,10 @@ namespace UnderratedAIO.Champions
                     Clear();
                     break;
                 case Orbwalking.OrbwalkingMode.LastHit:
-                    Lasthit();
+                    if (config.Item("useqLHH", true).GetValue<bool>() && !justE)
+                    {
+                        Lasthit();
+                    }
                     break;
                 default:
                     break;
@@ -174,10 +177,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("EQtoCursor", true).GetValue<KeyBind>().Active && E.IsReady() && Q.IsReady())
             {
                 orbwalker.SetMovement(false);
-                if (player.IsMoving)
-                {
-                    player.IssueOrder(GameObjectOrder.Stop, player.Position);
-                }
+
                 var barrel =
                     GetBarrels()
                         .Where(
@@ -209,16 +209,37 @@ namespace UnderratedAIO.Champions
                         Utility.DelayAction.Add(firsDelay, () => Q.CastOnUnit(barrel));
                         if (threeBarrel)
                         {
+                            if (player.IsMoving)
+                            {
+                                player.IssueOrder(GameObjectOrder.Stop, player.Position);
+                            }
                             Utility.DelayAction.Add(801, () => E.Cast(middle.Extend(cp, BarrelConnectionRange)));
                         }
                         else
                         {
                             if (Orbwalking.CanMove(100))
                             {
+                                orbwalker.SetMovement(true);
                                 Orbwalking.MoveTo(Game.CursorPos);
                             }
                         }
                     }
+                }
+                else
+                {
+                    if (Orbwalking.CanMove(100))
+                    {
+                        orbwalker.SetMovement(true);
+                        Orbwalking.MoveTo(Game.CursorPos);
+                    }
+                }
+            }
+            else if (config.Item("EQtoCursor", true).GetValue<KeyBind>().Active)
+            {
+                if (Orbwalking.CanMove(100))
+                {
+                    orbwalker.SetMovement(true);
+                    Orbwalking.MoveTo(Game.CursorPos);
                 }
             }
             if (config.Item("QbarrelCursor", true).GetValue<KeyBind>().Active && Q.IsReady())
@@ -926,7 +947,7 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
-            if (sender.IsEnemy && sender is Obj_AI_Hero && sender.Distance(player) < E.Range)
+            if (sender.IsEnemy && args.Target != null && sender is Obj_AI_Hero && sender.Distance(player) < E.Range)
             {
                 var targetBarrels =
                     savedBarrels.Where(
@@ -937,16 +958,8 @@ namespace UnderratedAIO.Champions
                                 sender.Distance(b.barrel) / args.SData.MissileSpeed));
                 foreach (var barrelData in targetBarrels)
                 {
-                    if (barrelData.barrel.Distance(player) < Orbwalking.GetRealAutoAttackRange(barrelData.barrel) &&
-                        Orbwalking.CanAttack() && !justQ)
-                    {
-                        player.IssueOrder(GameObjectOrder.AttackUnit, barrelData.barrel);
-                    }
-                    else
-                    {
-                        savedBarrels.Remove(barrelData);
-                        Console.WriteLine("Barrel removed");
-                    }
+                    savedBarrels.Remove(barrelData);
+                    Console.WriteLine("Barrel removed");
                 }
             }
         }
