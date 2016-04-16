@@ -72,13 +72,10 @@ namespace ChatTranslator
             new List<string>(
                 new string[]
                 {
-                    "?key=trnsl.1.1.20151027T151706Z.16f6a75f2f1b2aa4.d670690d98ed95429c11e25d871b7c2e05e81cbb",
-                    "?key=trnsl.1.1.20160104T204216Z.fafe170e32096852.9e3884fe5a4c00881dbf6781534fee74664c68ec",
-                    "?key=trnsl.1.1.20160104T204235Z.bbf140ab21cf34a8.7b5b3ff936297932f10250966e112f963370e675",
-                    "?key=trnsl.1.1.20160104T204435Z.4ee06ec4b7bf42ed.a6408bbb10e00b0480d516d7c8b2368d8f369710",
                     "?key=trnsl.1.1.20160104T204502Z.776f8a7e2c4d9d42.b1ee11db59b64410c6402df651cb1e156e0fe1d3",
                     "?key=trnsl.1.1.20160104T204457Z.986a06123cc06620.f114139f32732c33ba127de92e8a14961a080edd",
                     "?key=trnsl.1.1.20160104T204437Z.d766324c28c39ddb.25569303b37b7132212831048bbc0db2476eebbb",
+                    "?key=trnsl.1.1.20160416T081450Z.b4a83c93fa8dacc8.fa371dd2db68f920a81f8e6dbcee860290b4c170"
                 });
 
         public static string yandexApiKey;
@@ -325,7 +322,7 @@ namespace ChatTranslator
             {
                 translated = await TranslateYandex(message, from, to, true);
             }
-            if (from != to && !sender.IsMe && translated != message)
+            if (from != to && !sender.IsMe && !translated.Contains(message))
             {
                 translate = true;
                 Utility.DelayAction.Add(500, () => translate = false);
