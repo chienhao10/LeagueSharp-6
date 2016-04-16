@@ -68,6 +68,7 @@ namespace ChatTranslator
 
         public const string yandexUrl = "https://translate.yandex.net/api/v1.5/tr.json/translate";
 
+        // Pls don't take them
         public static List<string> yandexApiKeys =
             new List<string>(
                 new string[]
