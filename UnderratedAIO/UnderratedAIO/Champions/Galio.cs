@@ -62,7 +62,7 @@ namespace UnderratedAIO.Champions
         private void InitGalio()
         {
             Q = new Spell(SpellSlot.Q, 940);
-            Q.SetSkillshot(0.25f, 200, 1300, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(0.25f, 125, 1300, false, SkillshotType.SkillshotCircle);
             W = new Spell(SpellSlot.W, 800);
             E = new Spell(SpellSlot.E, 1180);
             E.SetSkillshot(0.25f, 140, 1200, false, SkillshotType.SkillshotLine);
