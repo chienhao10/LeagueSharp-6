@@ -890,6 +890,10 @@ namespace UnderratedAIO.Helpers
         public double GetDamageRemainingDamage(Obj_AI_Base target, BuffInstance buff)
         {
             var damage = GetdTotalBuffDamage(target, buff);
+            if (Stacks == 1)
+            {
+                return damage;
+            }
             return damage / Stacks * Math.Ceiling(CombatHelper.GetBuffTime(buff));
         }
 
@@ -899,8 +903,6 @@ namespace UnderratedAIO.Helpers
             var nextStackCount = 1 * Math.Max(1, time);
             if (Stacks != Time && Stacks < Time)
             {
-                Console.WriteLine(
-                    "\t \t " + (buff.EndTime - buff.StartTime - Time + time) + " > " + CombatHelper.GetBuffTime(buff));
                 if (buff.EndTime - buff.StartTime - Time + time > CombatHelper.GetBuffTime(buff))
                 {
                     nextStackCount = 1;

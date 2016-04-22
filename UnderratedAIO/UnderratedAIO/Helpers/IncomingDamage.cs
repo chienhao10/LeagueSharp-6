@@ -123,7 +123,7 @@ namespace UnderratedAIO.Helpers
                                 0, -1, SkillshotDetector.ActiveSkillshots[i].SkillshotData.Delay, Hero).IsSafe &&
                             Hero.IsValidTarget(1500, false, Hero.Position) &&
                             SkillshotDetector.ActiveSkillshots[i].IsAboutToHit(
-                                350, Hero, SkillshotDetector.ActiveSkillshots[i].Caster))
+                                510, Hero, SkillshotDetector.ActiveSkillshots[i].Caster))
                         {
                             var data =
                                 IncomingDamagesAlly.Concat(IncomingDamagesEnemy)
