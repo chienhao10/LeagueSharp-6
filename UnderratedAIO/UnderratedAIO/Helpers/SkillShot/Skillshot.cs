@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
@@ -472,10 +471,6 @@ namespace UnderratedAIO.Helpers.SkillShot
         {
             if (SkillshotData.Type == SkillShotType.SkillshotMissileLine)
             {
-                if (!SkillshotData.IsDangerous)
-                {
-                    time = time / 2;
-                }
                 var missilePos = GetMissilePosition(0);
                 var missilePosAfterT = GetMissilePosition(time);
 

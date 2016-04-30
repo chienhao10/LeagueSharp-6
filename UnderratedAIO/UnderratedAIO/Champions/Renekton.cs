@@ -173,11 +173,10 @@ namespace UnderratedAIO.Champions
                 config.Item("usee", true).GetValue<bool>())
             {
                 var closeGapTarget =
-                    ObjectManager.Get<Obj_AI_Base>()
-                        .FirstOrDefault(
-                            i =>
-                                i.IsEnemy && player.Distance(i) < E.Range && !i.IsDead &&
-                                i.Distance(target.ServerPosition) < E.Range);
+                    MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly)
+                        .Where(i => i.Distance(target.ServerPosition) < Q.Range - 40)
+                        .OrderByDescending(i => Environment.Minion.countMinionsInrange(i.Position, Q.Range))
+                        .FirstOrDefault();
                 if (closeGapTarget != null)
                 {
                     if ((canBeOpWIthQ(closeGapTarget.Position) || fury) && !rene)
@@ -275,11 +274,8 @@ namespace UnderratedAIO.Champions
                             return;
                         }
                         var closeGapTarget =
-                            ObjectManager.Get<Obj_AI_Minion>()
-                                .Where(
-                                    i =>
-                                        i.IsEnemy && player.Distance(i) < E.Range && !i.IsDead &&
-                                        i.Distance(target.ServerPosition) < Q.Range - 40)
+                            MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly)
+                                .Where(i => i.Distance(target.ServerPosition) < Q.Range - 40)
                                 .OrderByDescending(i => Environment.Minion.countMinionsInrange(i.Position, Q.Range))
                                 .FirstOrDefault();
                         if (closeGapTarget != null)

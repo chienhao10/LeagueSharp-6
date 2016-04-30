@@ -268,7 +268,7 @@ namespace UnderratedAIO.Helpers.SkillShot
                     CanBeRemoved = true,
                     CollisionObjects =
                         new[]
-                        {CollisionObjectTypes.Champions, CollisionObjectTypes.YasuoWall, CollisionObjectTypes.Minion}
+                        {CollisionObjectTypes.Champions, CollisionObjectTypes.YasuoWall}
                 });
 
             SkillShots.Add(
