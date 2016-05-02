@@ -140,6 +140,10 @@ namespace UnderratedAIO.Champions
 
         private void TurnOffQ()
         {
+            if (config.Item("DontOffQ", true).GetValue<bool>())
+            {
+                return;
+            }
             if (Q.Instance.ToggleState == 2 && System.Environment.TickCount - poisonTime > 1200)
             {
                 Q.Cast(config.Item("packets").GetValue<bool>());
@@ -530,6 +534,7 @@ namespace UnderratedAIO.Champions
                 .SetValue(new KeyBind("F".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
             menuC.AddItem(new MenuItem("targRange", "Target indicator", true)).SetValue(new Slider(300, 20, 600));
+            menuM.AddItem(new MenuItem("DontOffQ", "Do not turn off Q", true)).SetValue(false);
             menuM = Jungle.addJungleOptions(menuM);
 
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
