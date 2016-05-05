@@ -281,8 +281,8 @@ namespace UnderratedAIO.Helpers
             if (config.Item("protoBelt").GetValue<bool>() && target != null && player.Distance(target) < 750)
             {
                 if (config.Item("protoBeltEHealth").GetValue<Slider>().Value > target.HealthPercent &&
-                    (player.Distance(target) > 150) ||
-                    player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
+                    (player.Distance(target) > 150 ||
+                     player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target)))
                 {
                     if (Items.HasItem(ProtoBelt.Id) && Items.CanUseItem(ProtoBelt.Id))
                     {

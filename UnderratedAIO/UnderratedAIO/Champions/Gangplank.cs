@@ -740,6 +740,14 @@ namespace UnderratedAIO.Champions
         {
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
+            var drawecr = config.Item("draweecr", true).GetValue<Circle>();
+            if (drawecr.Active)
+            {
+                foreach (var barrel in GetBarrels().Where(b => b.Distance(player) < E.Range + BarrelConnectionRange))
+                {
+                    Render.Circle.DrawCircle(barrel.Position, BarrelConnectionRange, drawecr.Color, 7);
+                }
+            }
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
@@ -1002,6 +1010,8 @@ namespace UnderratedAIO.Champions
             menuD.AddItem(new MenuItem("drawW", "Draw W", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawee", "Draw E range", true))
                 .SetValue(new Circle(false, Color.FromArgb(180, 100, 146, 166)));
+            menuD.AddItem(new MenuItem("draweecr", "Draw Connection ranges", true))
+                .SetValue(new Circle(false, Color.FromArgb(180, 167, 141, 56)));
             menuD.AddItem(new MenuItem("drawWcd", "Draw E countdown", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawEmini", "Draw killable minions around E", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawcombo", "Draw combo damage", true)).SetValue(true);
