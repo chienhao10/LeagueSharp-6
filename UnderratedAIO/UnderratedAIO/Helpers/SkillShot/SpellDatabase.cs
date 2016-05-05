@@ -268,7 +268,7 @@ namespace UnderratedAIO.Helpers.SkillShot
                     CanBeRemoved = true,
                     CollisionObjects =
                         new[]
-                        {CollisionObjectTypes.Champions, CollisionObjectTypes.YasuoWall}
+                        {CollisionObjectTypes.Champions}
                 });
 
             SkillShots.Add(
@@ -574,7 +574,7 @@ namespace UnderratedAIO.Helpers.SkillShot
                     FixedRange = false,
                     AddHitbox = true,
                     DangerValue = 3,
-                    IsDangerous = false,
+                    IsDangerous = true,
                     MissileSpellName = "Rupture",
                 });
 

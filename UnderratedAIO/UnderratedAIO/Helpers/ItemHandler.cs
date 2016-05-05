@@ -41,11 +41,16 @@ namespace UnderratedAIO.Helpers
         public static Items.Item Seraph = new Items.Item(3040, 0);
         public static Items.Item SeraphDom = new Items.Item(3048, 0);
 
+        public static Items.Item ProtoBelt = new Items.Item(3152, 0);
+        public static Items.Item GLP = new Items.Item(3030, 0);
+
         public static bool QssUsed, useHydra = false;
         public static float MuramanaTime;
         public static Obj_AI_Hero hydraTarget;
 
         private static readonly Random _random = new Random(DateTime.Now.Millisecond);
+
+        public static bool IsURF;
 
         public static Spell Q, W, E, R;
 
@@ -104,7 +109,8 @@ namespace UnderratedAIO.Helpers
                 else if ((player.Distance(target) > config.Item("bilminr").GetValue<Slider>().Value &&
                           IsHeRunAway(target) && (target.Health / target.MaxHealth * 100f) < 40 &&
                           target.Distance(player) > player.AttackRange) ||
-                         (Math.Max(comboDmg, bilDmg) > target.Health && (player.Health / player.MaxHealth * 100f) < 50))
+                         (Math.Max(comboDmg, bilDmg) > target.Health && (player.Health / player.MaxHealth * 100f) < 50) ||
+                         IsURF)
                 {
                     bilgewater.Cast(target);
                 }
@@ -127,7 +133,8 @@ namespace UnderratedAIO.Helpers
                           config.Item("botrenemyhealth").GetValue<Slider>().Value) ||
                          (IsHeRunAway(target) && (target.Health / target.MaxHealth * 100f) < 40 &&
                           target.Distance(player) > player.AttackRange) ||
-                         (Math.Max(comboDmg, botrDmg) > target.Health && (player.Health / player.MaxHealth * 100f) < 50))
+                         (Math.Max(comboDmg, botrDmg) > target.Health && (player.Health / player.MaxHealth * 100f) < 50) ||
+                         IsURF)
                 {
                     botrk.Cast(target);
                 }
@@ -146,11 +153,13 @@ namespace UnderratedAIO.Helpers
                 else if ((player.Distance(target) > config.Item("hexminr").GetValue<Slider>().Value &&
                           IsHeRunAway(target) && (target.Health / target.MaxHealth * 100f) < 40 &&
                           target.Distance(player) > player.AttackRange) ||
-                         (Math.Max(comboDmg, hexDmg) > target.Health && (player.Health / player.MaxHealth * 100f) < 50))
+                         (Math.Max(comboDmg, hexDmg) > target.Health && (player.Health / player.MaxHealth * 100f) < 50) ||
+                         IsURF)
                 {
                     hexgun.Cast(target);
                 }
             }
+            /*
             if (config.Item("Muramana").GetValue<bool>() &&
                 ((!MuramanaEnabled && config.Item("MuramanaMinmana").GetValue<Slider>().Value < player.ManaPercent) ||
                  (MuramanaEnabled && config.Item("MuramanaMinmana").GetValue<Slider>().Value > player.ManaPercent)))
@@ -165,6 +174,7 @@ namespace UnderratedAIO.Helpers
                 }
             }
             MuramanaTime = System.Environment.TickCount;
+             */
             if (config.Item("you").GetValue<bool>() && Items.HasItem(youmuu.Id) && Items.CanUseItem(youmuu.Id) &&
                 target != null && player.Distance(target) < player.AttackRange + 50 && target.HealthPercent < 65)
             {
@@ -268,6 +278,44 @@ namespace UnderratedAIO.Helpers
                     }
                 }
             }
+            if (config.Item("protoBelt").GetValue<bool>() && target != null && player.Distance(target) < 750)
+            {
+                if (config.Item("protoBeltEHealth").GetValue<Slider>().Value > target.HealthPercent &&
+                    (player.Distance(target) > 150) ||
+                    player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
+                {
+                    if (Items.HasItem(ProtoBelt.Id) && Items.CanUseItem(ProtoBelt.Id))
+                    {
+                        var pred = Prediction.GetPrediction(
+                            target, 0.25f, 100, 2000,
+                            new[]
+                            {
+                                CollisionableObjects.Heroes, CollisionableObjects.Minions, CollisionableObjects.Walls,
+                                CollisionableObjects.YasuoWall
+                            });
+                        if (pred.Hitchance >= HitChance.High)
+                        {
+                            ProtoBelt.Cast(pred.CastPosition);
+                        }
+                    }
+                }
+            }
+            if (config.Item("glp").GetValue<bool>() && target != null && player.Distance(target) < 650)
+            {
+                if (config.Item("glpEHealth").GetValue<Slider>().Value > target.HealthPercent)
+                {
+                    if (Items.HasItem(GLP.Id) && Items.CanUseItem(GLP.Id))
+                    {
+                        var pred = Prediction.GetPrediction(
+                            target, 0.25f, 100, 1500,
+                            new[] { CollisionableObjects.Heroes, CollisionableObjects.YasuoWall });
+                        if (pred.Hitchance >= HitChance.High)
+                        {
+                            GLP.Cast(pred.CastPosition);
+                        }
+                    }
+                }
+            }
             if (config.Item("QSSEnabled").GetValue<bool>())
             {
                 UseCleanse(config, cleanseSpell);
@@ -364,12 +412,12 @@ namespace UnderratedAIO.Helpers
                                 ? (int) Orbwalking.GetRealAutoAttackRange(player)
                                 : hexgun.Range - 20), 0, (int) hexgun.Range));
             menuI.AddSubMenu(menuHextech);
-
+            /*
             Menu menuMura = new Menu("Muramana ", "Mura");
             menuMura.AddItem(new MenuItem("Muramana", "Enabled")).SetValue(true);
             menuMura.AddItem(new MenuItem("MuramanaMinmana", "Min mana")).SetValue(new Slider(40, 0, 100));
             menuI.AddSubMenu(menuMura);
-
+            */
             Menu menuFrost = new Menu("Frost Queen's Claim ", "Frost");
             menuFrost.AddItem(new MenuItem("frost", "Enabled")).SetValue(true);
             menuFrost.AddItem(new MenuItem("frostlow", "Use on low HP")).SetValue(true);
@@ -407,12 +455,28 @@ namespace UnderratedAIO.Helpers
             menuSolari.AddItem(new MenuItem("solariminenemy", "Min enemy")).SetValue(new Slider(2, 1, 6));
             menuI.AddSubMenu(menuSolari);
 
+            Menu menuProtoBelt = new Menu("Hextech ProtoBelt-01", "ProtoBelt");
+            menuProtoBelt.AddItem(new MenuItem("protoBelt", "Enabled")).SetValue(true);
+            menuProtoBelt.AddItem(new MenuItem("protoBeltEHealth", "Under enemy health %"))
+                .SetValue(new Slider(60, 0, 100));
+            menuI.AddSubMenu(menuProtoBelt);
+
+            Menu menuGLP = new Menu("Hextech GLP-800", "GLP");
+            menuGLP.AddItem(new MenuItem("glp", "Enabled")).SetValue(true);
+            menuGLP.AddItem(new MenuItem("glpEHealth", "Under enemy health %")).SetValue(new Slider(60, 0, 100));
+            menuI.AddSubMenu(menuGLP);
+
             menuI.AddItem(new MenuItem("you", "Youmuu's Ghostblade")).SetValue(true);
             menuI.AddItem(new MenuItem("useItems", "Use Items")).SetValue(true);
             mConfig.AddSubMenu(menuI);
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.OnAttack += Orbwalking_OnAttack;
             odins.Range = 500f;
+            if (player.HasBuff("awesomehealindicator"))
+            {
+                IsURF = true;
+            }
+
             return mConfig;
         }
 
@@ -651,6 +715,7 @@ namespace UnderratedAIO.Helpers
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+/*
             var deltaT = System.Environment.TickCount - MuramanaTime;
             if (MuramanaEnabled && ((deltaT > 500 && deltaT < 1000) || player.InFountain()))
             {
@@ -662,7 +727,7 @@ namespace UnderratedAIO.Helpers
                 {
                     Muramana2.Cast();
                 }
-            }
+            }*/
         }
 
         public static bool MuramanaEnabled

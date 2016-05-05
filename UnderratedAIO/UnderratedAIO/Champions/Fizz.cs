@@ -10,6 +10,7 @@ using SharpDX.Direct3D9;
 using UnderratedAIO.Helpers;
 using UnderratedAIO.Helpers.SkillShot;
 using Environment = UnderratedAIO.Helpers.Environment;
+using Geometry = LeagueSharp.Common.Geometry;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
 
 namespace UnderratedAIO.Champions
@@ -92,8 +93,8 @@ namespace UnderratedAIO.Champions
             {
                 CastAutoE();
             }
-            if (config.Item("autoEdmg", true).GetValue<Slider>().Value / 100f * player.Health <
-                data.ProjectileDamageTaken && E.IsReady() && !OnTrident)
+            if (config.Item("autoEdmg", true).GetValue<Slider>().Value / 100f * player.Health < data.DamageTaken &&
+                E.IsReady() && !OnTrident)
             {
                 CastAutoE();
             }
@@ -222,11 +223,11 @@ namespace UnderratedAIO.Champions
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
             }
             if (Q.CanCast(target) && config.Item("useq", true).GetValue<bool>() && !player.IsWindingUp &&
-                (!SpellDatabase.AnyReadyCC(player.Position, 700, true) && data.IncSkillShot || !Orbwalking.CanAttack()))
+                !data.IncSkillShot)
             {
                 Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
             }
-            var cmbdmg = ComboDamage(target);
+            var cmbdmg = ComboDamage(target) + ItemHandler.GetItemsDamage(target);
 
             if (E.IsReady() && config.Item("usee", true).GetValue<bool>() && !player.IsWindingUp)
             {
@@ -241,13 +242,17 @@ namespace UnderratedAIO.Champions
                 {
                     CastE(target, data);
                 }
+                if (cmbdmg > target.Health && target.Distance(player) > E.Range * 1.8f)
+                {
+                    CastE(target, data);
+                }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && player.IsWindingUp)
             {
                 W.Cast();
             }
             if (config.Item("user", true).GetValue<bool>() && R.IsReady() && player.IsWindingUp &&
-                cmbdmg * 1.2 + player.GetAutoAttackDamage(target, true) * 5 > target.Health &&
+                cmbdmg * 1.6 + player.GetAutoAttackDamage(target, true) * 5 > target.Health &&
                 (target.Health > R.GetDamage(target) * 1.4f || player.HealthPercent < 40))
             {
                 CastR(target);
