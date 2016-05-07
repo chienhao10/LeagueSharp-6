@@ -204,11 +204,7 @@ namespace UnderratedAIO.Champions
 
         private bool preventSilence(Spell spell)
         {
-            if (spell.Slot == SpellSlot.E && ActiveE)
-            {
-                return true;
-            }
-            return 20 + player.Mana < 100;
+            return (spell.Slot == SpellSlot.E ? 10 : 20) + player.Mana < 100;
         }
 
         private void Combo()
@@ -275,12 +271,16 @@ namespace UnderratedAIO.Champions
         {
             if (Program.IsSPrediction)
             {
-                R.SPredictionCastVector(target as Obj_AI_Hero, 1000f, HitChance.High);
+                if (config.Item("userEnabled", true).GetValue<bool>())
+                {
+                    R.SPredictionCastVector(target as Obj_AI_Hero, 1000f, HitChance.High);
+                }
             }
             else
             {
                 var targE = R.GetPrediction(target);
-                if ((config.Item("user", true).GetValue<bool>() && player.CountEnemiesInRange(R.Range + 175) <= 1) || manual)
+                if ((config.Item("user", true).GetValue<bool>() && player.CountEnemiesInRange(R.Range + 175) <= 1 &&
+                     config.Item("userEnabled", true).GetValue<bool>()) || manual)
                 {
                     if (target.IsMoving)
                     {
@@ -296,7 +296,7 @@ namespace UnderratedAIO.Champions
                         R.Cast(target.Position.Extend(player.Position, 500), target.Position);
                     }
                 }
-                else if (targE.Hitchance >= HitChance.VeryHigh)
+                else if (targE.Hitchance >= HitChance.VeryHigh && config.Item("userEnabled", true).GetValue<bool>())
                 {
                     var pred = getBestRVector3(target, targE);
                     if (pred != Vector3.Zero &&
@@ -430,8 +430,9 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("eDelay", "   Delay between E", true)).SetValue(new Slider(2000, 0, 2990));
             menuC.AddItem(new MenuItem("wSpeed", "Use W to speed up", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("user", "Use R 1v1", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("Rmin", "Use R teamfigh", true)).SetValue(new Slider(2, 1, 5));
+            menuC.AddItem(new MenuItem("userEnabled", "Use R", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("user", "   1v1", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("Rmin", "   Teamfight", true)).SetValue(new Slider(2, 1, 5));
             menuC.AddItem(new MenuItem("castR", "R manual cast", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
