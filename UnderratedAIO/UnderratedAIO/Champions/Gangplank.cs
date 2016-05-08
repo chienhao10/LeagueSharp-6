@@ -396,7 +396,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            if (Q.IsReady() && Q.IsReady() && config.Item("useqLC", true).GetValue<bool>())
+            if (config.Item("useqLC", true).GetValue<bool>())
             {
                 var barrel =
                     GetBarrels()
@@ -404,12 +404,45 @@ namespace UnderratedAIO.Champions
                             o =>
                                 o.IsValid && !o.IsDead && o.Distance(player) < Q.Range &&
                                 o.SkinName == "GangplankBarrel" && o.GetBuff("gangplankebarrellife").Caster.IsMe &&
-                                KillableBarrel(o) &&
-                                Environment.Minion.countMinionsInrange(o.Position, BarrelExplosionRange) >=
-                                config.Item("eMinHit", true).GetValue<Slider>().Value);
+                                Environment.Minion.countMinionsInrange(o.Position, BarrelExplosionRange) >= 1);
                 if (barrel != null)
                 {
-                    Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                    var minis = MinionManager.GetMinions(
+                        barrel.Position, BarrelExplosionRange, MinionTypes.All, MinionTeam.NotAlly);
+                    var Killable =
+                        minis.Where(e => Q.GetDamage(e) + ItemHandler.GetSheenDmg(e) >= e.Health && e.Health > 3);
+                    if (Q.IsReady() && KillableBarrel(barrel) &&
+                        Killable.Any(t => HealthPrediction.LaneClearHealthPrediction(t, 1000) <= 0))
+                    {
+                        Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                    }
+
+
+                    if (config.Item("ePrep", true).GetValue<bool>())
+                    {
+                        if (Q.IsReady() && minis.Count == Killable.Count() && KillableBarrel(barrel))
+                        {
+                            Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                        }
+                        else
+                        {
+                            foreach (var m in
+                                minis.Where(
+                                    e => Q.GetDamage(e) + ItemHandler.GetSheenDmg(e) <= e.Health && e.Health > 3)
+                                    .OrderBy(t => t.Distance(player))
+                                    .ThenByDescending(t => t.Health))
+                            {
+                                orbwalker.ForceTarget(m);
+                                return;
+                            }
+                        }
+                    }
+                    else if (Q.IsReady() && KillableBarrel(barrel) &&
+                             minis.Count >= config.Item("eMinHit", true).GetValue<Slider>().Value)
+                    {
+                        Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                    }
+
                     return;
                 }
             }
@@ -1066,6 +1099,7 @@ namespace UnderratedAIO.Champions
             menuLC.AddItem(new MenuItem("useeLC", "Use E", true)).SetValue(true);
             menuLC.AddItem(new MenuItem("eMinHit", "   Min hit", true)).SetValue(new Slider(3, 1, 6));
             menuLC.AddItem(new MenuItem("eStacksLC", "   Keep stacks", true)).SetValue(new Slider(0, 0, 5));
+            menuLC.AddItem(new MenuItem("ePrep", "   Prepare minions", true)).SetValue(true);
             menuLC.AddItem(new MenuItem("minmana", "Keep X% mana", true)).SetValue(new Slider(1, 1, 100));
             config.AddSubMenu(menuLC);
             Menu menuM = new Menu("Misc ", "Msettings");

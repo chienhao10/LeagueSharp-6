@@ -235,6 +235,8 @@ namespace UnderratedAIO.Helpers
 
         private static int _autoattackCounter;
 
+        public static string animation;
+
         /// <summary>
         ///     Initializes static members of the <see cref="Orbwalking" /> class.
         /// </summary>
@@ -247,6 +249,16 @@ namespace UnderratedAIO.Helpers
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpell;
             Obj_AI_Base.OnDoCast += Obj_AI_Base_OnDoCast;
             Spellbook.OnStopCast += SpellbookOnStopCast;
+            Obj_AI_Hero.OnPlayAnimation += Obj_AI_Hero_OnPlayAnimation;
+        }
+
+
+        private static void Obj_AI_Hero_OnPlayAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
+        {
+            if (sender.IsMe)
+            {
+                animation = args.Animation;
+            }
         }
 
         /// <summary>
@@ -451,12 +463,14 @@ namespace UnderratedAIO.Helpers
                 {
                     return true;
                 }
-
                 return false;
             }
-            if (Player.IsWindingUp)
+            if (Player.ChampionName == "Jhin")
             {
-                return false;
+                if (Player.HasBuff("JhinPassiveReload"))
+                {
+                    return false;
+                }
             }
             return Utils.GameTimeTickCount + Game.Ping / 2 + 25 >= LastAATick + Player.AttackDelay * 1000;
         }
@@ -468,10 +482,6 @@ namespace UnderratedAIO.Helpers
         /// <returns><c>true</c> if this instance can move the specified extra windup; otherwise, <c>false</c>.</returns>
         public static bool CanMove(float extraWindup, bool disableMissileCheck = false)
         {
-            if (Player.IsWindingUp)
-            {
-                return false;
-            }
             if (_missileLaunched && Orbwalker.MissileCheck && !disableMissileCheck)
             {
                 return true;
@@ -648,7 +658,7 @@ namespace UnderratedAIO.Helpers
                         return;
                     }
                     if (Player.IsMelee() && meleePrediction && target != null &&
-                        target.Position.Distance(Player.Position) < GetRealAutoAttackRange(target) &&
+                        target.Position.Distance(Player.Position) + 25 < GetRealAutoAttackRange(target) &&
                         target is Obj_AI_Hero && Game.CursorPos.Distance(target.Position) < 300)
                     {
                         Obj_AI_Hero tar = (Obj_AI_Hero) target;
@@ -664,12 +674,12 @@ namespace UnderratedAIO.Helpers
                         {
                             AutoAttack.Delay = Player.BasicAttack.SpellCastTime;
                             AutoAttack.Speed = Player.BasicAttack.MissileSpeed;
-                            MoveTo(pos, holdAreaRadius, false, useFixedDistance, randomizeMinDistance);
+                            MoveTo(pos, Math.Max(holdAreaRadius, 30), false, useFixedDistance, randomizeMinDistance);
                         }
                     }
                     else
                     {
-                        MoveTo(position, holdAreaRadius, false, useFixedDistance, randomizeMinDistance);
+                        MoveTo(position, Math.Max(holdAreaRadius, 30), false, useFixedDistance, randomizeMinDistance);
                     }
                 }
             }
@@ -711,7 +721,7 @@ namespace UnderratedAIO.Helpers
             {
                 if (Game.Ping <= 30) //First world problems kappa
                 {
-                    Utility.DelayAction.Add(30, () => Obj_AI_Base_OnDoCast_Delayed(sender, args));
+                    Utility.DelayAction.Add(30 - Game.Ping, () => Obj_AI_Base_OnDoCast_Delayed(sender, args));
                     return;
                 }
 
@@ -1152,6 +1162,12 @@ namespace UnderratedAIO.Helpers
                 AttackableUnit result = null;
                 var mode = ActiveMode;
 
+                //Forced target
+                if (_forcedTarget.IsValidTarget() && InAutoAttackRange(_forcedTarget))
+                {
+                    return _forcedTarget;
+                }
+
                 if ((mode == OrbwalkingMode.Mixed || mode == OrbwalkingMode.LaneClear) &&
                     !_config.Item("PriorizeFarm").GetValue<bool>())
                 {
@@ -1230,12 +1246,6 @@ namespace UnderratedAIO.Helpers
                             }
                         }
                     }
-                }
-
-                //Forced target
-                if (_forcedTarget.IsValidTarget() && InAutoAttackRange(_forcedTarget))
-                {
-                    return _forcedTarget;
                 }
 
                 /* turrets / inhibitors / nexus */
