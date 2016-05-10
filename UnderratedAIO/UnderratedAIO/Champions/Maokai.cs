@@ -177,13 +177,11 @@ namespace UnderratedAIO.Champions
             {
                 ItemHandler.UseItems(target, config, ComboDamage(target));
             }
-            if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) &&
-                config.Item("usee", true).GetValue<bool>() &&
-                player.Distance(target) <= config.Item("useqrange", true).GetValue<Slider>().Value &&
+            if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) && !player.IsWindingUp &&
                 ((config.Item("useqroot", true).GetValue<bool>() &&
-                  (!target.HasBuffOfType(BuffType.Snare) && !target.HasBuffOfType(BuffType.Slow) &&
-                   !target.HasBuffOfType(BuffType.Stun) && !target.HasBuffOfType(BuffType.Suppression))) ||
-                 !config.Item("useqroot", true).GetValue<bool>()))
+                  (!target.HasBuffOfType(BuffType.Snare) && !target.HasBuffOfType(BuffType.Stun) &&
+                   !target.HasBuffOfType(BuffType.Suppression))) || !config.Item("useqroot", true).GetValue<bool>()) &&
+                !W.CanCast(target))
             {
                 Q.Cast(target, config.Item("packets").GetValue<bool>());
             }
@@ -344,7 +342,7 @@ namespace UnderratedAIO.Champions
             // Combo settings
             Menu menuC = new Menu("Combo ", "csettings");
             menuC.AddItem(new MenuItem("useq", "Use Q", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("useqroot", "   Wait if the target stunned, slowed...", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("useqroot", "   Wait if the target stunned", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useqrange", "   Q max range", true))
                 .SetValue(new Slider((int) Q.Range, 0, (int) Q.Range));
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
