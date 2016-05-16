@@ -113,26 +113,13 @@ namespace UnderratedAIO.Champions
                     break;
             }
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
-            if (data != null && W.IsReady())
+            if (data != null && W.IsReady() && config.Item("autoW", true).GetValue<bool>() &&
+                config.Item("minmanaP", true).GetValue<Slider>().Value < player.ManaPercent)
             {
                 Obj_AI_Hero enemy = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                if ((config.Item("usew", true).GetValue<bool>() &&
-                     orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && enemy != null &&
-                     data.DamageTaken >= enemy.GetAutoAttackDamage(player) - 5) ||
-                    (config.Item("usewDangerous", true).GetValue<bool>() && data.DamageTaken > player.Health * 0.1f))
+                if (enemy != null && data.ProjectileDamageTaken >= enemy.GetAutoAttackDamage(player) - 5)
                 {
-                    MinionManager.FarmLocation bestPositionW =
-                        W.GetLineFarmLocation(
-                            MinionManager.GetMinions(
-                                ObjectManager.Player.ServerPosition, W.Range, MinionTypes.All, MinionTeam.NotAlly));
-                    if (enemy != null)
-                    {
-                        W.Cast(enemy, config.Item("packets").GetValue<bool>());
-                    }
-                    else if (bestPositionW.MinionsHit > 0)
-                    {
-                        W.Cast(bestPositionW.Position, config.Item("packets").GetValue<bool>());
-                    }
+                    W.Cast(enemy, config.Item("packets").GetValue<bool>());
                 }
             }
         }
@@ -240,7 +227,6 @@ namespace UnderratedAIO.Champions
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
             if (config.Item("usewCC", true).GetValue<bool>() && W.IsReady() && data.AnyCC)
             {
-                Console.WriteLine("asdafwfq");
                 W.Cast(target.Position, config.Item("packets").GetValue<bool>());
             }
             var closestPassive = GetClosestPassivePosition(target);
@@ -282,10 +268,16 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
-            if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && target.Distance(player) > 350f &&
-                W.GetDamage(target) > target.Health)
+            if (W.IsReady() && config.Item("usew", true).GetValue<bool>())
             {
-                W.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                var killable = (target.Distance(player) > 350f && W.GetDamage(target) > target.Health);
+                var incAA = data.ProjectileDamageTaken >= target.GetAutoAttackDamage(player) - 5;
+                var dangerous = incAA && data.DamageTaken >= player.Health * 0.4f;
+                if (killable || (incAA && !config.Item("usewDangerous", true).GetValue<bool>()) ||
+                    (config.Item("usewDangerous", true).GetValue<bool>() && dangerous))
+                {
+                    W.CastIfHitchanceEquals(target, HitChance.Low, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("useIgnite").GetValue<bool>() && hasIgnite && ComboDamage(target) > target.Health &&
                 !Q.IsReady() &&
