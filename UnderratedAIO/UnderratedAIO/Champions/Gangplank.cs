@@ -797,6 +797,29 @@ namespace UnderratedAIO.Champions
                         Color.Coral);
                 }
             }
+            var tokens = player.GetBuff("gangplankbilgewatertoken");
+            if (player.InFountain() && config.Item("drawQpass", true).GetValue<bool>() && tokens != null &&
+                tokens.Count > 500)
+            {
+                var second = DateTime.Now.Second.ToString();
+                var time = int.Parse(second[second.Length - 1].ToString());
+                var color = Color.DeepSkyBlue;
+                if (time >= 3 && time < 6)
+                {
+                    color = Color.GreenYellow;
+                }
+                if (time >= 6 && time < 8)
+                {
+                    color = Color.Yellow;
+                }
+                if (time >= 8)
+                {
+                    color = Color.Orange;
+                }
+                Drawing.DrawText(
+                    Drawing.WorldToScreen(Game.CursorPos).X - 150, Drawing.WorldToScreen(Game.CursorPos).Y - 50, color,
+                    "Spend your Silver Serpents, landlubber!");
+            }
             if (config.Item("drawKillableSL", true).GetValue<StringList>().SelectedIndex != 0 && R.IsReady())
             {
                 var text = new List<string>();
@@ -1051,6 +1074,7 @@ namespace UnderratedAIO.Champions
             menuD.AddItem(new MenuItem("drawEQ", "Draw EQ to cursor", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawKillableSL", "Show killable targets with R", true))
                 .SetValue(new StringList(new[] { "OFF", "Above HUD", "Under GP" }, 1));
+            menuD.AddItem(new MenuItem("drawQpass", "Draw notification about Silver serpents", true)).SetValue(true);
             config.AddSubMenu(menuD);
             // Combo Settings
             Menu menuC = new Menu("Combo ", "csettings");
