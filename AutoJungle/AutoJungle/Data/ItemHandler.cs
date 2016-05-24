@@ -34,7 +34,7 @@ namespace AutoJungle.Data
             ItemList.Add(new BuyingOrder(4, 1039, "Hunter's Talisman", 350));
             ItemList.Add(new BuyingOrder(5, 3715, "Skirmisher's Sabre", 700));
             ItemList.Add(new BuyingOrder(6, 1042, "Dagger", 350));
-            ItemList.Add(new BuyingOrder(7, 1415, "Devourer", 1100));
+            ItemList.Add(new BuyingOrder(7, 1419, "Bloodrazor", 1350));
             ItemList.Add(new BuyingOrder(8, (int) ItemId.Boots_of_Speed, "Boots of Speed", 300));
             ItemList.Add(new BuyingOrder(9, (int) ItemId.Tear_of_the_Goddess, "Tear of the Goddess", 750));
             ItemList.Add(new BuyingOrder(10, (int) ItemId.Boots_of_Swiftness, "Boots of Swoftness", 500));
@@ -61,7 +61,7 @@ namespace AutoJungle.Data
             ItemList.Add(new BuyingOrder(4, 1039, "Hunter's Talisman", 350));
             ItemList.Add(new BuyingOrder(5, 3715, "Skirmisher's Sabre", 700));
             ItemList.Add(new BuyingOrder(6, 1042, "Dagger", 350));
-            ItemList.Add(new BuyingOrder(7, 1415, "Devourer", 1100));
+            ItemList.Add(new BuyingOrder(7, 1419, "Bloodrazor", 1350));
             ItemList.Add(new BuyingOrder(8, (int) ItemId.Boots_of_Speed, "Boots of Speed", 300));
             ItemList.Add(new BuyingOrder(9, (int) ItemId.Boots_of_Swiftness, "Boots of Swoftness", 500));
             ItemList.Add(new BuyingOrder(10, (int) ItemId.Bilgewater_Cutlass, "Bilgewater Cutlass", 1650));
