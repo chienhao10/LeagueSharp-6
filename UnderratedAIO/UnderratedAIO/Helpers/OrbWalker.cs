@@ -667,7 +667,7 @@ namespace UnderratedAIO.Helpers
                         if (Player.ChampionName == "Nocturne" &&
                             (tar.HasBuffOfType(BuffType.Fear) || tar.HasBuffOfType(BuffType.Flee)))
                         {
-                            pos = tar.ServerPosition.Extend(Player.ServerPosition, GetRealAutoAttackRange(tar));
+                            pos = position;
                         }
                         if (Player.Distance(target) > target.BoundingRadius &&
                             !CombatHelper.IsFacing((Obj_AI_Base) target, Player.Position, 120f) && tar.IsMoving)
@@ -1619,7 +1619,15 @@ namespace UnderratedAIO.Helpers
                     {
                         if (minion.Health < ObjectManager.Player.GetAutoAttackDamage(minion, true))
                         {
-                            Render.Circle.DrawCircle(minion.Position, 50, Color.LimeGreen);
+                            Render.Circle.DrawCircle(minion.Position, 50, Color.LimeGreen, 7);
+                        }
+                        else if (minion.Health < ObjectManager.Player.GetAutoAttackDamage(minion, true) * 1.5f)
+                        {
+                            Render.Circle.DrawCircle(minion.Position, 50, Color.Orange, 7);
+                        }
+                        else if (minion.Health < ObjectManager.Player.GetAutoAttackDamage(minion, true) * 2f)
+                        {
+                            Render.Circle.DrawCircle(minion.Position, 50, Color.Red, 7);
                         }
                     }
                 }
