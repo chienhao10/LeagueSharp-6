@@ -273,15 +273,6 @@ namespace UnderratedAIO.Champions
                     .Where(i => i.Health < E.GetDamage(i) || i.Health > 500f)
                     .OrderByDescending(i => i.Distance(player))
                     .FirstOrDefault();
-            var targetJ =
-                MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly)
-                    .Where(i => i.Health > 500f)
-                    .OrderByDescending(i => i.Health)
-                    .FirstOrDefault();
-            if (target == null)
-            {
-                target = targetJ;
-            }
             if (config.Item("useeLC").GetValue<bool>() && E.CanCast(target))
             {
                 E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
