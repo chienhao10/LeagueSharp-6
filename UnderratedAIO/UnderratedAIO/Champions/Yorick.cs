@@ -92,16 +92,6 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        public static bool CanCloneAttack(Obj_AI_Base ghost)
-        {
-            if (ghost != null)
-            {
-                return Utils.GameTimeTickCount >=
-                       LastAATick + Game.Ping + 100 + (ghost.AttackDelay - ghost.AttackCastDelay) * 1000;
-            }
-            return false;
-        }
-
         private void moveGhost()
         {
             var Gtarget = TargetSelector.GetTarget(GhostRange, TargetSelector.DamageType.Magical);
@@ -127,45 +117,9 @@ namespace UnderratedAIO.Champions
             }
             if (clone != null && Gtarget != null && Gtarget.IsValid)
             {
-                if (clone.AttackRange < 500)
-                {
-                    if (CanCloneAttack(clone) || player.HealthPercent < 25)
-                    {
-                        R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                    }
-                    else
-                    {
-                        var prediction = Prediction.GetPrediction(Gtarget, 2);
-                        R.Cast(
-                            Gtarget.Position.Extend(prediction.UnitPosition, Orbwalking.GetRealAutoAttackRange(Gtarget)),
-                            config.Item("packets").GetValue<bool>());
-                    }
-                }
-                else
-                {
-                    if (CanCloneAttack(clone) || player.HealthPercent < 25)
-                    {
-                        R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                    }
-                    else
-                    {
-                        var pred = Prediction.GetPrediction(Gtarget, 0.5f);
-                        var point =
-                            CombatHelper.PointsAroundTheTargetOuterRing(pred.UnitPosition, clone.AttackRange / 2, 15)
-                                .Where(p => !p.IsWall())
-                                .OrderBy(p => p.CountEnemiesInRange(500))
-                                .ThenBy(p => p.Distance(player.Position))
-                                .FirstOrDefault();
-
-                        if (point.IsValid())
-                        {
-                            R.Cast(point, config.Item("packets").GetValue<bool>());
-                        }
-                    }
-                }
+                R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
                 GhostDelay = true;
                 Utility.DelayAction.Add(200, () => GhostDelay = false);
-                return;
             }
         }
 
@@ -197,12 +151,6 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
-
-            if (R.IsReady() && Yorickghost && !GhostDelay && config.Item("moveGhost", true).GetValue<bool>() &&
-                !config.Item("autoMoveGhost", true).GetValue<bool>())
-            {
-                moveGhost();
-            }
             if (target == null)
             {
                 return;
@@ -238,6 +186,11 @@ namespace UnderratedAIO.Champions
             if (config.Item("useIgnite").GetValue<bool>() && combodmg > target.Health && hasIgnite)
             {
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
+            }
+            if (R.IsReady() && Yorickghost && !GhostDelay && config.Item("moveGhost", true).GetValue<bool>() &&
+                !config.Item("autoMoveGhost", true).GetValue<bool>())
+            {
+                moveGhost();
             }
         }
 
