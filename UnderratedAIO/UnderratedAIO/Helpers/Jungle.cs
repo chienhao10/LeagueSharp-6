@@ -91,9 +91,15 @@ namespace UnderratedAIO.Helpers
 
         //Kurisu
         private static readonly int[] SmitePurple = { 3713, 3726, 3725, 3724, 3723, 3933 };
-        private static readonly int[] SmiteGrey = { 3711, 3722, 3721, 3720, 3719, 3932 }; // 1410, 1409, 1408, 1411
-        private static readonly int[] SmiteRed = { 3715, 3718, 3717, 3716, 3714, 3931, 1415, 1412 }; //1414, 1413
-        private static readonly int[] SmiteBlue = { 3706, 3710, 3709, 3708, 3707, 3930 }; // 1402, 1401, 1400, 1403
+
+        private static readonly int[] SmiteGrey = { 3711, 3722, 3721, 3720, 3719, 3932, 1410, 1409, 1408, 1411 };
+            // 1410, 1409, 1408, 1411
+
+        private static readonly int[] SmiteRed = { 3715, 3718, 3717, 3716, 3714, 3931, 1415, 1412, 1419, 1414, 1413 };
+        //1414, 1413
+
+        private static readonly int[] SmiteBlue = { 3706, 3710, 3709, 3708, 3707, 3930, 1402, 1401, 1400, 1403 };
+        // 1402, 1401, 1400, 1403
 
         public static string smitetype()
         {

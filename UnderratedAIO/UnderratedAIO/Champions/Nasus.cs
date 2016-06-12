@@ -49,7 +49,8 @@ namespace UnderratedAIO.Champions
             if (unit.IsMe && Q.IsReady() &&
                 ((config.Item("autoQ").GetValue<bool>() &&
                   target.Health < Q.GetDamage((Obj_AI_Base) target) + player.GetAutoAttackDamage((Obj_AI_Base) target)) ||
-                 (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear && target.Health > 1000)))
+                 (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear && target.Health > 1000 &&
+                  config.Item("useqLC").GetValue<bool>())))
             {
                 Q.Cast(config.Item("packets").GetValue<bool>());
             }
@@ -180,7 +181,7 @@ namespace UnderratedAIO.Champions
             }
             MinionManager.FarmLocation bestPositionE =
                 E.GetCircularFarmLocation(MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly), 400f);
-            if (config.Item("useeLC").GetValue<bool>() && Q.IsReady() &&
+            if (config.Item("useeLC").GetValue<bool>() && E.IsReady() &&
                 bestPositionE.MinionsHit >= config.Item("ehitLC").GetValue<Slider>().Value)
             {
                 E.Cast(bestPositionE.Position, config.Item("packets").GetValue<bool>());
@@ -191,7 +192,11 @@ namespace UnderratedAIO.Champions
         {
             var minions =
                 MinionManager.GetMinions(Orbwalking.GetRealAutoAttackRange(player), MinionTypes.All, MinionTeam.NotAlly)
-                    .FirstOrDefault(m => m.Health > 5 && m.Health < Q.GetDamage(m) + player.GetAutoAttackDamage(m));
+                    .FirstOrDefault(
+                        m =>
+                            m.Health > 5 &&
+                            HealthPrediction.LaneClearHealthPrediction(m, 1000) <
+                            Q.GetDamage(m) + player.GetAutoAttackDamage(m));
             if (minions != null)
             {
                 Q.Cast(config.Item("packets").GetValue<bool>());
@@ -327,6 +332,7 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuH);
             // LaneClear Settings
             Menu menuLC = new Menu("LaneClear ", "Lcsettings");
+            menuLC.AddItem(new MenuItem("useqLC", "Use Q")).SetValue(true);
             menuLC.AddItem(new MenuItem("useeLC", "Use E")).SetValue(true);
             menuLC.AddItem(new MenuItem("ehitLC", "   Min hit").SetValue(new Slider(4, 1, 10)));
             menuLC.AddItem(new MenuItem("minmana", "Keep X% mana")).SetValue(new Slider(1, 1, 100));

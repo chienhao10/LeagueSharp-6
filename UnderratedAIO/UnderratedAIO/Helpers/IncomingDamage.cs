@@ -231,6 +231,10 @@ namespace UnderratedAIO.Helpers
                             {
                                 var dmg =
                                     (float) (sender.GetAutoAttackDamage(target, true) + ItemHandler.GetSheenDmg(target));
+                                if (args.SData.Name.ToLower().Contains("crit"))
+                                {
+                                    dmg = dmg * 2;
+                                }
                                 data.Damages.Add(
                                     new Dmg(target, dmg, missileSpeed, !sender.Name.ToLower().Contains("turret")));
                             }

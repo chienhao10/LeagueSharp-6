@@ -93,7 +93,7 @@ namespace UnderratedAIO.Champions
             {
                 CastAutoE();
             }
-            if (config.Item("autoEdmg", true).GetValue<Slider>().Value / 100f * player.Health < data.DamageTaken &&
+            if (config.Item("autoEdmg2", true).GetValue<Slider>().Value / 100f * player.Health < data.DamageTaken &&
                 E.IsReady() && !OnTrident)
             {
                 CastAutoE();
@@ -231,20 +231,33 @@ namespace UnderratedAIO.Champions
 
             if (E.IsReady() && config.Item("usee", true).GetValue<bool>() && !player.IsWindingUp)
             {
-                if (config.Item("useedmg", true).GetValue<bool>() &&
-                    data.ProjectileDamageTaken > target.GetAutoAttackDamage(player, true) + 10)
+                var enemyPred = E.GetPrediction(target);
+                if (!OnTrident)
                 {
-                    CastE(target, data);
+                    if (config.Item("useedmg", true).GetValue<bool>() &&
+                        data.ProjectileDamageTaken > target.GetAutoAttackDamage(player, true) + 10)
+                    {
+                        E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
+                    }
+                    if (config.Item("useeaa", true).GetValue<bool>() &&
+                        data.AADamageTaken < target.GetAutoAttackDamage(player, true) + 10 &&
+                        !SpellDatabase.AnyReadyCC(player.Position, 700, true))
+                    {
+                        E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
+                    }
+                    if (config.Item("useegc", true).GetValue<bool>() &&
+                        cmbdmg > HeroManager.Enemies.Where(e => target.Distance(e) < 1500).Sum(e => e.Health) &&
+                        !target.UnderTurret(true))
+                    {
+                        E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
+                    }
                 }
-                if (config.Item("useeaa", true).GetValue<bool>() &&
-                    data.AADamageTaken < target.GetAutoAttackDamage(player, true) + 10 &&
-                    !SpellDatabase.AnyReadyCC(player.Position, 700, true))
+                else
                 {
-                    CastE(target, data);
-                }
-                if (cmbdmg > target.Health && target.Distance(player) > E.Range * 1.8f)
-                {
-                    CastE(target, data);
+                    if (data.DamageTaken < 10 && enemyPred.Hitchance >= HitChance.High)
+                    {
+                        E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
+                    }
                 }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && player.IsWindingUp)
@@ -259,17 +272,6 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        private void CastE(Obj_AI_Hero target, IncData data)
-        {
-            if (OnTrident && !data.AnyCC)
-            {
-                E.Cast(player.Position.Extend(target.Position, E.Range), config.Item("packets").GetValue<bool>());
-            }
-            else
-            {
-                E.Cast(player.Position.Extend(Game.CursorPos, E.Range), config.Item("packets").GetValue<bool>());
-            }
-        }
 
         private void Game_OnDraw(EventArgs args)
         {
@@ -364,6 +366,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useedmg", "   On spell damage", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useeaa", "   On AA damage", true)).SetValue(false);
+            menuC.AddItem(new MenuItem("useecq", "   CloseGap 1v1", true)).SetValue(false);
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
             menuC.AddItem(new MenuItem("castR", "Cast R", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
@@ -392,7 +395,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(Program.SPredictionMenu);
             Menu menuE = new Menu("Auto E ", "Esettings");
             menuE.AddItem(new MenuItem("autoECC", "Before CC", true)).SetValue(true);
-            menuE.AddItem(new MenuItem("autoEdmg", "Before Damage in % Health", true)).SetValue(new Slider(20, 1, 100));
+            menuE.AddItem(new MenuItem("autoEdmg2", "Before Damage in % Health", true)).SetValue(new Slider(20, 1, 100));
             menuM.AddSubMenu(menuE);
             menuM = Jungle.addJungleOptions(menuM);
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
