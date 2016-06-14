@@ -18,10 +18,11 @@ namespace UnderratedAIO.Champions
         public static Spell Q, W, E, R;
         public static bool hasGhost = false;
         public static bool GhostDelay, justW;
-        public static int GhostRange = 2200;
+        public static int GhostRange = 2200, wWidth = 300;
         public static AutoLeveler autoLeveler;
         public static int LastAATick;
         public Obj_AI_Hero IgniteTarget;
+        public static Obj_AI_Base clone;
 
         public Mordekaiser()
         {
@@ -46,19 +47,6 @@ namespace UnderratedAIO.Champions
                 {
                     justW = true;
                     Utility.DelayAction.Add(1000, () => justW = false);
-                }
-            }
-            if (MordeGhost)
-            {
-                //var clone = ObjectManager.Get<Obj_AI_Base>().FirstOrDefault(m => m.HasBuff("mordekaisercotgpetbuff2"));
-                var clone = ObjectManager.Player.Pet;
-                if (clone == null)
-                {
-                    return;
-                }
-                if (hero.NetworkId == clone.NetworkId)
-                {
-                    LastAATick = Utils.GameTimeTickCount;
                 }
             }
         }
@@ -86,6 +74,11 @@ namespace UnderratedAIO.Champions
             {
                 moveGhost();
             }
+            clone = (Obj_AI_Base) ObjectManager.Player.Pet;
+            if (clone != null && !clone.IsValid)
+            {
+                clone = null;
+            }
         }
 
         private void BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
@@ -103,11 +96,12 @@ namespace UnderratedAIO.Champions
 
         private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
+            var junglemob = Jungle.GetNearest(player.Position);
             if (unit.IsMe && Q.IsReady() &&
                 ((orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && config.Item("useq", true).GetValue<bool>() &&
                   target.IsEnemy && target.Team != player.Team) ||
-                 (config.Item("useqLC", true).GetValue<bool>() &&
-                  Jungle.GetNearest(player.Position).Distance(player.Position) < player.AttackRange + 30)))
+                 (config.Item("useqLC", true).GetValue<bool>() && junglemob != null &&
+                  junglemob.Distance(player.Position) < player.AttackRange + 30)))
             {
                 Q.Cast(config.Item("packets").GetValue<bool>());
                 Orbwalking.ResetAutoAttackTimer();
@@ -118,16 +112,12 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
-            if (MordeGhost && !GhostDelay && config.Item("moveGhost", true).GetValue<bool>() &&
-                !config.Item("autoMoveGhost", true).GetValue<bool>())
-            {
-                moveGhost();
-            }
             if (target == null)
             {
-                if (MordeGhost && !GhostDelay && config.Item("follow", true).GetValue<bool>())
+                if (MordeGhost && clone != null && !GhostDelay && config.Item("follow", true).GetValue<bool>() &&
+                    clone.Distance(player) > 350)
                 {
-                    R.Cast(Game.CursorPos.Extend(player.Position, 100));
+                    R.Cast(Game.CursorPos.Extend(player.Position, 250));
                     GhostDelay = true;
                     Utility.DelayAction.Add(200, () => GhostDelay = false);
                 }
@@ -140,7 +130,7 @@ namespace UnderratedAIO.Champions
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
             {
-                CastW();
+                CastW(target);
             }
             if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target) && player.Distance(target) < E.Range)
             {
@@ -162,7 +152,12 @@ namespace UnderratedAIO.Champions
                 R.GetDamage(target) * 0.8f + ignitedmg > HealthPrediction.GetHealthPrediction(target, 400))
             {
                 IgniteTarget = target;
-                Utility.DelayAction.Add(500, () => IgniteTarget = null);
+                Utility.DelayAction.Add(
+                    150, () =>
+                    {
+                        player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), IgniteTarget);
+                        IgniteTarget = null;
+                    });
                 R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
             }
             if (config.Item("useIgnite").GetValue<bool>() && ignitedmg > target.Health && hasIgnite)
@@ -174,11 +169,15 @@ namespace UnderratedAIO.Champions
                 }
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
             }
+            if (MordeGhost && !GhostDelay && config.Item("moveGhost", true).GetValue<bool>() &&
+                !config.Item("autoMoveGhost", true).GetValue<bool>())
+            {
+                moveGhost();
+            }
         }
 
         private void moveGhost()
         {
-            var ghost = ObjectManager.Get<Obj_AI_Minion>().FirstOrDefault(m => m.HasBuff("mordekaisercotgpetbuff2"));
             var Gtarget = TargetSelector.GetTarget(GhostRange, TargetSelector.DamageType.Magical);
             switch (config.Item("ghostTarget", true).GetValue<StringList>().SelectedIndex)
             {
@@ -187,96 +186,81 @@ namespace UnderratedAIO.Champions
                     break;
                 case 1:
                     Gtarget =
-                        ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(i => i.IsEnemy && !i.IsDead && player.Distance(i) <= R.Range)
+                        HeroManager.Enemies.Where(i => player.Distance(i) <= 1500)
                             .OrderBy(i => i.Health)
                             .FirstOrDefault();
                     break;
                 case 2:
                     Gtarget =
-                        ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(i => i.IsEnemy && !i.IsDead && player.Distance(i) <= R.Range)
+                        HeroManager.Enemies.Where(i => player.Distance(i) <= 1500)
                             .OrderBy(i => player.Distance(i))
                             .FirstOrDefault();
                     break;
                 default:
                     break;
             }
-            if (ghost != null && Gtarget != null && Gtarget.IsValid && !ghost.IsWindingUp)
+            if (clone != null && Gtarget != null && Gtarget.IsValid && !clone.IsWindingUp)
             {
-                if (ghost.IsMelee)
-                {
-                    if (CanCloneAttack(ghost) || player.HealthPercent < 25)
-                    {
-                        R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                    }
-                    else
-                    {
-                        var prediction = Prediction.GetPrediction(Gtarget, 2);
-                        R.Cast(
-                            Gtarget.Position.Extend(prediction.UnitPosition, Orbwalking.GetRealAutoAttackRange(Gtarget)),
-                            config.Item("packets").GetValue<bool>());
-                    }
-                }
-                else
-                {
-                    if (CanCloneAttack(ghost) || player.HealthPercent < 25)
-                    {
-                        R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                    }
-                    else
-                    {
-                        var pred = Prediction.GetPrediction(Gtarget, 0.5f);
-                        var point =
-                            CombatHelper.PointsAroundTheTargetOuterRing(pred.UnitPosition, Gtarget.AttackRange / 2, 15)
-                                .Where(p => !p.IsWall())
-                                .OrderBy(p => p.CountEnemiesInRange(500))
-                                .ThenBy(p => p.Distance(Game.CursorPos))
-                                .FirstOrDefault();
-
-                        if (point.IsValid())
-                        {
-                            Console.WriteLine("---orbwalk---");
-                            R.Cast(point, config.Item("packets").GetValue<bool>());
-                        }
-                    }
-                }
+                R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
                 GhostDelay = true;
-                Utility.DelayAction.Add(200, () => GhostDelay = false);
+                Utility.DelayAction.Add(500, () => GhostDelay = false);
             }
         }
 
-        private void CastW()
+        private void CastW(Obj_AI_Hero target)
         {
             if (justW)
             {
                 return;
             }
-            var allyW = ObjectManager.Get<Obj_AI_Base>().FirstOrDefault(o => o.HasBuff("mordekaisercreepingdeath"));
-            if (allyW != null)
+            var allyWs =
+                ObjectManager.Get<Obj_AI_Base>()
+                    .Where(o => o.Distance(player) < 1500 && o.HasBuff("mordekaisercreepingdeath"));
+            if (allyWs.Any())
             {
-                if (allyW.HealthPercent < 20 || player.HealthPercent < 20 ||
-                    CombatHelper.GetBuffTime(allyW.GetBuff("mordekaisercreepingdeath")) < 0.5f)
+                foreach (var allyW in allyWs)
                 {
-                    if ((allyW.CountEnemiesInRange(250) +
-                         Environment.Minion.countMinionsInrange(allyW.Position, 250f) / 2f >= 1 ||
-                         player.CountEnemiesInRange(250f) +
-                         Environment.Minion.countMinionsInrange(player.Position, 250f) / 2f >= 1))
+                    var targethero =
+                        HeroManager.Enemies.Where(e => e.Distance(allyW.Position) < wWidth && e.IsValidTarget())
+                            .OrderByDescending(e => e.Distance(allyW.Position))
+                            .FirstOrDefault();
+                    if (targethero != null)
                     {
-                        W.Cast(config.Item("packets").GetValue<bool>());
+                        var pred =
+                            Prediction.GetPrediction(targethero, 0.1f)
+                                .UnitPosition.Distance(Prediction.GetPrediction(allyW, 0.1f).UnitPosition);
+                        if ((pred > wWidth &&
+                             (allyW.CountEnemiesInRange(wWidth) == 1 || target.NetworkId == targethero.NetworkId)) &&
+                            !allyWs.Any(
+                                a =>
+                                    Prediction.GetPrediction(targethero, 0.1f)
+                                        .UnitPosition.Distance(Prediction.GetPrediction(a, 0.1f).UnitPosition) < wWidth))
+                        {
+                            W.Cast(config.Item("packets").GetValue<bool>());
+                        }
+                    }
+                    if (allyW is Obj_AI_Hero)
+                    {
+                        var data = Program.IncDamages.GetAllyData(allyW.NetworkId);
+                        if (data != null)
+                        {
+                            if (data.IsAboutToDie)
+                            {
+                                W.Cast(config.Item("packets").GetValue<bool>());
+                            }
+                        }
                     }
                 }
             }
             else
             {
-                Obj_AI_Base wTarget = Environment.Hero.mostEnemyAtFriend(player, W.Range, 250f);
+                Obj_AI_Base wTarget = Environment.Hero.mostEnemyAtFriend(player, W.Range, wWidth);
                 if (MordeGhost)
                 {
-                    var ghost =
-                        ObjectManager.Get<Obj_AI_Minion>().FirstOrDefault(m => m.HasBuff("mordekaisercotgpetbuff2"));
-                    if (wTarget == null || ghost.CountEnemiesInRange(250f) > wTarget.CountEnemiesInRange(250f))
+                    if (wTarget == null || clone.CountEnemiesInRange(250f) > wTarget.CountEnemiesInRange(250f))
                     {
-                        wTarget = ghost;
+                        W.Cast(clone, config.Item("packets").GetValue<bool>());
+                        return;
                     }
                 }
                 if (wTarget != null && (wTarget.CountEnemiesInRange(250) > 0 || player.CountEnemiesInRange(250) > 0))
@@ -288,17 +272,7 @@ namespace UnderratedAIO.Champions
 
         private static bool MordeGhost
         {
-            get { return player.Spellbook.GetSpell(SpellSlot.R).Name == "mordekaisercotgguide"; }
-        }
-
-        public static bool CanCloneAttack(Obj_AI_Minion ghost)
-        {
-            if (ghost != null)
-            {
-                return Utils.GameTimeTickCount >=
-                       LastAATick + Game.Ping + 100 + (ghost.AttackDelay - ghost.AttackCastDelay) * 1000;
-            }
-            return false;
+            get { return player.Spellbook.GetSpell(SpellSlot.R).Name.ToLower() == "mordekaisercotgguide"; }
         }
 
         private void Harass()

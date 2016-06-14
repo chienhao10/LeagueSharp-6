@@ -22,7 +22,7 @@ namespace UnderratedAIO.Champions
         public static int GhostRange = 2200;
         public static int LastAATick;
         public static AutoLeveler autoLeveler;
-        public static Obj_AI_Minion clone;
+        public static Obj_AI_Base clone;
 
         public Yorick()
         {
@@ -56,19 +56,6 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            if (Yorickghost && clone == null)
-            {
-                clone =
-                    ObjectManager.Get<Obj_AI_Minion>()
-                        .FirstOrDefault(
-                            m =>
-                                m.IsAlly && m.Distance(player) < 3000 &&
-                                HeroManager.Allies.Any(h => h.Name.ToLower().Equals(m.Name.ToLower())));
-                if (clone != null)
-                {
-                    Console.WriteLine("Found: " + clone.Name);
-                }
-            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -89,6 +76,11 @@ namespace UnderratedAIO.Champions
             if (R.IsReady() && Yorickghost && !GhostDelay && config.Item("autoMoveGhost", true).GetValue<bool>())
             {
                 moveGhost();
+            }
+            clone = (Obj_AI_Base) ObjectManager.Player.Pet;
+            if (clone != null && !clone.IsValid)
+            {
+                clone = null;
             }
         }
 
@@ -115,11 +107,11 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            if (clone != null && Gtarget != null && Gtarget.IsValid)
+            if (clone != null && Gtarget != null && Gtarget.IsValid && !clone.IsWindingUp)
             {
                 R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
                 GhostDelay = true;
-                Utility.DelayAction.Add(200, () => GhostDelay = false);
+                Utility.DelayAction.Add(500, () => GhostDelay = false);
             }
         }
 
@@ -160,7 +152,6 @@ namespace UnderratedAIO.Champions
             {
                 ItemHandler.UseItems(target, config, combodmg);
             }
-
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
             if (config.Item("usew").GetValue<bool>() && W.CanCast(target))
             {
