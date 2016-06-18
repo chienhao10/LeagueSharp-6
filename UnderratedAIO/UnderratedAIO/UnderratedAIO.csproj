@@ -36,22 +36,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="clipper_library">
-      <HintPath>..\..\..\..\..\Downloads\LeagueSharp\System\clipper_library.dll</HintPath>
+      <HintPath>C:\LeagueSharp\System\clipper_library.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp">
-      <HintPath>..\..\..\..\..\Downloads\LeagueSharp\System\LeagueSharp.dll</HintPath>
+      <HintPath>C:\LeagueSharp\System\LeagueSharp.dll</HintPath>
     </Reference>
     <Reference Include="LeagueSharp.Common">
-      <HintPath>..\..\..\..\..\Downloads\LeagueSharp\System\LeagueSharp.Common.dll</HintPath>
+      <HintPath>C:\LeagueSharp\System\LeagueSharp.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\..\Downloads\LeagueSharp\System\SharpDX.dll</HintPath>
+      <HintPath>C:\LeagueSharp\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>..\..\..\..\..\Downloads\LeagueSharp\System\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>C:\LeagueSharp\System\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="SPrediction">
-      <HintPath>..\..\..\..\..\Downloads\LeagueSharp\System\SPrediction.dll</HintPath>
+      <HintPath>C:\LeagueSharp\System\SPrediction.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -97,6 +97,7 @@
     <Compile Include="Champions\Yorick.cs" />
     <Compile Include="Champions\Zac.cs" />
     <Compile Include="Helpers\AutoLeveler.cs" />
+    <Compile Include="Helpers\PetHandler.cs" />
     <Compile Include="Helpers\CombatHelper.cs" />
     <Compile Include="Helpers\DrawHelper.cs" />
     <Compile Include="Helpers\DynamicInitializer.cs" />

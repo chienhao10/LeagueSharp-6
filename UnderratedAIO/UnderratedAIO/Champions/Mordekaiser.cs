@@ -16,13 +16,10 @@ namespace UnderratedAIO.Champions
         private static Orbwalking.Orbwalker orbwalker;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
         public static Spell Q, W, E, R;
-        public static bool hasGhost = false;
-        public static bool GhostDelay, justW;
-        public static int GhostRange = 2200, wWidth = 300;
+        public static bool justW;
+        public static int wWidth = 300;
         public static AutoLeveler autoLeveler;
-        public static int LastAATick;
         public Obj_AI_Hero IgniteTarget;
-        public static Obj_AI_Base clone;
 
         public Mordekaiser()
         {
@@ -70,14 +67,9 @@ namespace UnderratedAIO.Champions
                     break;
             }
             Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-            if (MordeGhost && !GhostDelay && config.Item("autoMoveGhost", true).GetValue<bool>())
+            if (MordeGhost && R.IsReady())
             {
-                moveGhost();
-            }
-            clone = (Obj_AI_Base) ObjectManager.Player.Pet;
-            if (clone != null && !clone.IsValid)
-            {
-                clone = null;
+                PetHandler.MovePet(config, orbwalker.ActiveMode);
             }
         }
 
@@ -112,98 +104,54 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
-            if (target == null)
+            if (target != null)
             {
-                if (MordeGhost && clone != null && !GhostDelay && config.Item("follow", true).GetValue<bool>() &&
-                    clone.Distance(player) > 350)
+                if (config.Item("useItems").GetValue<bool>())
                 {
-                    R.Cast(Game.CursorPos.Extend(player.Position, 250));
-                    GhostDelay = true;
-                    Utility.DelayAction.Add(200, () => GhostDelay = false);
+                    ItemHandler.UseItems(target, config, ComboDamage(target));
                 }
-                return;
-            }
-            if (config.Item("useItems").GetValue<bool>())
-            {
-                ItemHandler.UseItems(target, config, ComboDamage(target));
-            }
-            bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
-            if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
-            {
-                CastW(target);
-            }
-            if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target) && player.Distance(target) < E.Range)
-            {
-                E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
-            }
-            var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
-            var canUlt = config.Item("user", true).GetValue<bool>() && !MordeGhost &&
-                         !config.Item("ult" + target.SkinName, true).GetValue<bool>() &&
-                         (!config.Item("ultDef", true).GetValue<bool>() ||
-                          (config.Item("ultDef", true).GetValue<bool>() && !CombatHelper.HasDef(target)));
-            if (canUlt &&
-                (player.Distance(target.Position) <= 400f ||
-                 (R.CanCast(target) && target.Health < 250f && target.Position.CountAlliesInRange(600f) >= 1)) &&
-                R.GetDamage(target) * 0.8f > target.Health)
-            {
-                R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
-            }
-            if (canUlt && hasIgnite && player.Distance(target) < 600 &&
-                R.GetDamage(target) * 0.8f + ignitedmg > HealthPrediction.GetHealthPrediction(target, 400))
-            {
-                IgniteTarget = target;
-                Utility.DelayAction.Add(
-                    150, () =>
+                bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
+                if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
+                {
+                    CastW(target);
+                }
+                if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target) && player.Distance(target) < E.Range)
+                {
+                    E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                }
+                var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+                var canUlt = config.Item("user", true).GetValue<bool>() && !MordeGhost &&
+                             !config.Item("ult" + target.SkinName, true).GetValue<bool>() &&
+                             (!config.Item("ultDef", true).GetValue<bool>() ||
+                              (config.Item("ultDef", true).GetValue<bool>() && !CombatHelper.HasDef(target)));
+                if (canUlt &&
+                    (player.Distance(target.Position) <= 400f ||
+                     (R.CanCast(target) && target.Health < 250f && target.Position.CountAlliesInRange(600f) >= 1)) &&
+                    R.GetDamage(target) * 0.8f > target.Health)
+                {
+                    R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                }
+                if (canUlt && hasIgnite && player.Distance(target) < 600 &&
+                    R.GetDamage(target) * 0.8f + ignitedmg > HealthPrediction.GetHealthPrediction(target, 400))
+                {
+                    IgniteTarget = target;
+                    Utility.DelayAction.Add(
+                        150, () =>
+                        {
+                            player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), IgniteTarget);
+                            IgniteTarget = null;
+                        });
+                    R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                }
+                if (config.Item("useIgnite").GetValue<bool>() && ignitedmg > target.Health && hasIgnite)
+                {
+                    if (IgniteTarget != null)
                     {
                         player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), IgniteTarget);
-                        IgniteTarget = null;
-                    });
-                R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
-            }
-            if (config.Item("useIgnite").GetValue<bool>() && ignitedmg > target.Health && hasIgnite)
-            {
-                if (IgniteTarget != null)
-                {
-                    player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), IgniteTarget);
-                    return;
+                        return;
+                    }
+                    player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
                 }
-                player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
-            }
-            if (MordeGhost && !GhostDelay && config.Item("moveGhost", true).GetValue<bool>() &&
-                !config.Item("autoMoveGhost", true).GetValue<bool>())
-            {
-                moveGhost();
-            }
-        }
-
-        private void moveGhost()
-        {
-            var Gtarget = TargetSelector.GetTarget(GhostRange, TargetSelector.DamageType.Magical);
-            switch (config.Item("ghostTarget", true).GetValue<StringList>().SelectedIndex)
-            {
-                case 0:
-                    Gtarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
-                    break;
-                case 1:
-                    Gtarget =
-                        HeroManager.Enemies.Where(i => player.Distance(i) <= 1500)
-                            .OrderBy(i => i.Health)
-                            .FirstOrDefault();
-                    break;
-                case 2:
-                    Gtarget =
-                        HeroManager.Enemies.Where(i => player.Distance(i) <= 1500)
-                            .OrderBy(i => player.Distance(i))
-                            .FirstOrDefault();
-                    break;
-                default:
-                    break;
-            }
-            if (clone != null && Gtarget != null && Gtarget.IsValid && !clone.IsWindingUp)
-            {
-                R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                GhostDelay = true;
-                Utility.DelayAction.Add(500, () => GhostDelay = false);
             }
         }
 
@@ -255,11 +203,11 @@ namespace UnderratedAIO.Champions
             else
             {
                 Obj_AI_Base wTarget = Environment.Hero.mostEnemyAtFriend(player, W.Range, wWidth);
-                if (MordeGhost)
+                if (MordeGhost && PetHandler.Pet != null)
                 {
-                    if (wTarget == null || clone.CountEnemiesInRange(250f) > wTarget.CountEnemiesInRange(250f))
+                    if (wTarget == null || PetHandler.Pet.CountEnemiesInRange(250f) > wTarget.CountEnemiesInRange(250f))
                     {
-                        W.Cast(clone, config.Item("packets").GetValue<bool>());
+                        W.Cast(PetHandler.Pet, config.Item("packets").GetValue<bool>());
                         return;
                     }
                 }
@@ -383,8 +331,6 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
             menuC.AddItem(new MenuItem("ultDef", "   Don't use on Qss/barrier etc...", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("moveGhost", "   Move ghost", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("follow", "   Follow without target", true)).SetValue(true);
             menuC.AddItem(new MenuItem("selected", "Focus Selected target", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite")).SetValue(true);
             menuC = ItemHandler.addItemOptons(menuC);
@@ -402,10 +348,8 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
             // Misc Settings
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM.AddItem(new MenuItem("ghostTarget", "Ghost target priority", true))
-                .SetValue(new StringList(new[] { "Targetselector", "Lowest health", "Closest to you" }, 0));
             menuM = Jungle.addJungleOptions(menuM);
-            menuM.AddItem(new MenuItem("autoMoveGhost", "Always move ghost", true)).SetValue(false);
+            menuM = PetHandler.addItemOptons(menuM);
 
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);

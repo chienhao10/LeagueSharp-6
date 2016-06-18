@@ -18,11 +18,8 @@ namespace UnderratedAIO.Champions
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
         public static Spell Q, W, E, R;
         public static bool hasGhost = false;
-        public static bool GhostDelay = false;
-        public static int GhostRange = 2200;
         public static int LastAATick;
         public static AutoLeveler autoLeveler;
-        public static Obj_AI_Base clone;
 
         public Yorick()
         {
@@ -35,23 +32,6 @@ namespace UnderratedAIO.Champions
             Orbwalking.BeforeAttack += beforeAttack;
             Drawing.OnDraw += Game_OnDraw;
             Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
-            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
-        }
-
-        private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base hero, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (Yorickghost)
-            {
-                if (args == null || clone == null)
-                {
-                    return;
-                }
-                if (hero.NetworkId != clone.NetworkId)
-                {
-                    return;
-                }
-                LastAATick = Utils.GameTimeTickCount;
-            }
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -73,45 +53,9 @@ namespace UnderratedAIO.Champions
                     break;
             }
             Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-            if (R.IsReady() && Yorickghost && !GhostDelay && config.Item("autoMoveGhost", true).GetValue<bool>())
+            if (Yorickghost && R.IsReady())
             {
-                moveGhost();
-            }
-            clone = (Obj_AI_Base) ObjectManager.Player.Pet;
-            if (clone != null && !clone.IsValid)
-            {
-                clone = null;
-            }
-        }
-
-        private void moveGhost()
-        {
-            var Gtarget = TargetSelector.GetTarget(GhostRange, TargetSelector.DamageType.Magical);
-            switch (config.Item("ghostTarget", true).GetValue<StringList>().SelectedIndex)
-            {
-                case 0:
-                    Gtarget = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
-                    break;
-                case 1:
-                    Gtarget =
-                        HeroManager.Enemies.Where(i => player.Distance(i) <= 1500)
-                            .OrderBy(i => i.Health)
-                            .FirstOrDefault();
-                    break;
-                case 2:
-                    Gtarget =
-                        HeroManager.Enemies.Where(i => player.Distance(i) <= 1500)
-                            .OrderBy(i => player.Distance(i))
-                            .FirstOrDefault();
-                    break;
-                default:
-                    break;
-            }
-            if (clone != null && Gtarget != null && Gtarget.IsValid && !clone.IsWindingUp)
-            {
-                R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                GhostDelay = true;
-                Utility.DelayAction.Add(500, () => GhostDelay = false);
+                PetHandler.MovePet(config, orbwalker.ActiveMode);
             }
         }
 
@@ -161,27 +105,25 @@ namespace UnderratedAIO.Champions
             {
                 E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
             }
-            var ally =
-                HeroManager.Allies.Where(
-                    i =>
-                        !i.IsDead &&
-                        ((i.Health * 100 / i.MaxHealth) <= config.Item("atpercenty").GetValue<Slider>().Value ||
-                         Program.IncDamages.GetAllyData(i.NetworkId).IsAboutToDie) && player.Distance(i) < R.Range &&
-                        !config.Item("ulty" + i.SkinName).GetValue<bool>() && i.CountEnemiesInRange(750) > 0)
-                    .OrderByDescending(i => Environment.Hero.GetAdOverTime(player, i, 5))
-                    .FirstOrDefault();
-            if (!Yorickghost && ally != null && config.Item("user").GetValue<bool>() && R.IsInRange(ally) && R.IsReady())
+            if (!Yorickghost && config.Item("user").GetValue<bool>() && R.IsReady())
             {
-                R.Cast(ally, config.Item("packets").GetValue<bool>());
+                var ally =
+                    HeroManager.Allies.Where(
+                        i =>
+                            !i.IsDead && player.Distance(i) < R.Range &&
+                            ((i.Health * 100 / i.MaxHealth) <= config.Item("atpercenty").GetValue<Slider>().Value ||
+                             Program.IncDamages.GetAllyData(i.NetworkId).IsAboutToDie) &&
+                            !config.Item("ulty" + i.SkinName).GetValue<bool>() && i.CountEnemiesInRange(750) > 0)
+                        .OrderByDescending(i => Environment.Hero.GetAdOverTime(player, i, 5))
+                        .FirstOrDefault();
+                if (ally != null && R.IsInRange(ally))
+                {
+                    R.Cast(ally, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("useIgnite").GetValue<bool>() && combodmg > target.Health && hasIgnite)
             {
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
-            }
-            if (R.IsReady() && Yorickghost && !GhostDelay && config.Item("moveGhost", true).GetValue<bool>() &&
-                !config.Item("autoMoveGhost", true).GetValue<bool>())
-            {
-                moveGhost();
             }
         }
 
@@ -324,8 +266,6 @@ namespace UnderratedAIO.Champions
             Menu menuD = new Menu("Drawings ", "dsettings");
             menuD.AddItem(new MenuItem("drawaa", "Draw AA range"))
                 .SetValue(new Circle(false, Color.FromArgb(180, 116, 99, 45)));
-            menuD.AddItem(new MenuItem("drawqq", "Draw Q range"))
-                .SetValue(new Circle(false, Color.FromArgb(180, 116, 99, 45)));
             menuD.AddItem(new MenuItem("drawww", "Draw W range"))
                 .SetValue(new Circle(false, Color.FromArgb(180, 116, 99, 45)));
             menuD.AddItem(new MenuItem("drawee", "Draw E range"))
@@ -340,7 +280,6 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usew", "Use W")).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E")).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R")).SetValue(true);
-            menuC.AddItem(new MenuItem("moveGhost", "   Move ghost", true)).SetValue(true);
             menuC.AddItem(new MenuItem("atpercenty", "Ult friend under")).SetValue(new Slider(30, 0, 100));
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite")).SetValue(true);
             menuC = ItemHandler.addItemOptons(menuC);
@@ -360,12 +299,8 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
             // Misc Settings
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM.AddItem(new MenuItem("ghostTarget", "Ghost target priority", true))
-                .SetValue(new StringList(new[] { "Targetselector", "Lowest health", "Closest to you" }, 0));
+            menuM = PetHandler.addItemOptons(menuM);
             menuM = Jungle.addJungleOptions(menuM);
-            menuM.AddItem(new MenuItem("autoMoveGhost", "Always move ghost", true)).SetValue(false);
-
-
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);

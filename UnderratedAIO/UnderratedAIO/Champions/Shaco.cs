@@ -21,8 +21,7 @@ namespace UnderratedAIO.Champions
         public static bool GhostDelay = false;
         public static int GhostRange = 2200;
         public static AutoLeveler autoLeveler;
-        public static int LastAATick;
-        public static float cloneTime, lastBox;
+
 
         public Shaco()
         {
@@ -32,30 +31,7 @@ namespace UnderratedAIO.Champions
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Game_OnDraw;
             Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
-            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             Helpers.Jungle.setSmiteSlot();
-        }
-
-        private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base hero, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (ShacoClone)
-            {
-                var clone = ObjectManager.Get<Obj_AI_Minion>().FirstOrDefault(m => m.Name == player.Name && !m.IsMe);
-
-                if (args == null || clone == null)
-                {
-                    return;
-                }
-                if (hero.NetworkId != clone.NetworkId)
-                {
-                    return;
-                }
-                LastAATick = Utils.GameTimeTickCount;
-            }
-            if (hero.IsMe && args.SData.Name == "JackInTheBox")
-            {
-                lastBox = System.Environment.TickCount;
-            }
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -71,10 +47,6 @@ namespace UnderratedAIO.Champions
             else
             {
                 orbwalker.SetAttack(true);
-            }
-            if (!ShacoClone)
-            {
-                cloneTime = System.Environment.TickCount;
             }
             switch (orbwalker.ActiveMode)
             {
@@ -102,7 +74,7 @@ namespace UnderratedAIO.Champions
                     if ((config.Item("ks", true).GetValue<bool>() || config.Item("ksq", true).GetValue<bool>()) &&
                         E.CanCast(ksTarget))
                     {
-                        E.Cast(ksTarget);
+                        E.CastOnUnit(ksTarget);
                     }
                     if (Q.IsReady() && config.Item("ks", true).GetValue<bool>() &&
                         ksTarget.Distance(player) < Q.Range + E.Range && ksTarget.Distance(player) > E.Range &&
@@ -139,9 +111,9 @@ namespace UnderratedAIO.Champions
                 }
             }
             Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-            if (ShacoClone && !GhostDelay && config.Item("autoMoveClone", true).GetValue<bool>())
+            if (R.IsReady() && ShacoClone)
             {
-                moveClone();
+                PetHandler.MovePet(config, orbwalker.ActiveMode);
             }
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
             if (config.Item("userCC", true).GetValue<bool>() && R.IsReady() && target != null &&
@@ -159,11 +131,6 @@ namespace UnderratedAIO.Champions
             }
             var cmbDmg = ComboDamage(target);
             float dist = (float) (Q.Range + player.MoveSpeed * 2.5);
-            if (ShacoClone && !GhostDelay && config.Item("useClone", true).GetValue<bool>() &&
-                !config.Item("autoMoveClone", true).GetValue<bool>())
-            {
-                moveClone();
-            }
             if ((config.Item("WaitForStealth", true).GetValue<bool>() && ShacoStealth && cmbDmg < target.Health) ||
                 !Orbwalking.CanMove(100))
             {
@@ -213,50 +180,6 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        private void moveClone()
-        {
-            var Gtarget = TargetSelector.GetTarget(2200, TargetSelector.DamageType.Physical);
-            switch (config.Item("ghostTarget", true).GetValue<StringList>().SelectedIndex)
-            {
-                case 0:
-                    Gtarget = TargetSelector.GetTarget(GhostRange, TargetSelector.DamageType.Physical);
-                    break;
-                case 1:
-                    Gtarget =
-                        ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(i => i.IsEnemy && !i.IsDead && player.Distance(i) <= GhostRange)
-                            .OrderBy(i => i.Health)
-                            .FirstOrDefault();
-                    break;
-                case 2:
-                    Gtarget =
-                        ObjectManager.Get<Obj_AI_Hero>()
-                            .Where(i => i.IsEnemy && !i.IsDead && player.Distance(i) <= GhostRange)
-                            .OrderBy(i => player.Distance(i))
-                            .FirstOrDefault();
-                    break;
-                default:
-                    break;
-            }
-            var clone = ObjectManager.Get<Obj_AI_Minion>().FirstOrDefault(m => m.Name == player.Name && !m.IsMe);
-            if (clone != null && Gtarget != null && Gtarget.IsValid && !clone.IsWindingUp)
-            {
-                if (CanCloneAttack(clone))
-                {
-                    R.CastOnUnit(Gtarget, config.Item("packets").GetValue<bool>());
-                }
-                else if (player.HealthPercent > 25)
-                {
-                    var prediction = Prediction.GetPrediction(Gtarget, 2);
-                    R.Cast(
-                        Gtarget.Position.Extend(prediction.UnitPosition, Orbwalking.GetRealAutoAttackRange(Gtarget)),
-                        config.Item("packets").GetValue<bool>());
-                }
-
-                GhostDelay = true;
-                Utility.DelayAction.Add(200, () => GhostDelay = false);
-            }
-        }
 
         private bool CheckWalls(Obj_AI_Hero target)
         {
@@ -296,16 +219,6 @@ namespace UnderratedAIO.Champions
                     W.Cast(player.Position.Extend(target.Position, W.Range - player.Distance(target)));
                 }
             }
-        }
-
-        public static bool CanCloneAttack(Obj_AI_Minion clone)
-        {
-            if (clone != null)
-            {
-                return Utils.GameTimeTickCount >=
-                       LastAATick + Game.Ping + 100 + (clone.AttackDelay - clone.AttackCastDelay) * 1000;
-            }
-            return false;
         }
 
         private void CastW(Obj_AI_Hero target, Vector3 from, Vector3 to)
@@ -439,7 +352,6 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("useClone", "   Move clone", true)).SetValue(true);
             menuC.AddItem(new MenuItem("userCC", "   Dodge targeted CC", true)).SetValue(true);
             menuC.AddItem(new MenuItem("WaitForStealth", "Block spells in stealth", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite")).SetValue(true);
@@ -461,7 +373,7 @@ namespace UnderratedAIO.Champions
                 .SetValue(new StringList(new[] { "Targetselector", "Lowest health", "Closest to you" }, 0));
             menuM.AddItem(new MenuItem("ksq", "KS E", true)).SetValue(true);
             menuM.AddItem(new MenuItem("ks", "KS Q+E", true)).SetValue(true);
-            menuM.AddItem(new MenuItem("autoMoveClone", "Always move clone", true)).SetValue(false);
+            menuM = PetHandler.addItemOptons(menuM);
             menuM.AddItem(new MenuItem("stackBox", "Stack boxes", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
