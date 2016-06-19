@@ -14,13 +14,13 @@ namespace AutoJungle
 {
     internal class Program
     {
-        public static GameInfo _GameInfo = new GameInfo();
+        public static GameInfo _GameInfo;
 
         public static Menu menu;
 
         public static float UpdateLimiter, ResetTimer, GameStateChanging;
 
-        public static readonly Obj_AI_Hero player = ObjectManager.Player;
+        public static readonly Obj_AI_Hero player;
 
         public static Random Random = new Random(Environment.TickCount);
 
