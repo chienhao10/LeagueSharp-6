@@ -1257,6 +1257,8 @@ namespace AutoJungle
 
         private static void OnGameLoad(EventArgs args)
         {
+            Game.PrintChat("This is an outdated version! Use this: https://github.com/Soresu/LeagueSharp.BOT");
+            return;
             if (Game.MapId != GameMapId.SummonersRift)
             {
                 Game.PrintChat("The map is not supported!");
