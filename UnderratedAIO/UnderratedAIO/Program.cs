@@ -14,7 +14,7 @@ namespace UnderratedAIO
 {
     internal class Program
     {
-        public static Obj_AI_Hero player = ObjectManager.Player;
+        public static Obj_AI_Hero player;
         public static string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         public static IncomingDamage IncDamages;
         public static Menu SPredictionMenu;
@@ -33,6 +33,7 @@ namespace UnderratedAIO
         {
             try
             {
+                player = ObjectManager.Player;
                 SPredictionMenu = SPrediction.Prediction.Initialize();
                 /* SPredictionMenu.Item("PREDICTONLIST")
                     .SetValue(new StringList(new[] { "SPrediction", "Common Predicion" }, 1));*/
@@ -54,7 +55,7 @@ namespace UnderratedAIO
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Console.WriteLine("Failed To load: " + e);
             }
         }
     }
