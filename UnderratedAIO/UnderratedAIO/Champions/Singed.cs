@@ -297,7 +297,8 @@ namespace UnderratedAIO.Champions
             {
                 CastQ();
             }
-            if (config.Item("moveLC", true).GetValue<bool>() && player.CountEnemiesInRange(1000) < 1)
+            if (config.Item("moveLC", true).GetValue<bool>() && player.CountEnemiesInRange(1000) < 1 &&
+                Orbwalking.CanMove(100) && player.Mana > 30 && !player.IsWindingUp)
             {
                 var mini =
                     MinionManager.GetMinions(600, MinionTypes.All, MinionTeam.NotAlly)
@@ -305,10 +306,12 @@ namespace UnderratedAIO.Champions
                         .OrderBy(m => m.Distance(player))
                         .FirstOrDefault();
 
-                if (mini != null && Orbwalking.CanMove(100) && player.Mana > 30)
+                if (mini != null && !Environment.Minion.KillableMinion(player.AttackRange))
                 {
                     player.IssueOrder(
                         GameObjectOrder.MoveTo, player.Position.Extend(mini.Position, player.Distance(mini) + 100));
+                    Orbwalking.Attack = false;
+                    Orbwalking.Move = false;
                 }
             }
         }
@@ -406,12 +409,9 @@ namespace UnderratedAIO.Champions
             {
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
             }
-            if (E.IsReady() && config.Item("usee", true).GetValue<bool>())
-            {
-                Orbwalking.Attack = false;
-            }
+            var blockOrb = false;
             var throwPos = target.Position.Extend(player.Position, 500);
-            if (config.Item("usee", true).GetValue<bool>() && E.IsReady() && E.CanCast(target) &&
+            if (config.Item("usee", true).GetValue<bool>() && E.IsReady() &&
                 ((throwPos.CountAlliesInRange(700) > target.CountAlliesInRange(700) &&
                   HeroManager.Allies.FirstOrDefault(a => a.Distance(throwPos) < 700 && a.HealthPercent < 25) == null) ||
                  W.GetDamage(target) > target.Health || !target.HasBuff("poisontrailtarget") ||
@@ -419,14 +419,25 @@ namespace UnderratedAIO.Champions
             {
                 var pos = Prediction.GetPrediction(target, W.Delay / 2)
                     .UnitPosition.Extend(player.Position, 515 + player.Distance(target.Position));
-                if (config.Item("WwithE", true).GetValue<bool>() && W.IsReady() &&
+                if (config.Item("WwithE", true).GetValue<bool>() && E.CanCast(target) && W.IsReady() &&
                     player.Mana > E.Instance.ManaCost + W.Instance.ManaCost + 15 && !pos.IsWall() &&
                     target.Health > E.GetDamage(target) + Q.GetDamage(target))
                 {
                     W.Cast(pos);
                     return;
                 }
-                E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                if (E.CanCast(target))
+                {
+                    E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                }
+                else if (target.Distance(player) < E.Range + 100)
+                {
+                    blockOrb = true;
+                }
+            }
+            if (blockOrb)
+            {
+                Orbwalking.Attack = false;
             }
         }
 
