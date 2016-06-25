@@ -165,7 +165,7 @@ namespace UnderratedAIO.Champions
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical, true);
             if (config.Item("useeH", true).GetValue<bool>() && target != null && E.CanCast(target) &&
-                !player.IsWindingUp)
+                !player.IsWindingUp && Orbwalking.CanMove(100))
             {
                 E.Cast(target);
             }
@@ -174,7 +174,7 @@ namespace UnderratedAIO.Champions
                 GotoAxe(target.Position);
             }
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
-            if (player.Mana < player.MaxMana * perc || player.IsWindingUp || target == null)
+            if (player.Mana < player.MaxMana * perc || player.IsWindingUp || target == null || !Orbwalking.CanMove(100))
             {
                 return;
             }
@@ -187,7 +187,7 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical, true);
-            if (player.IsWindingUp || target == null)
+            if (player.IsWindingUp || target == null || !Orbwalking.CanMove(100))
             {
                 return;
             }
@@ -252,7 +252,11 @@ namespace UnderratedAIO.Champions
 
         private void CastQ(Obj_AI_Hero target)
         {
-            var ext = 75;
+            var ext = 0;
+            if (player.Distance(target.ServerPosition) > 400)
+            {
+                ext = 100;
+            }
             if (Program.IsSPrediction)
             {
                 var pred = Q.GetSPrediction(target);
@@ -265,16 +269,11 @@ namespace UnderratedAIO.Champions
             else
             {
                 var pred = Q.GetPrediction(target, true);
-                if (pred.Hitchance >= HitChance.High ||
-                    (pred.Hitchance >= HitChance.Medium && player.Distance(target) < 500) &&
-                    pred.CastPosition.Distance(pred.UnitPosition) < 350)
+                var pos = player.Position.Extend(pred.CastPosition, player.Distance(pred.CastPosition) + ext);
+                if (pred.CastPosition.IsValid() && target.Distance(pos) < player.Distance(target))
                 {
                     //Console.WriteLine(2 + " - " + " - " + pred.Hitchance);
-                    Q.Cast(player.Position.Extend(pred.CastPosition, player.Distance(pred.CastPosition) + ext));
-                }
-                else
-                {
-                    //Console.WriteLine("Fail!!!!!! - " + " - " + pred.Hitchance);
+                    Q.Cast(pos);
                 }
             }
         }
