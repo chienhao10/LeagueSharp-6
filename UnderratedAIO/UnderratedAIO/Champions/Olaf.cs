@@ -195,8 +195,9 @@ namespace UnderratedAIO.Champions
             {
                 CastQ(target);
             }
-            if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target) && (E.GetDamage(target) > target.Health) ||
-                player.HealthPercent > 25)
+            if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target) &&
+                (((E.GetDamage(target) > target.Health) || player.HealthPercent > 25) ||
+                 Program.IncDamages.GetAllyData(player.NetworkId).IsAboutToDie))
             {
                 E.Cast(target);
             }
@@ -270,7 +271,8 @@ namespace UnderratedAIO.Champions
             {
                 var pred = Q.GetPrediction(target, true);
                 var pos = player.Position.Extend(pred.CastPosition, player.Distance(pred.CastPosition) + ext);
-                if (pred.CastPosition.IsValid() && target.Distance(pos) < player.Distance(target))
+                if (pred.CastPosition.IsValid() && target.Distance(pos) < player.Distance(target) &&
+                    pred.Hitchance >= HitChance.Medium)
                 {
                     //Console.WriteLine(2 + " - " + " - " + pred.Hitchance);
                     Q.Cast(pos);
