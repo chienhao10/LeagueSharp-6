@@ -734,6 +734,12 @@ namespace UnderratedAIO.Helpers
             return (float) buff.EndTime - Game.ClockTime;
         }
 
+        public static bool IsCCed(Obj_AI_Hero unit)
+        {
+            return (unit.HasBuffOfType(BuffType.Snare) || unit.HasBuffOfType(BuffType.Stun) ||
+                    unit.HasBuffOfType(BuffType.Taunt) || unit.HasBuffOfType(BuffType.Suppression));
+        }
+
         public static float IgniteDamage(Obj_AI_Hero target)
         {
             var igniteBuff =

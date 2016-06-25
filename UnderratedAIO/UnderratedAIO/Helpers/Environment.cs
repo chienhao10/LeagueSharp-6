@@ -200,6 +200,19 @@ namespace UnderratedAIO.Helpers
                 return false;
             }
 
+            public static Vector3 ClosestWall(Vector3 StartPos, Vector3 EndPos)
+            {
+                var distance = StartPos.Distance(EndPos);
+                for (int i = 1; i < 8; i++)
+                {
+                    if (StartPos.Extend(EndPos, distance + 55 * i).IsWall())
+                    {
+                        return StartPos.Extend(EndPos, distance + 55 * i);
+                    }
+                }
+                return EndPos;
+            }
+
             public static float GetPath(Obj_AI_Hero hero, Vector3 b)
             {
                 var path = hero.GetPath(b);

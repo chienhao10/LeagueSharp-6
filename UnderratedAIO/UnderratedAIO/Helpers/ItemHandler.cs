@@ -377,24 +377,13 @@ namespace UnderratedAIO.Helpers
             menuBilgewater.AddItem(new MenuItem("bil", "Enabled")).SetValue(true);
             menuBilgewater.AddItem(new MenuItem("bilonlyks", "KS only")).SetValue(false);
             menuBilgewater.AddItem(new MenuItem("bilminr", "Min range"))
-                .SetValue(
-                    new Slider(
-                        (int)
-                            (Orbwalking.GetRealAutoAttackRange(player) < bilgewater.Range
-                                ? (int) Orbwalking.GetRealAutoAttackRange(player)
-                                : bilgewater.Range - 20), 0, (int) bilgewater.Range));
+                .SetValue(new Slider(150, 0, (int) bilgewater.Range));
             menuI.AddSubMenu(menuBilgewater);
 
             Menu menuBlade = new Menu("Blade of the Ruined King", "Blades");
             menuBlade.AddItem(new MenuItem("botr", "Enabled")).SetValue(true);
             menuBlade.AddItem(new MenuItem("botronlyks", "KS only")).SetValue(false);
-            menuBlade.AddItem(new MenuItem("botrminr", "Min range"))
-                .SetValue(
-                    new Slider(
-                        (int)
-                            (Orbwalking.GetRealAutoAttackRange(player) < botrk.Range
-                                ? (int) Orbwalking.GetRealAutoAttackRange(player)
-                                : botrk.Range - 20), 0, (int) botrk.Range));
+            menuBlade.AddItem(new MenuItem("botrminr", "Min range")).SetValue(new Slider(150, 0, (int) botrk.Range));
             menuBlade.AddItem(new MenuItem("botrmyhealth", "Use if player healt lower"))
                 .SetValue(new Slider(40, 0, 100));
             menuBlade.AddItem(new MenuItem("botrenemyhealth", "Use if enemy healt lower"))
@@ -404,13 +393,7 @@ namespace UnderratedAIO.Helpers
             Menu menuHextech = new Menu("Hextech Gunblade", "Hextechs");
             menuHextech.AddItem(new MenuItem("hex", "Enabled")).SetValue(true);
             menuHextech.AddItem(new MenuItem("hexonlyks", "KS only")).SetValue(false);
-            menuHextech.AddItem(new MenuItem("hexminr", "Min range"))
-                .SetValue(
-                    new Slider(
-                        (int)
-                            (Orbwalking.GetRealAutoAttackRange(player) < hexgun.Range
-                                ? (int) Orbwalking.GetRealAutoAttackRange(player)
-                                : hexgun.Range - 20), 0, (int) hexgun.Range));
+            menuHextech.AddItem(new MenuItem("hexminr", "Min range")).SetValue(new Slider(150, 0, (int) hexgun.Range));
             menuI.AddSubMenu(menuHextech);
             /*
             Menu menuMura = new Menu("Muramana ", "Mura");
