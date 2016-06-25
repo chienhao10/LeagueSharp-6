@@ -313,7 +313,7 @@ namespace UnderratedAIO.Champions
             // Harass Settings
             Menu menuH = new Menu("Harass ", "Hsettings");
             menuH.AddItem(new MenuItem("useqH", "Use Q", true)).SetValue(false);
-            menuC.AddItem(new MenuItem("gotoAxeH", "Catch axe", true)).SetValue(true);
+            menuH.AddItem(new MenuItem("gotoAxeH", "Catch axe", true)).SetValue(true);
             menuH.AddItem(new MenuItem("useeH", "Use E", true)).SetValue(false);
             menuH.AddItem(new MenuItem("minmanaH", "Keep X% mana", true)).SetValue(new Slider(1, 1, 100));
             config.AddSubMenu(menuH);
