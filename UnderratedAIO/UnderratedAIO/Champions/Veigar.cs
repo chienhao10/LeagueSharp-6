@@ -42,7 +42,7 @@ namespace UnderratedAIO.Champions
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
             CustomEvents.Unit.OnDash += Unit_OnDash;
 
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
         private void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
@@ -448,7 +448,12 @@ namespace UnderratedAIO.Champions
                     {
                         R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
                         IgniteTarget = target;
-                        Utility.DelayAction.Add(500, () => IgniteTarget = null);
+                        Utility.DelayAction.Add(
+                            200, () =>
+                            {
+                                IgniteTarget = null;
+                                player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
+                            });
                     }
                 }
                 else
@@ -626,7 +631,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             if (wPos.IsValid() && config.Item("drawW", true).GetValue<bool>())
             {
                 Render.Circle.DrawCircle(wPos, W.Width, Color.Blue, 8);
@@ -810,7 +815,7 @@ namespace UnderratedAIO.Champions
                     E.SetSkillshot(1.2f, 25f, float.MaxValue, false, SkillshotType.SkillshotCircle);
                     break;
                 case 1:
-                    E.SetSkillshot(0.5f, 50f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+                    E.SetSkillshot(0.85f, 50f, float.MaxValue, false, SkillshotType.SkillshotCircle);
                     break;
             }
             config.Item("predType", true).ValueChanged += OnValueChanged;
@@ -824,7 +829,7 @@ namespace UnderratedAIO.Champions
                     E.SetSkillshot(1.2f, 25f, float.MaxValue, false, SkillshotType.SkillshotCircle);
                     break;
                 case 1:
-                    E.SetSkillshot(0.5f, 50f, float.MaxValue, false, SkillshotType.SkillshotCircle);
+                    E.SetSkillshot(0.85f, 50f, float.MaxValue, false, SkillshotType.SkillshotCircle);
                     break;
             }
         }
