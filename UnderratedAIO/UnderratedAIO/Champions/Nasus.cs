@@ -26,7 +26,7 @@ namespace UnderratedAIO.Champions
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             Orbwalking.OnAttack += Orbwalking_OnAttack;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
@@ -268,7 +268,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
         private void InitNocturne()

@@ -98,6 +98,7 @@
     <Compile Include="Champions\Yorick.cs" />
     <Compile Include="Champions\Zac.cs" />
     <Compile Include="Helpers\AutoLeveler.cs" />
+    <Compile Include="Helpers\HpBarDamageIndicator.cs" />
     <Compile Include="Helpers\PetHandler.cs" />
     <Compile Include="Helpers\CombatHelper.cs" />
     <Compile Include="Helpers\DrawHelper.cs" />

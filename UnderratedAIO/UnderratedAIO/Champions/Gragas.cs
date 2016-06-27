@@ -35,7 +35,7 @@ namespace UnderratedAIO.Champions
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             GameObject.OnCreate += GameObjectOnOnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
@@ -437,8 +437,7 @@ namespace UnderratedAIO.Champions
                 }
 
                 if (config.Item("rtoq", true).GetValue<bool>() && logic &&
-                    (target.Distance(qPos) > QExplosionRange ||
-                     (target.Health < rqCombo && target.Health > getQdamage(target))))
+                    (target.Health < rqCombo && target.Health > getQdamage(target)))
                 {
                     castInsec(target);
                 }
@@ -633,7 +632,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
         private static float ComboDamage(Obj_AI_Hero hero)

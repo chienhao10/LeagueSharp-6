@@ -345,7 +345,7 @@ namespace UnderratedAIO.Helpers
                 {
                     Items.UseItem(tiamat.Id);
                 }
-                if (Items.HasItem(hydra.Id) && Items.CanUseItem(hydra.Id) && player.IsWindingUp)
+                if (Items.HasItem(hydra.Id) && Items.CanUseItem(hydra.Id) && !Orbwalking.CanAttack())
                 {
                     Items.UseItem(hydra.Id);
                 }
@@ -453,7 +453,7 @@ namespace UnderratedAIO.Helpers
             menuI.AddItem(new MenuItem("useItems", "Use Items")).SetValue(true);
             mConfig.AddSubMenu(menuI);
             Game.OnUpdate += Game_OnGameUpdate;
-            Orbwalking.OnAttack += Orbwalking_OnAttack;
+            Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             odins.Range = 500f;
             if (player.HasBuff("awesomehealindicator"))
             {
@@ -463,13 +463,14 @@ namespace UnderratedAIO.Helpers
             return mConfig;
         }
 
-        private static void Orbwalking_OnAttack(AttackableUnit unit, AttackableUnit target)
+        private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            if (useHydra && unit.IsMe && target.NetworkId == hydraTarget.NetworkId && !player.HasBuff("GarenQ"))
+            if (useHydra && unit.IsMe && hydraTarget != null && target.NetworkId == hydraTarget.NetworkId)
             {
                 if (Items.HasItem(titanic.Id) && Items.CanUseItem(titanic.Id))
                 {
                     titanic.Cast();
+                    Orbwalking.ResetAutoAttackTimer();
                 }
             }
         }

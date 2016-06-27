@@ -31,7 +31,7 @@ namespace UnderratedAIO.Champions
             Orbwalking.AfterAttack += AfterAttack;
             Orbwalking.BeforeAttack += beforeAttack;
             Drawing.OnDraw += Game_OnDraw;
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -201,7 +201,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr").GetValue<Circle>(), R.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
         private float ComboDamage(Obj_AI_Hero hero)

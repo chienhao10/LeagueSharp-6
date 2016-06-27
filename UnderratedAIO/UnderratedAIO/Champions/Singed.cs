@@ -37,7 +37,7 @@ namespace UnderratedAIO.Champions
             Helpers.Jungle.setSmiteSlot();
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
             CustomEvents.Unit.OnDash += Unit_OnDash;
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Spellbook.OnCastSpell += Spellbook_OnCastSpell;
             Obj_AI_Hero.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
         }
@@ -447,7 +447,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target != null && config.Item("targCircle", true).GetValue<Circle>().Active)
             {

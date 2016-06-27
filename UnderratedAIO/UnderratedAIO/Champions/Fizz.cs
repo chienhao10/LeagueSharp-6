@@ -34,7 +34,7 @@ namespace UnderratedAIO.Champions
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
@@ -239,13 +239,17 @@ namespace UnderratedAIO.Champions
                     {
                         E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
                     }
+                    if (config.Item("useehighdmg", true).GetValue<bool>() && data.DamageTaken > player.Health * 0.4f)
+                    {
+                        E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
+                    }
                     if (config.Item("useeaa", true).GetValue<bool>() &&
                         data.AADamageTaken < target.GetAutoAttackDamage(player, true) + 10 &&
                         !SpellDatabase.AnyReadyCC(player.Position, 700, true))
                     {
                         E.Cast(enemyPred.CastPosition, config.Item("packets").GetValue<bool>());
                     }
-                    if (config.Item("useegc", true).GetValue<bool>() &&
+                    if (config.Item("useecq", true).GetValue<bool>() &&
                         cmbdmg > HeroManager.Enemies.Where(e => target.Distance(e) < 1500).Sum(e => e.Health) &&
                         !target.UnderTurret(true))
                     {
@@ -280,7 +284,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
         private static float ComboDamage(Obj_AI_Hero hero)
@@ -364,6 +368,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("useq", "Use Q", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("useehighdmg", "   On high damage", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useedmg", "   On spell damage", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useeaa", "   On AA damage", true)).SetValue(false);
             menuC.AddItem(new MenuItem("useecq", "   CloseGap 1v1", true)).SetValue(false);

@@ -552,7 +552,7 @@ namespace UnderratedAIO.Helpers
             {
                 if (Player.Path.Length > 0)
                 {
-                    Player.IssueOrder(GameObjectOrder.Stop, playerPosition);
+                    Player.IssueOrder(GameObjectOrder.HoldPosition, playerPosition);
                     LastMoveCommandPosition = playerPosition;
                     LastMoveCommandT = Utils.GameTimeTickCount - 70;
                 }
@@ -922,7 +922,7 @@ namespace UnderratedAIO.Helpers
                 /* Misc options */
                 var misc = new Menu("Misc", "Misc");
                 misc.AddItem(
-                    new MenuItem("HoldPosRadius", "Hold Position Radius").SetShared().SetValue(new Slider(110, 0, 250)));
+                    new MenuItem("HoldPosRadius", "Hold Position Radius").SetShared().SetValue(new Slider(110, 50, 250)));
                 misc.AddItem(new MenuItem("PriorizeFarm", "Priorize farm over harass").SetShared().SetValue(true));
                 misc.AddItem(new MenuItem("AttackWards", "Auto attack wards").SetShared().SetValue(false));
                 misc.AddItem(new MenuItem("AttackPetsnTraps", "Auto attack pets & traps").SetShared().SetValue(true));

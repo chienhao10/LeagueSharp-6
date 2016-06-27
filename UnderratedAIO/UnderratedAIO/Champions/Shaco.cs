@@ -30,7 +30,7 @@ namespace UnderratedAIO.Champions
             Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Shaco</font>");
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Game_OnDraw;
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Helpers.Jungle.setSmiteSlot();
         }
 
@@ -287,7 +287,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
         private float ComboDamage(Obj_AI_Hero hero)

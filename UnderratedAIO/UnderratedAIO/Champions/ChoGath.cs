@@ -32,7 +32,7 @@ namespace UnderratedAIO.Champions
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
             Interrupter2.OnInterruptableTarget += OnPossibleToInterrupt;
             Helpers.Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
 
@@ -298,9 +298,13 @@ namespace UnderratedAIO.Champions
             if (config.Item("usew", true).GetValue<bool>() && W.CanCast(target))
             {
                 if (Program.IsSPrediction)
+                {
                     W.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     W.Cast(target, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("UseFlashC", true).GetValue<bool>() && !flashRblock && R.IsReady() && hasFlash &&
                 !CombatHelper.CheckCriticalBuffs(target) && player.GetSpell(SpellSlot.R).ManaCost <= player.Mana &&
@@ -350,7 +354,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrrflash", true).GetValue<Circle>(), RFlash.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
         public static float ComboDamage(Obj_AI_Hero hero)
@@ -385,7 +389,7 @@ namespace UnderratedAIO.Champions
         {
             Q = new Spell(SpellSlot.Q, 950);
             Q.SetSkillshot(1.2f, 175f, float.MaxValue, false, SkillshotType.SkillshotCircle);
-            W = new Spell(SpellSlot.W, 650);
+            W = new Spell(SpellSlot.W, 300);
             W.SetSkillshot(0.25f, 250f, float.MaxValue, false, SkillshotType.SkillshotCone);
             E = new Spell(SpellSlot.E, 500);
             E.SetSkillshot(

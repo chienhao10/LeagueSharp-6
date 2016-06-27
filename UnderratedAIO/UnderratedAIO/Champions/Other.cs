@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
 using UnderratedAIO.Helpers;
-using UnderratedAIO.Helpers.SkillShot;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
 
 namespace UnderratedAIO.Champions
@@ -21,7 +19,7 @@ namespace UnderratedAIO.Champions
         {
             InitMenu();
             Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Underrated AIO Common</font>");
-            Helpers.Jungle.setSmiteSlot();
+            Jungle.setSmiteSlot();
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Game_OnDraw;
             Console.WriteLine(ObjectManager.Player.ChampionName);
@@ -87,7 +85,7 @@ namespace UnderratedAIO.Champions
         {
             if (config.Item("Enabledcomm").GetValue<bool>())
             {
-                Helpers.Jungle.ShowSmiteStatus(
+                Jungle.ShowSmiteStatus(
                     config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             }
         }

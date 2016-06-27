@@ -31,7 +31,7 @@ namespace UnderratedAIO.Champions
             Interrupter2.OnInterruptableTarget += OnPossibleToInterrupt;
             Orbwalking.AfterAttack += AfterAttack;
             Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
         private void AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -70,7 +70,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
         private static void Game_OnGameUpdate(EventArgs args)

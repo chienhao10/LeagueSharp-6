@@ -45,7 +45,7 @@ namespace UnderratedAIO.Champions
             Obj_AI_Base.OnDamage += Obj_AI_Base_OnDamage;
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
         private void Obj_AI_Base_OnDamage(AttackableUnit sender, AttackableUnitDamageEventArgs args)
@@ -96,7 +96,7 @@ namespace UnderratedAIO.Champions
             {
                 Render.Circle.DrawCircle(blade, bladeRadius, Color.BlueViolet, 7);
             }
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
         private static void DrawHealths()

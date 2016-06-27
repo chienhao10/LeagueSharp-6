@@ -32,7 +32,7 @@ namespace UnderratedAIO.Champions
             Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Kennen</font>");
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Game_OnDraw;
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Orbwalking.OnAttack += Orbwalking_OnAttack;
         }
 
@@ -82,7 +82,7 @@ namespace UnderratedAIO.Champions
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
             if (data != null && player.HasBuff("KennenShurikenStorm") &&
                 (config.Item("Minhelath", true).GetValue<Slider>().Value > player.Health / player.MaxHealth * 100 ||
-                 (data.DamageTaken > player.Health && config.Item("Minhelath", true).GetValue<Slider>().Value > 0)))
+                 (data.IsAboutToDie && config.Item("Minhelath", true).GetValue<Slider>().Value > 0)))
             {
                 if (Items.HasItem(ItemHandler.Wooglet.Id) && Items.CanUseItem(ItemHandler.Wooglet.Id))
                 {
@@ -331,7 +331,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             DrawHelper.DrawCircle(
                 config.Item("drawrrr", true).GetValue<Circle>(), config.Item("userrange", true).GetValue<Slider>().Value);
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
             if (config.Item("ShowState", true).GetValue<bool>())
             {
                 config.Item("KenAutoQ", true).Permashow(true, "Auto Q");

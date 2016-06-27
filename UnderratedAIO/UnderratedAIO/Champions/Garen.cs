@@ -30,7 +30,7 @@ namespace UnderratedAIO.Champions
             Orbwalking.AfterAttack += AfterAttack;
             Drawing.OnDraw += Game_OnDraw;
             Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -38,6 +38,7 @@ namespace UnderratedAIO.Champions
             if (GarenE)
             {
                 orbwalker.SetMovement(false);
+                orbwalker.SetAttack(false);
                 if (orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.None)
                 {
                     player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
@@ -45,6 +46,7 @@ namespace UnderratedAIO.Champions
             }
             else
             {
+                orbwalker.SetAttack(true);
                 orbwalker.SetMovement(true);
             }
             switch (orbwalker.ActiveMode)
@@ -188,7 +190,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
             if (R.IsReady() && config.Item("drawrkillable", true).GetValue<bool>())
             {
                 foreach (var e in HeroManager.Enemies.Where(e => e.IsValid && e.IsHPBarRendered))

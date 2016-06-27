@@ -37,7 +37,7 @@ namespace UnderratedAIO.Champions
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             Obj_AI_Base.OnDelete += Obj_AI_Base_OnDelete;
             Obj_AI_Base.OnCreate += Obj_AI_Base_OnCreate;
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Console.WriteLine(Game.IP);
         }
 
@@ -82,7 +82,7 @@ namespace UnderratedAIO.Champions
             }
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
         }
@@ -113,7 +113,9 @@ namespace UnderratedAIO.Champions
         {
             var minis = MinionManager.GetMinions(325f, MinionTypes.All, MinionTeam.NotAlly);
             var killableWithE =
-                minis.Where(m => m.Health < E.GetDamage(m)).OrderByDescending(m => m.MaxHealth).FirstOrDefault();
+                minis.Where(m => HealthPrediction.GetHealthPrediction(m, 245) < E.GetDamage(m))
+                    .OrderByDescending(m => m.MaxHealth)
+                    .FirstOrDefault();
             if (config.Item("useeLC", true).GetValue<bool>() && E.IsReady() && killableWithE != null &&
                 (!player.IsWindingUp || killableWithE.MaxHealth > 2000))
             {
@@ -272,7 +274,9 @@ namespace UnderratedAIO.Champions
                 var pred = Q.GetPrediction(target, true);
                 var pos = player.Position.Extend(pred.CastPosition, player.Distance(pred.CastPosition) + ext);
                 if (pred.CastPosition.IsValid() && target.Distance(pos) < player.Distance(target) &&
-                    pred.Hitchance >= HitChance.Medium)
+                    ((pred.Hitchance >= HitChance.Medium && player.Distance(target) < 500) ||
+                     pred.Hitchance >= HitChance.High ||
+                     (pred.Hitchance >= HitChance.Low && Q.CountHits(new List<Obj_AI_Base>() { target }, pos) > 0)))
                 {
                     //Console.WriteLine(2 + " - " + " - " + pred.Hitchance);
                     Q.Cast(pos);
@@ -354,7 +358,7 @@ namespace UnderratedAIO.Champions
             {
                 damage += Damage.GetSpellDamage(player, hero, SpellSlot.E);
             }
-            //damage += ItemHandler.GetItemsDamage(target);
+            damage += ItemHandler.GetItemsDamage(hero);
             var ignitedmg = player.GetSummonerSpellDamage(hero, Damage.SummonerSpell.Ignite);
             if (player.Spellbook.CanUseSpell(player.GetSpellSlot("summonerdot")) == SpellState.Ready &&
                 hero.Health < damage + ignitedmg)
@@ -367,7 +371,7 @@ namespace UnderratedAIO.Champions
         private void InitOlaf()
         {
             Q = new Spell(SpellSlot.Q, 1000);
-            Q.SetSkillshot(250, 105, 1600, false, SkillshotType.SkillshotCircle);
+            Q.SetSkillshot(250, 105, 1600, false, SkillshotType.SkillshotLine);
             W = new Spell(SpellSlot.W);
             E = new Spell(SpellSlot.E, 325);
             R = new Spell(SpellSlot.R);

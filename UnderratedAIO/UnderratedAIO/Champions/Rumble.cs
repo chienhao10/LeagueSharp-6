@@ -34,7 +34,7 @@ namespace UnderratedAIO.Champions
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             CustomEvents.Unit.OnDash += Unit_OnDash;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
@@ -64,7 +64,7 @@ namespace UnderratedAIO.Champions
             E = new Spell(SpellSlot.E, 800);
             E.SetSkillshot(0.25f, 70, 1200, true, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, 1700);
-            R.SetSkillshot(0.4f, 130, 2500, false, SkillshotType.SkillshotLine);
+            R.SetSkillshot(0.4f, 200, 1600, false, SkillshotType.SkillshotLine);
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -142,7 +142,7 @@ namespace UnderratedAIO.Champions
             {
                 return 0;
             }
-            var dmg = Damage.GetSpellDamage(player, target, SpellSlot.Q);
+            var dmg = QDamage(target, true);
             return (float) (Enhanced ? dmg * 1.5f : dmg);
         }
 
@@ -286,9 +286,9 @@ namespace UnderratedAIO.Champions
                     {
                         var pos = targE.CastPosition;
                         if (pos.IsValid() && pos.Distance(player.Position) < R.Range + 1000 &&
-                            targE.Hitchance >= HitChance.VeryHigh)
+                            targE.Hitchance >= HitChance.High)
                         {
-                            R.Cast(target.Position.Extend(pos, -target.MoveSpeed), pos);
+                            R.Cast(target.Position.Extend(pos, -500), pos);
                         }
                     }
                     else
@@ -296,7 +296,7 @@ namespace UnderratedAIO.Champions
                         R.Cast(target.Position.Extend(player.Position, 500), target.Position);
                     }
                 }
-                else if (targE.Hitchance >= HitChance.VeryHigh && config.Item("userEnabled", true).GetValue<bool>())
+                else if (targE.Hitchance >= HitChance.High && config.Item("userEnabled", true).GetValue<bool>())
                 {
                     var pred = getBestRVector3(target, targE);
                     if (pred != Vector3.Zero &&
@@ -347,13 +347,13 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
         private static float ComboDamage(Obj_AI_Hero hero)
         {
             double damage = 0;
-            if (Q.IsReady())
+            if (Q.IsReady() || player.HasBuff("RumbleFlameThrower"))
             {
                 damage += getQdamage(hero);
             }
@@ -403,6 +403,18 @@ namespace UnderratedAIO.Champions
             {
                 W.Cast();
             }
+        }
+
+        private static double QDamage(Obj_AI_Hero target, bool bufftime = false)
+        {
+            var buff = player.GetBuff("RumbleFlameThrower");
+            var percentage = 1d;
+            if (bufftime && buff != null)
+            {
+                percentage = CombatHelper.GetBuffTime(buff) / 3f;
+            }
+            var dmg = Q.GetDamage(target);
+            return dmg * percentage;
         }
 
         private void InitMenu()

@@ -34,7 +34,7 @@ namespace UnderratedAIO.Champions
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();
-            Utility.HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             GameObject.OnCreate += GameObjectOnOnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
@@ -783,7 +783,7 @@ namespace UnderratedAIO.Champions
             }
             Helpers.Jungle.ShowSmiteStatus(
                 config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            Utility.HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
+            HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             if (config.Item("drawW", true).GetValue<bool>())
             {
                 if (W.IsReady() && player.HealthPercent < 100)
@@ -928,7 +928,7 @@ namespace UnderratedAIO.Champions
                     foreach (var m in
                         minis.Where(e => Q.GetDamage(e) + ItemHandler.GetSheenDmg(e) >= e.Health && e.Health > 3))
                     {
-                        Render.Circle.DrawCircle(m.Position, 45, Color.Yellow, 7);
+                        Render.Circle.DrawCircle(m.Position, 57, Color.Yellow, 7);
                     }
                 }
             }
