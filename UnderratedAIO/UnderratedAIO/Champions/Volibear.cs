@@ -256,7 +256,7 @@ namespace UnderratedAIO.Champions
 
         public static double Wdmg(Obj_AI_Base target)
         {
-            return (new double[] { 80, 125, 170, 215, 260 }[W.Level - 1] +
+            return (new double[] { 80, 110, 160, 210, 260 }[W.Level - 1] +
                     ((player.MaxHealth - (498.48f + (86f * (player.Level - 1f)))) * 0.15f)) *
                    ((target.MaxHealth - target.Health) / target.MaxHealth + 1);
         }
