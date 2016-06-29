@@ -1083,6 +1083,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("detoneateTargets", "   Blow up enemies with E", true))
                 .SetValue(new Slider(2, 1, 5));
             menuC.AddItem(new MenuItem("usew", "Use W under health", true)).SetValue(new Slider(20, 0, 100));
+            menuC.AddItem(new MenuItem("AutoW", "Use W with QSS options", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useeAlways", "Use E always", true))
                 .SetTooltip(
                     "NOT RECOMMENDED, If there is no barrel around the target, this will put one to a predicted position")
@@ -1134,7 +1135,6 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("RhealtMin", "   Enemy min health %", true))
                 .SetTooltip("min enemy healthpercent to prevent KS or casting too late")
                 .SetValue(new Slider(10, 0, 100));
-            menuM.AddItem(new MenuItem("AutoW", "W with QSS options", true)).SetValue(true);
             menuM.AddItem(new MenuItem("AutoQBarrel", "AutoQ barrel near enemies", true)).SetValue(false);
             menuM = Jungle.addJungleOptions(menuM);
 
