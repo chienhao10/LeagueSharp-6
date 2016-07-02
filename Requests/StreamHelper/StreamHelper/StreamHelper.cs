@@ -52,6 +52,7 @@ namespace StreamHelper
             _menu.AddItem(new MenuItem("Debug", "Debug")).SetValue(false);
             _menu.AddItem(new MenuItem("Enabled", "Enabled")).SetValue(true);
             _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(150, 90, 250));
+            _menu.AddItem(new MenuItem("Linear", "Linear cursor speed")).SetValue(false);
             _menu.AddToMainMenu();
             _cursorAttack = new Render.Sprite(
                 Properties.Resources.Attack, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
@@ -183,17 +184,18 @@ namespace StreamHelper
                 return;
             }
             var l = _actPosition.Distance(_newPosition);
-            var t = _newClickTime - _lastClickTime;
-            var deltaT = (float) (Environment.TickCount) / (float) (_newClickTime + 1000f);
             var speed = _menu.Item("Speed").GetValue<Slider>().Value;
-            var lerp = (MathUtil.Lerp(0, l, Math.Min(deltaT, 1)) * (speed / 100f)) * (l / 50f);
-            if (lerp < 70)
+            var mod = 1f;
+            if (!_menu.Item("Linear").GetValue<bool>())
+            {
+                mod = Math.Max((l / 350), 1);
+            }
+            var dSpeed = 35 * (speed / 100f) * mod;
+            if (_actPosition.Distance(_newPosition) < 70)
             {
                 _actPosition = _newPosition;
-                return;
             }
-
-            _actPosition = _actPosition.Extend(_newPosition, Math.Min(lerp / 2, 70));
+            _actPosition = _actPosition.Extend(_newPosition, dSpeed);
         }
 
         private void MoveCursors(Vector3 pos)
@@ -254,7 +256,7 @@ namespace StreamHelper
             var distance = (int) _player.Distance(pos);
 
             // HoldPosition
-            if (distance < 30 && !isSpell)
+            if (distance < 1 && !isSpell)
             {
                 return;
             }
