@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,12 +16,10 @@ namespace StreamHelper
     internal class StreamHelper
     {
         private static Obj_AI_Hero _player = ObjectManager.Player;
-        private static Vector3 _actPosition;
-        private static Vector3 _newPosition;
-        private static int _lastClickTime;
-        private static int _newClickTime;
+        private static Vector3 _actPosition, _newPosition;
+        private static int _lastClickTime, _newClickTime, _movetoDisplay;
         private static Random _rnd = new Random();
-        private static Render.Sprite _cursorAttack, _cursorMove;
+        private static Render.Sprite _cursorAttack, _cursorMove, _moveTo;
         private static Menu _menu;
 
         public StreamHelper()
@@ -30,6 +30,25 @@ namespace StreamHelper
             Game.OnUpdate += Game_OnUpdate;
 
             _menu = new Menu("StreamHelper", "StreamHelper", true);
+
+            Menu MoveTo = new Menu("Moveto Cursor", "Moveto");
+            MoveTo.AddItem(new MenuItem("MovetoLasthit", "Lasthit"))
+                .SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press))
+                .SetFontStyle(FontStyle.Bold, SharpDX.Color.Orange);
+            MoveTo.AddItem(new MenuItem("MovetoMixed", "Mixed"))
+                .SetValue(new KeyBind("C".ToCharArray()[0], KeyBindType.Press))
+                .SetFontStyle(FontStyle.Bold, SharpDX.Color.Orange);
+            MoveTo.AddItem(new MenuItem("MovetoClear", "Clear"))
+                .SetValue(new KeyBind("A".ToCharArray()[0], KeyBindType.Press))
+                .SetFontStyle(FontStyle.Bold, SharpDX.Color.Orange);
+            MoveTo.AddItem(new MenuItem("MovetoCombo", "Combo"))
+                .SetValue(new KeyBind(32, KeyBindType.Press))
+                .SetFontStyle(FontStyle.Bold, SharpDX.Color.Orange);
+            MoveTo.AddItem(new MenuItem("MovetoEnable", "Enable")).SetValue(false);
+            MoveTo.AddItem(new MenuItem("MovetoOnlyEnemy", "Only around enemies")).SetValue(true);
+            MoveTo.AddItem(new MenuItem("InfoI", "It won't work wit the common fakeClick"));
+            _menu.AddSubMenu(MoveTo);
+
             _menu.AddItem(new MenuItem("Debug", "Debug")).SetValue(false);
             _menu.AddItem(new MenuItem("Enabled", "Enabled")).SetValue(true);
             _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(150, 90, 250));
@@ -45,16 +64,42 @@ namespace StreamHelper
             _cursorMove.Add(0);
             _cursorMove.OnDraw();
 
+            _moveTo = new Render.Sprite(
+                Properties.Resources.MoveTo, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
+            _moveTo.Add(0);
+            _moveTo.OnDraw();
+
             _newPosition = Game.CursorPos;
             _actPosition = Game.CursorPos;
         }
 
-        private void Obj_AI_Hero_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+        private bool MoveToCursorEnabled()
         {
-            if (sender.IsMe && args.Order != GameObjectOrder.HoldPosition && args.Order != GameObjectOrder.Stop)
+            if (!_menu.Item("MovetoEnable").GetValue<bool>())
             {
-                SetNewPos(args.TargetPosition);
+                return false;
             }
+            if (_menu.Item("MovetoOnlyEnemy").GetValue<bool>() && !IsThereUnitPlayer())
+            {
+                return false;
+            }
+            if (_menu.Item("MovetoLasthit").GetValue<KeyBind>().Active)
+            {
+                return true;
+            }
+            if (_menu.Item("MovetoMixed").GetValue<KeyBind>().Active)
+            {
+                return true;
+            }
+            if (_menu.Item("MovetoClear").GetValue<KeyBind>().Active)
+            {
+                return true;
+            }
+            if (_menu.Item("MovetoCombo").GetValue<KeyBind>().Active)
+            {
+                return true;
+            }
+            return false;
         }
 
         private void Game_OnUpdate(EventArgs args)
@@ -72,16 +117,29 @@ namespace StreamHelper
                 _newPosition = Game.CursorPos;
             }
             MoveCursors(finalPos);
-
+            if (_actPosition.Distance(_newPosition) < 1)
+            {
+                _movetoDisplay = Environment.TickCount + 150;
+            }
             if (IsThereUnit(finalPos))
             {
                 _cursorAttack.Visible = true;
                 _cursorMove.Visible = false;
+                _moveTo.Visible = false;
+            }
+            else if (MoveToCursorEnabled() && Game.CursorPos.Distance(_newPosition) < 50 &&
+                     Game.CursorPos.Distance(_actPosition) < 150 && Game.CursorPos.Distance(_actPosition) > 50 &&
+                     _movetoDisplay - Environment.TickCount <= 150)
+            {
+                _cursorAttack.Visible = false;
+                _cursorMove.Visible = false;
+                _moveTo.Visible = true;
             }
             else
             {
                 _cursorAttack.Visible = false;
                 _cursorMove.Visible = true;
+                _moveTo.Visible = false;
             }
         }
 
@@ -98,6 +156,19 @@ namespace StreamHelper
             return obj != null;
         }
 
+        private bool IsThereUnitPlayer()
+        {
+            var heroesUnderCursor =
+                HeroManager.Enemies.FirstOrDefault(h => h.IsValidTarget() && h.Distance(_player.Position) < 1000);
+            var minionUnderCursor =
+                MinionManager.GetMinions(_player.Position, 1000, MinionTypes.All, MinionTeam.NotAlly)
+                    .FirstOrDefault(m => m.IsValidTarget());
+            var obj =
+                ObjectManager.Get<Obj_AI_Base>()
+                    .FirstOrDefault(m => m.IsValidTarget() && m.Distance(_player.Position) < 1000);
+            return obj != null;
+        }
+
         private void SetActPos()
         {
             if (_actPosition == _newPosition)
@@ -105,7 +176,7 @@ namespace StreamHelper
                 _newPosition = Game.CursorPos;
                 return;
             }
-            if (_actPosition.Distance(_newPosition) > 2000)
+            if (_actPosition.Distance(_newPosition) > 3000)
             {
                 _newPosition = Game.CursorPos;
                 _actPosition = Game.CursorPos;
@@ -115,14 +186,14 @@ namespace StreamHelper
             var t = _newClickTime - _lastClickTime;
             var deltaT = (float) (Environment.TickCount) / (float) (_newClickTime + 1000f);
             var speed = _menu.Item("Speed").GetValue<Slider>().Value;
-            var lerp = MathUtil.Lerp(0, l, Math.Min(deltaT, 1)) * speed / 100f;
+            var lerp = (MathUtil.Lerp(0, l, Math.Min(deltaT, 1)) * (speed / 100f)) * (l / 50f);
             if (lerp < 70)
             {
                 _actPosition = _newPosition;
                 return;
             }
 
-            _actPosition = _actPosition.Extend(_newPosition, Math.Min(lerp / 4, 70));
+            _actPosition = _actPosition.Extend(_newPosition, Math.Min(lerp / 2, 70));
         }
 
         private void MoveCursors(Vector3 pos)
@@ -131,11 +202,13 @@ namespace StreamHelper
             {
                 _cursorMove.Position = Utils.GetCursorPos();
                 _cursorAttack.Position = Utils.GetCursorPos();
+                _moveTo.Position = Utils.GetCursorPos();
             }
             else
             {
                 _cursorMove.Position = Drawing.WorldToScreen(pos);
                 _cursorAttack.Position = Drawing.WorldToScreen(pos);
+                _moveTo.Position = Drawing.WorldToScreen(pos);
             }
         }
 
@@ -164,10 +237,17 @@ namespace StreamHelper
                 {
                     return;
                 }
-                SetNewPos(args.End, true, IsThereUnit(args.End) || (args.Target != null));
+                SetNewPos(args.End, !args.SData.IsAutoAttack(), IsThereUnit(args.End) || (args.Target != null));
             }
         }
 
+        private void Obj_AI_Hero_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+        {
+            if (sender.IsMe && args.Order != GameObjectOrder.HoldPosition && args.Order != GameObjectOrder.Stop)
+            {
+                //SetNewPos(args.TargetPosition);
+            }
+        }
 
         private void SetNewPos(Vector3 pos, bool isSpell = false, bool hasTarget = false)
         {
@@ -178,10 +258,9 @@ namespace StreamHelper
             {
                 return;
             }
-            // Casted too far
-            if (distance > 500 && isSpell && !hasTarget)
+            if (distance > 300 && isSpell && !hasTarget)
             {
-                pos = _player.Position.Extend(pos, _rnd.Next(300, 700));
+                pos = _player.Position.Extend(pos, _rnd.Next(300, 600));
             }
             _lastClickTime = _newClickTime;
             _newPosition = pos;
