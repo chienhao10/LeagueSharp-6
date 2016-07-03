@@ -90,6 +90,7 @@
     <Compile Include="Champions\Sion.cs" />
     <Compile Include="Champions\Skarner.cs" />
     <Compile Include="Champions\TahmKench.cs" />
+    <Compile Include="Champions\Trundle.cs" />
     <Compile Include="Champions\Tryndamere.cs" />
     <Compile Include="Champions\Udyr.cs" />
     <Compile Include="Champions\Veigar.cs" />

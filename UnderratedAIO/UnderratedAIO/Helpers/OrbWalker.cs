@@ -150,7 +150,7 @@ namespace UnderratedAIO.Helpers
             "caitlynheadshotmissile", "frostarrow", "garenslash2",
             "kennenmegaproc", "masteryidoublestrike", "quinnwenhanced", "renektonexecute", "renektonsuperexecute",
             "rengarnewpassivebuffdash", "trundleq", "xenzhaothrust", "xenzhaothrust2", "xenzhaothrust3", "viktorqbuff",
-            "GangplankQWrapper", "RenektonExecute"
+            "GangplankQWrapper", "RenektonExecute", "TrundleQ"
         };
 
         /// <summary>
