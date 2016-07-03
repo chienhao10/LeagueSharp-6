@@ -108,7 +108,7 @@ namespace UnderratedAIO.Champions
                 }
                 var turret =
                     ObjectManager.Get<Obj_AI_Turret>()
-                        .FirstOrDefault(tw => tw.Distance(t) < 1000 && tw.Distance(s) < 1000 && tw.IsAlly);
+                        .FirstOrDefault(tw => tw.Distance(t) < 750 && tw.Distance(s) < 750 && tw.IsAlly);
                 if (s is Obj_AI_Hero && t is Obj_AI_Hero && s.IsAlly && turret != null && E.CanCast(t))
                 {
                     E.Cast(t.Position.Extend(turret.Position, -(t.BoundingRadius + E.Width)));
