@@ -262,16 +262,6 @@ namespace UnderratedAIO.Champions
             {
                 return pos;
             }
-            if (pred.UnitPosition.Distance(player.Position) > player.Distance(target))
-            {
-                var dist = target.BoundingRadius + E.Width;
-                var predPos = pred.UnitPosition;
-                if (target.Distance(predPos) < dist)
-                {
-                    predPos = target.Position.Extend(predPos, dist);
-                }
-                pos = predPos.Extend(target.Position, -dist);
-            }
             if (config.Item("useeWall", true).GetValue<bool>())
             {
                 var dist = E.Width + target.BoundingRadius / 2.5f;
@@ -285,6 +275,17 @@ namespace UnderratedAIO.Champions
                 {
                     pos = wall.Extend(pred.UnitPosition, (target.BoundingRadius + dist));
                 }
+                return pos;
+            }
+            if (pred.UnitPosition.Distance(player.Position) > player.Distance(target))
+            {
+                var dist = target.BoundingRadius + E.Width;
+                var predPos = pred.UnitPosition;
+                if (target.Distance(predPos) < dist)
+                {
+                    predPos = target.Position.Extend(predPos, dist);
+                }
+                pos = predPos.Extend(target.Position, -dist);
             }
             return pos;
         }
