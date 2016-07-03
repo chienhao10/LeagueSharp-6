@@ -380,9 +380,9 @@ namespace UnderratedAIO.Champions
         {
             Q = new Spell(SpellSlot.Q);
             W = new Spell(SpellSlot.W, 1000);
-            W.SetSkillshot(250, 1000, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            W.SetSkillshot(0.25f, 1000, float.MaxValue, false, SkillshotType.SkillshotCircle);
             E = new Spell(SpellSlot.E, 1000);
-            E.SetSkillshot(250, 100, float.MaxValue, false, SkillshotType.SkillshotCircle);
+            E.SetSkillshot(0.25f, 100, float.MaxValue, false, SkillshotType.SkillshotCircle);
             R = new Spell(SpellSlot.R, 700);
         }
     }
