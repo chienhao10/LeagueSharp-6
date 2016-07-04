@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
@@ -16,7 +11,7 @@ namespace StreamHelper
     internal class StreamHelper
     {
         private static Obj_AI_Hero _player = ObjectManager.Player;
-        private static Vector3 _actPosition, _newPosition;
+        private static Vector3 _actPosition, _newPosition, _offsetPosition;
         private static int _lastClickTime, _newClickTime, _movetoDisplay;
         private static Random _rnd = new Random();
         private static Render.Sprite _cursorAttack, _cursorMove, _moveTo;
@@ -111,6 +106,18 @@ namespace StreamHelper
                 _cursorMove.Visible = false;
                 return;
             }
+            if (_offsetPosition.IsValid() && _offsetPosition.Distance(_newPosition) < Speed(100))
+            {
+                _offsetPosition = Vector3.Zero;
+            }
+            else if (_offsetPosition.IsValid())
+            {
+                _offsetPosition = _offsetPosition.Extend(_newPosition, Speed(_offsetPosition.Distance(_newPosition)));
+            }
+            else
+            {
+                _offsetPosition = Vector3.Zero;
+            }
             SetActPos();
             var finalPos = _actPosition;
             if (!IsThereUnit(_newPosition))
@@ -184,6 +191,16 @@ namespace StreamHelper
                 return;
             }
             var l = _actPosition.Distance(_newPosition);
+            var dSpeed = Speed(l);
+            if (l < 70)
+            {
+                _actPosition = _newPosition;
+            }
+            _actPosition = _actPosition.Extend(_offsetPosition.IsValid() ? _offsetPosition : _newPosition, dSpeed);
+        }
+
+        private static float Speed(float l)
+        {
             var speed = _menu.Item("Speed").GetValue<Slider>().Value;
             var mod = 1f;
             if (!_menu.Item("Linear").GetValue<bool>())
@@ -191,11 +208,7 @@ namespace StreamHelper
                 mod = Math.Max((l / 350), 1);
             }
             var dSpeed = 35 * (speed / 100f) * mod;
-            if (_actPosition.Distance(_newPosition) < 70)
-            {
-                _actPosition = _newPosition;
-            }
-            _actPosition = _actPosition.Extend(_newPosition, dSpeed);
+            return dSpeed;
         }
 
         private void MoveCursors(Vector3 pos)
@@ -228,6 +241,10 @@ namespace StreamHelper
             {
                 Render.Circle.DrawCircle(_newPosition, 70, Color.LawnGreen, 7);
             }
+            if (_offsetPosition.IsValid())
+            {
+                Render.Circle.DrawCircle(_offsetPosition, 70, Color.Blue, 7);
+            }
         }
 
         private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -239,7 +256,7 @@ namespace StreamHelper
                 {
                     return;
                 }
-                SetNewPos(args.End, !args.SData.IsAutoAttack(), IsThereUnit(args.End) || (args.Target != null));
+                SetNewPos(args.End, !args.SData.IsAutoAttack(), (IsThereUnit(args.End) || (args.Target != null)));
             }
         }
 
@@ -254,7 +271,6 @@ namespace StreamHelper
         private void SetNewPos(Vector3 pos, bool isSpell = false, bool hasTarget = false)
         {
             var distance = (int) _player.Distance(pos);
-
             // HoldPosition
             if (distance < 1 && !isSpell)
             {
@@ -264,8 +280,15 @@ namespace StreamHelper
             {
                 pos = _player.Position.Extend(pos, _rnd.Next(300, 600));
             }
+
+            var between = _player.Position.Extend(pos, distance / 2);
+            var offRad = distance / 2;
+            var off = new Vector3(
+                between.X + _rnd.Next(-offRad, offRad), between.Y + +_rnd.Next(-offRad, offRad), between.Z);
+
             _lastClickTime = _newClickTime;
             _newPosition = pos;
+            _offsetPosition = off;
             _newClickTime = Environment.TickCount;
         }
     }
