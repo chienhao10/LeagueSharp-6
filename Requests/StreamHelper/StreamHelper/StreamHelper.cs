@@ -205,10 +205,15 @@ namespace StreamHelper
             var mod = 1f;
             if (!_menu.Item("Linear").GetValue<bool>())
             {
-                mod = Math.Max((l / 350), 1);
+                mod = Math.Max((l / 150), 1);
             }
+
             var dSpeed = 35 * (speed / 100f) * mod;
-            return dSpeed;
+
+            var better = 0f;
+            better = ((dSpeed * Math.Min((((1f / _player.AttackDelay)) + _player.AttackCastDelay), 1f)));
+            better = Math.Min(better, l);
+            return better;
         }
 
         private void MoveCursors(Vector3 pos)
@@ -272,19 +277,26 @@ namespace StreamHelper
         {
             var distance = (int) _player.Distance(pos);
             // HoldPosition
-            if (distance < 1 && !isSpell)
+            if ((distance < 1 && !isSpell) || !pos.IsOnScreen())
             {
                 return;
             }
+            var closerPos = _player.Position.Extend(pos, _rnd.Next(300, 600));
             if (distance > 300 && isSpell && !hasTarget)
             {
-                pos = _player.Position.Extend(pos, _rnd.Next(300, 600));
+                pos = closerPos;
+                distance = (int) _player.Distance(pos);
             }
 
             var between = _player.Position.Extend(pos, distance / 2);
             var offRad = distance / 2;
             var off = new Vector3(
                 between.X + _rnd.Next(-offRad, offRad), between.Y + +_rnd.Next(-offRad, offRad), between.Z);
+
+            if (pos.Distance(Game.CursorPos) < 100)
+            {
+                off = Vector3.Zero;
+            }
 
             _lastClickTime = _newClickTime;
             _newPosition = pos;
