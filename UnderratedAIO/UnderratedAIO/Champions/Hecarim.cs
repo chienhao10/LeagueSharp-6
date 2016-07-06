@@ -29,6 +29,7 @@ namespace UnderratedAIO.Champions
         {
             InitHecarim();
             InitMenu();
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Hecarim</font>");
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Jungle.setSmiteSlot();
