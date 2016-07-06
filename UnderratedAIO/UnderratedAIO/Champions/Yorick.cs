@@ -25,7 +25,7 @@ namespace UnderratedAIO.Champions
         {
             InitYorick();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Yorick</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Yorick</font>");
             Jungle.setSmiteSlot();
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += AfterAttack;

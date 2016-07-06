@@ -22,7 +22,7 @@ namespace UnderratedAIO.Champions
         {
             InitJax();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Jax</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Jax</font>");
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();

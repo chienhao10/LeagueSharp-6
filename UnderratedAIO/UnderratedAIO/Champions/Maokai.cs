@@ -24,7 +24,7 @@ namespace UnderratedAIO.Champions
         {
             InitMao();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Maokai</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Maokai</font>");
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;

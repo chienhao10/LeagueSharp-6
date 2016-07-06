@@ -23,7 +23,7 @@ namespace UnderratedAIO.Champions
         {
             InitSkarner();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Skarner</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Skarner</font>");
             Drawing.OnDraw += Game_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Helpers.Jungle.setSmiteSlot();

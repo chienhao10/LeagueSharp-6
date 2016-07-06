@@ -30,7 +30,7 @@ namespace UnderratedAIO.Champions
         {
             InitOlaf();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Olaf</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Olaf</font>");
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Helpers.Jungle.setSmiteSlot();

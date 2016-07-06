@@ -29,7 +29,7 @@ namespace UnderratedAIO.Champions
         {
             InitKennen();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Kennen</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Kennen</font>");
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Game_OnDraw;
             HpBarDamageIndicator.DamageToUnit = ComboDamage;

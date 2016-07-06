@@ -24,7 +24,7 @@ namespace UnderratedAIO.Champions
         {
             InitSejuani();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Sejuani</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Sejuani</font>");
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Game_OnDraw;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
@@ -318,7 +318,7 @@ namespace UnderratedAIO.Champions
             E = new Spell(SpellSlot.E, 1000);
             R = new Spell(SpellSlot.R, 1175);
             Q.SetSkillshot(0, 70, 1600, false, SkillshotType.SkillshotLine);
-            R.SetSkillshot(250, 110, 1600, true, SkillshotType.SkillshotLine);
+            R.SetSkillshot(0.25f, 110, 1600, true, SkillshotType.SkillshotLine);
         }
 
         private static void InitMenu()
