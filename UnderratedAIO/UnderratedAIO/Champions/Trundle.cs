@@ -37,6 +37,38 @@ namespace UnderratedAIO.Champions
             Orbwalking.AfterAttack += AfterAttack;
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
             HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            CustomEvents.Unit.OnDash += Unit_OnDash;
+        }
+
+        private void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
+        {
+            return;
+            if (args.IsBlink)
+            {
+                return;
+            }
+            if (!sender.IsEnemy && !(sender is Obj_AI_Hero))
+            {
+                return;
+            }
+            if (args.StartPos.Distance(player) > E.Range && args.EndPos.Distance(player) > E.Range)
+            {
+                return;
+            }
+            Console.WriteLine("Dash!");
+            var steps = 6f;
+            var stepLength = args.StartPos.Distance(args.EndPos) / steps;
+            for (int i = 1; i < steps + 1; i++)
+            {
+                var p = args.StartPos.Extend(args.EndPos, stepLength * i);
+                if (p.IsWall() && p.Distance(args.StartPos) > args.Speed * 0.25f - E.Width &&
+                    p.Distance(player) < E.Range)
+                {
+                    Console.WriteLine("Casted Cause wall");
+                    E.Cast(p);
+                    return;
+                }
+            }
         }
 
 
@@ -108,7 +140,7 @@ namespace UnderratedAIO.Champions
                 }
                 var turret =
                     ObjectManager.Get<Obj_AI_Turret>()
-                        .FirstOrDefault(tw => tw.Distance(t) < 750 && tw.Distance(s) < 750 && tw.IsAlly);
+                        .FirstOrDefault(tw => tw.Distance(t) < 1000 && tw.Distance(s) < 1000 && tw.IsAlly);
                 if (s is Obj_AI_Hero && t is Obj_AI_Hero && s.IsAlly && turret != null && E.CanCast(t))
                 {
                     E.Cast(t.Position.Extend(turret.Position, -(t.BoundingRadius + E.Width)));
@@ -254,27 +286,27 @@ namespace UnderratedAIO.Champions
         {
             var pos = Vector3.Zero;
             var pred = Prediction.GetPrediction(target, 0.25f);
-            if (pred.Hitchance < HitChance.Medium || target.Distance(player) < Orbwalking.GetRealAutoAttackRange(target))
-            {
-                return pos;
-            }
             if (!target.IsMoving)
             {
                 return pos;
             }
+            var distW = E.Width / 2 + target.BoundingRadius;
+            var points = CombatHelper.PointsAroundTheTarget(pred.UnitPosition, distW);
+            var walls =
+                points.Where(p => p.IsWall() && player.Distance(target) > target.BoundingRadius)
+                    .OrderBy(p => p.Distance(pred.UnitPosition));
+            var wall = walls.FirstOrDefault();
+            if (wall.IsValid() && wall.Distance(target.Position) < 350 &&
+                walls.Any(w => w.Distance(target.Position) < distW))
+            {
+                pos = wall.Extend(pred.UnitPosition, (target.BoundingRadius + distW));
+            }
             if (config.Item("useeWall", true).GetValue<bool>())
             {
-                var dist = E.Width + target.BoundingRadius / 2.5f;
-                var points = CombatHelper.PointsAroundTheTarget(pred.UnitPosition, dist);
-                var walls =
-                    points.Where(p => p.IsWall() && player.Distance(target) > target.BoundingRadius)
-                        .OrderBy(p => p.Distance(pred.UnitPosition));
-                var wall = walls.FirstOrDefault();
-                if (wall.IsValid() && wall.Distance(target.Position) < 350 &&
-                    walls.Any(w => w.Distance(target.Position) < dist))
-                {
-                    pos = wall.Extend(pred.UnitPosition, (target.BoundingRadius + dist));
-                }
+                return pos;
+            }
+            if (pred.Hitchance < HitChance.Medium || target.Distance(player) < Orbwalking.GetRealAutoAttackRange(target))
+            {
                 return pos;
             }
             if (pred.UnitPosition.Distance(player.Position) > player.Distance(target))
