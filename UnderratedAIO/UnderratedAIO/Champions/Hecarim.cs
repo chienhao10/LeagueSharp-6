@@ -29,7 +29,6 @@ namespace UnderratedAIO.Champions
         {
             InitHecarim();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Hecarim</font>");
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Jungle.setSmiteSlot();
@@ -279,7 +278,7 @@ namespace UnderratedAIO.Champions
             W = new Spell(SpellSlot.W, 525);
             E = new Spell(SpellSlot.E);
             R = new Spell(SpellSlot.R, 1000);
-            R.SetSkillshot(0.5f, 300, 1200, true, SkillshotType.SkillshotLine);
+            R.SetSkillshot(0.5f, 300, 1200, true, SkillshotType.SkillshotCircle);
         }
     }
 }
