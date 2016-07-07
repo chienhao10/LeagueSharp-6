@@ -510,13 +510,20 @@ namespace UnderratedAIO.Champions
                             o.GetBuff("gangplankebarrellife").Caster.IsMe)
                     .ToList();
 
-            if (config.Item("useq", true).GetValue<bool>() && Q.IsReady() && config.Item("usee", true).GetValue<bool>() &&
-                E.IsReady() && Orbwalking.CanMove(100) && !justE)
+            if (config.Item("useq", true).GetValue<bool>() && config.Item("usee", true).GetValue<bool>() && E.IsReady() &&
+                !justE)
             {
                 var pred = Prediction.GetPrediction(target, 0.5f);
                 if (pred.Hitchance >= HitChance.High)
                 {
-                    var Qbarrels = GetBarrels().Where(o => o.Distance(player) < Q.Range && KillableBarrel(o));
+                    var QMana = Q.ManaCost < player.Mana;
+                    var Qbarrels =
+                        GetBarrels()
+                            .Where(
+                                o =>
+                                    ((Q.CanCast(o) && QMana) ||
+                                     (o.Distance(player) < Orbwalking.GetRealAutoAttackRange(o) &&
+                                      Orbwalking.CanAttack())) && KillableBarrel(o, !Q.IsReady() && QMana));
                     foreach (var Qbarrel in Qbarrels.OrderByDescending(b => b.Distance(target) < BarrelExplosionRange))
                     {
                         var targPred = Prediction.GetPrediction(target, GetQTime(Qbarrel));
@@ -540,6 +547,7 @@ namespace UnderratedAIO.Champions
                                 {
                                     dontQ = true;
                                     E.Cast(pos);
+                                    return;
                                 }
                             }
                             break;
@@ -558,10 +566,17 @@ namespace UnderratedAIO.Champions
                                 .FirstOrDefault();
                         if (point.IsValid())
                         {
-                            dontQ = true;
                             E.Cast(point);
-                            Utility.DelayAction.Add(1, () => Q.CastOnUnit(Qbarrel));
-                            return;
+                            if (Q.CanCast(Qbarrel) && QMana)
+                            {
+                                dontQ = true;
+                                Utility.DelayAction.Add(5, () => Q.CastOnUnit(Qbarrel));
+                            }
+                            else
+                            {
+                                orbwalker.SetAttack(false);
+                                Utility.DelayAction.Add(5, () => player.IssueOrder(GameObjectOrder.AttackUnit, Qbarrel));
+                            }
                         }
                     }
                 }
@@ -705,7 +720,7 @@ namespace UnderratedAIO.Champions
                     dontQ = true;
                 }
                 if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) && Orbwalking.CanMove(100) && !justE &&
-                    !dontQ)
+                    (!config.Item("useqBlock", true).GetValue<bool>() || !dontQ))
                 {
                     CastQonHero(target, barrels);
                 }
@@ -847,54 +862,58 @@ namespace UnderratedAIO.Champions
                 }
             }
 
-            if (Q.IsReady() && config.Item("drawEQ", true).GetValue<bool>())
+            try
             {
-                var points =
-                    CombatHelper.PointsAroundTheTarget(player.Position, E.Range - 200, 15, 6)
-                        .Where(p => p.Distance(player.Position) < E.Range);
-
-
-                var barrel =
-                    GetBarrels()
-                        .Where(
-                            o =>
-                                o.IsValid && !o.IsDead && o.Distance(player) < Q.Range &&
-                                o.SkinName == "GangplankBarrel" && o.GetBuff("gangplankebarrellife").Caster.IsMe &&
-                                KillableBarrel(o))
-                        .OrderBy(o => o.Distance(Game.CursorPos))
-                        .FirstOrDefault();
-                if (barrel != null)
+                if (Q.IsReady() && config.Item("drawEQ", true).GetValue<bool>())
                 {
-                    var cp = Game.CursorPos;
-                    var cursorPos = barrel.Distance(cp) > BarrelConnectionRange
-                        ? barrel.Position.Extend(cp, BarrelConnectionRange)
-                        : cp;
-                    var cursorPos2 = cursorPos.Distance(cp) > BarrelConnectionRange
-                        ? cursorPos.Extend(cp, BarrelConnectionRange)
-                        : cp;
-                    var middle = GetMiddleBarrel(barrel, points, cursorPos);
-                    var threeBarrel = cursorPos.Distance(cp) > BarrelExplosionRange && E.Instance.Ammo >= 2 &&
-                                      cursorPos2.Distance(player.Position) < E.Range && middle.IsValid();
-                    if (threeBarrel)
+                    var points =
+                        CombatHelper.PointsAroundTheTarget(player.Position, E.Range - 200, 15, 6)
+                            .Where(p => p.Distance(player.Position) < E.Range);
+
+
+                    var barrel =
+                        GetBarrels()
+                            .Where(
+                                o =>
+                                    o.IsValid && !o.IsDead && o.Distance(player) < Q.Range &&
+                                    o.SkinName == "GangplankBarrel" && o.GetBuff("gangplankebarrellife").Caster.IsMe &&
+                                    KillableBarrel(o))
+                            .OrderBy(o => o.Distance(Game.CursorPos))
+                            .FirstOrDefault();
+                    if (barrel != null)
                     {
-                        Render.Circle.DrawCircle(
-                            middle.Extend(cp, BarrelConnectionRange), BarrelExplosionRange, Color.DarkOrange, 6);
-                        Render.Circle.DrawCircle(middle, BarrelExplosionRange, Color.DarkOrange, 6);
-                        Drawing.DrawLine(
-                            Drawing.WorldToScreen(barrel.Position),
-                            Drawing.WorldToScreen(middle.Extend(barrel.Position, BarrelExplosionRange)), 2,
-                            Color.DarkOrange);
-                    }
-                    else if (E.Instance.Ammo >= 1)
-                    {
-                        Drawing.DrawLine(
-                            Drawing.WorldToScreen(barrel.Position),
-                            Drawing.WorldToScreen(cursorPos.Extend(barrel.Position, BarrelExplosionRange)), 2,
-                            Color.DarkOrange);
-                        Render.Circle.DrawCircle(cursorPos, BarrelExplosionRange, Color.DarkOrange, 6);
+                        var cp = Game.CursorPos;
+                        var cursorPos = barrel.Distance(cp) > BarrelConnectionRange
+                            ? barrel.Position.Extend(cp, BarrelConnectionRange)
+                            : cp;
+                        var cursorPos2 = cursorPos.Distance(cp) > BarrelConnectionRange
+                            ? cursorPos.Extend(cp, BarrelConnectionRange)
+                            : cp;
+                        var middle = GetMiddleBarrel(barrel, points, cursorPos);
+                        var threeBarrel = cursorPos.Distance(cp) > BarrelExplosionRange && E.Instance.Ammo >= 2 &&
+                                          cursorPos2.Distance(player.Position) < E.Range && middle.IsValid();
+                        if (threeBarrel)
+                        {
+                            Render.Circle.DrawCircle(
+                                middle.Extend(cp, BarrelConnectionRange), BarrelExplosionRange, Color.DarkOrange, 6);
+                            Render.Circle.DrawCircle(middle, BarrelExplosionRange, Color.DarkOrange, 6);
+                            Drawing.DrawLine(
+                                Drawing.WorldToScreen(barrel.Position),
+                                Drawing.WorldToScreen(middle.Extend(barrel.Position, BarrelExplosionRange)), 2,
+                                Color.DarkOrange);
+                        }
+                        else if (E.Instance.Ammo >= 1)
+                        {
+                            Drawing.DrawLine(
+                                Drawing.WorldToScreen(barrel.Position),
+                                Drawing.WorldToScreen(cursorPos.Extend(barrel.Position, BarrelExplosionRange)), 2,
+                                Color.DarkOrange);
+                            Render.Circle.DrawCircle(cursorPos, BarrelExplosionRange, Color.DarkOrange, 6);
+                        }
                     }
                 }
             }
+            catch (Exception) {}
             if (config.Item("drawWcd", true).GetValue<bool>())
             {
                 foreach (var barrelData in savedBarrels)
@@ -1079,6 +1098,7 @@ namespace UnderratedAIO.Champions
             // Combo Settings
             Menu menuC = new Menu("Combo ", "csettings");
             menuC.AddItem(new MenuItem("useq", "Use Q", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("useqBlock", "   Block Q to save for EQ", true)).SetValue(false);
             menuC.AddItem(new MenuItem("detoneateTarget", "   Blow up target with E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("detoneateTargets", "   Blow up enemies with E", true))
                 .SetValue(new Slider(2, 1, 5));

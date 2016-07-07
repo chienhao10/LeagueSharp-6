@@ -1238,7 +1238,8 @@ namespace UnderratedAIO.Helpers
                         }
 
                         if (minion.Team == GameObjectTeam.Neutral && _config.Item("AttackBarrel").GetValue<bool>() &&
-                            minion.CharData.BaseSkinName == "gangplankbarrel" && minion.IsHPBarRendered)
+                            minion.CharData.BaseSkinName == "gangplankbarrel" && minion.IsHPBarRendered &&
+                            Player.ChampionName != "Gangplank")
                         {
                             if (minion.Health < 2)
                             {
