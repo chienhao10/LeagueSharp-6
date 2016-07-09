@@ -530,14 +530,22 @@ namespace UnderratedAIO.Champions
             //Blow up barrels
             if (barrels.Any())
             {
-                var bestBarrelMelee = GetBestBarrel(barrels, target, true);
+                var moveDist = config.Item("movetoBarrel", true).GetValue<bool>() ? 250 : 0;
+                var bestBarrelMelee = GetBestBarrel(barrels, target, true, moveDist);
                 var bestBarrelQ = GetBestBarrel(barrels, target, false);
                 if (bestBarrelMelee != null && shouldAAbarrel)
                 {
                     orbwalker.SetAttack(false);
                     if (Orbwalking.CanAttack())
                     {
-                        player.IssueOrder(GameObjectOrder.AttackUnit, bestBarrelMelee);
+                        if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
+                        {
+                            player.IssueOrder(GameObjectOrder.MoveTo, bestBarrelMelee.Position);
+                        }
+                        else
+                        {
+                            player.IssueOrder(GameObjectOrder.AttackUnit, bestBarrelMelee);
+                        }
                     }
                     return;
                 }
@@ -608,15 +616,22 @@ namespace UnderratedAIO.Champions
             return false;
         }
 
-        private Obj_AI_Minion GetBestBarrel(List<Obj_AI_Minion> barrels, Obj_AI_Hero target, bool isMelee)
+        private Obj_AI_Minion GetBestBarrel(List<Obj_AI_Minion> barrels,
+            Obj_AI_Hero target,
+            bool isMelee,
+            float moveDist = 0f)
         {
             var meleeBarrels =
                 barrels.Where(
                     b =>
-                        player.Distance(b) < (isMelee ? Orbwalking.GetRealAutoAttackRange(b) : Q.Range) &&
+                        player.Distance(b) < (isMelee ? Orbwalking.GetRealAutoAttackRange(b) + moveDist : Q.Range) &&
                         KillableBarrel(b, isMelee));
             var secondaryBarrels = barrels.Select(b => b.Position).Concat(castedBarrels.Select(c => c.pos));
             var meleeDelay = isMelee ? 0.25f : 0;
+            if (moveDist > 0f)
+            {
+                meleeDelay -= (moveDist / player.MoveSpeed);
+            }
             foreach (var melee in meleeBarrels)
             {
                 var secondBarrels =
@@ -1090,6 +1105,7 @@ namespace UnderratedAIO.Champions
                 .SetValue(new Slider(0, 0, 5));
             menuC.AddItem(new MenuItem("comboPrior", "   Combo priority", true))
                 .SetValue(new StringList(new[] { "E-Q", "E-AA", }, 0));
+            menuC.AddItem(new MenuItem("movetoBarrel", "Move to barrel to AA", true)).SetValue(true);
             menuC.AddItem(new MenuItem("EQtoCursor", "EQ to cursor", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
