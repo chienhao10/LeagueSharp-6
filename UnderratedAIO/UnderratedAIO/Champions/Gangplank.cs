@@ -117,13 +117,25 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            var barrels =
+                GetBarrels()
+                    .Where(
+                        o =>
+                            o.IsValid && !o.IsDead && o.Distance(player) < 3000 && o.SkinName == "GangplankBarrel" &&
+                            o.GetBuff("gangplankebarrellife").Caster.IsMe)
+                    .ToList();
+            var QMana = Q.ManaCost < player.Mana;
+            var shouldAAbarrel = (!Q.IsReady() ||
+                                  config.Item("comboPrior", true).GetValue<StringList>().SelectedIndex == 1 ||
+                                  (Q.IsReady() && !QMana) || !config.Item("useq", true).GetValue<bool>());
+
             orbwalker.SetAttack(true);
             orbwalker.SetMovement(true);
             Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
-                    Combo();
+                    Combo(barrels, shouldAAbarrel, QMana);
                     break;
                 case Orbwalking.OrbwalkingMode.Mixed:
                     Harass();
@@ -275,26 +287,9 @@ namespace UnderratedAIO.Champions
                 }
             }
 
-            if (config.Item("AutoQBarrel", true).GetValue<bool>() && Q.IsReady())
+            if (config.Item("AutoQBarrel", true).GetValue<bool>())
             {
-                var barrel =
-                    GetBarrels()
-                        .FirstOrDefault(
-                            o =>
-                                o.IsValid && !o.IsDead && o.Distance(player) < Q.Range &&
-                                o.SkinName == "GangplankBarrel" && o.GetBuff("gangplankebarrellife").Caster.IsMe &&
-                                KillableBarrel(o) &&
-                                (o.CountEnemiesInRange(BarrelExplosionRange - 50) > 0 ||
-                                 HeroManager.Enemies.Count(
-                                     e =>
-                                         e.IsValidTarget() &&
-                                         Prediction.GetPrediction(e, 0.1f).UnitPosition.Distance(o.Position) <
-                                         BarrelExplosionRange - 20) > 0));
-
-                if (barrel != null && Orbwalking.OrbwalkingMode.Combo != orbwalker.ActiveMode && E.Instance.Ammo == 0)
-                {
-                    Q.Cast(barrel);
-                }
+                BlowUpBarrel(barrels, shouldAAbarrel, false);
             }
             for (int i = 0; i < castedBarrels.Count; i++)
             {
@@ -478,7 +473,7 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        private void Combo()
+        private void Combo(List<Obj_AI_Minion> barrels, bool shouldAAbarrel, bool Qmana)
         {
             var target = TargetSelector.GetTarget(
                 1650, TargetSelector.DamageType.Physical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
@@ -486,11 +481,9 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            var QMana = Q.ManaCost < player.Mana;
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
-            if (config.Item("useIgnite", true).GetValue<bool>() &&
-                ignitedmg > target.Health - Program.IncDamages.GetEnemyData(target.NetworkId).DamageTaken && hasIgnite &&
+            if (config.Item("useIgnite", true).GetValue<bool>() && ignitedmg > target.Health && hasIgnite &&
                 !CombatHelper.CheckCriticalBuffs(target) && !Q.IsReady() && !justQ)
             {
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
@@ -515,45 +508,10 @@ namespace UnderratedAIO.Champions
             }
             var dontQ = false;
 
-            var barrels =
-                GetBarrels()
-                    .Where(
-                        o =>
-                            o.IsValid && !o.IsDead && o.Distance(player) < 3000 && o.SkinName == "GangplankBarrel" &&
-                            o.GetBuff("gangplankebarrellife").Caster.IsMe)
-                    .ToList();
-
-            var shouldAAbarrel = (!Q.IsReady() ||
-                                  config.Item("comboPrior", true).GetValue<StringList>().SelectedIndex == 1 ||
-                                  (Q.IsReady() && !QMana) || !config.Item("useq", true).GetValue<bool>());
-
             //Blow up barrels
-            if (barrels.Any())
+            if (BlowUpBarrel(barrels, shouldAAbarrel, config.Item("movetoBarrel", true).GetValue<bool>()))
             {
-                var moveDist = config.Item("movetoBarrel", true).GetValue<bool>() ? 250 : 0;
-                var bestBarrelMelee = GetBestBarrel(barrels, target, true, moveDist);
-                var bestBarrelQ = GetBestBarrel(barrels, target, false);
-                if (bestBarrelMelee != null && shouldAAbarrel)
-                {
-                    orbwalker.SetAttack(false);
-                    if (Orbwalking.CanAttack())
-                    {
-                        if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
-                        {
-                            player.IssueOrder(GameObjectOrder.MoveTo, bestBarrelMelee.Position);
-                        }
-                        else
-                        {
-                            player.IssueOrder(GameObjectOrder.AttackUnit, bestBarrelMelee);
-                        }
-                    }
-                    return;
-                }
-                if (bestBarrelQ != null && config.Item("useq", true).GetValue<bool>())
-                {
-                    Q.CastOnUnit(bestBarrelQ);
-                    return;
-                }
+                return;
             }
 
             //Cast E to chain
@@ -605,6 +563,38 @@ namespace UnderratedAIO.Champions
             }
         }
 
+        private bool BlowUpBarrel(List<Obj_AI_Minion> barrels, bool shouldAAbarrel, bool movetoBarrel)
+        {
+            if (barrels.Any())
+            {
+                var moveDist = movetoBarrel ? 250 : 0;
+                var bestBarrelMelee = GetBestBarrel(barrels, true, moveDist);
+                var bestBarrelQ = GetBestBarrel(barrels, false);
+                if (bestBarrelMelee != null && shouldAAbarrel)
+                {
+                    orbwalker.SetAttack(false);
+                    if (Orbwalking.CanAttack())
+                    {
+                        if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
+                        {
+                            player.IssueOrder(GameObjectOrder.MoveTo, bestBarrelMelee.Position);
+                        }
+                        else
+                        {
+                            player.IssueOrder(GameObjectOrder.AttackUnit, bestBarrelMelee);
+                        }
+                    }
+                    return true;
+                }
+                if (bestBarrelQ != null && config.Item("useq", true).GetValue<bool>())
+                {
+                    Q.CastOnUnit(bestBarrelQ);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private bool EnemiesInBarrelRange(Vector3 barrel, float delay)
         {
             if (
@@ -616,16 +606,16 @@ namespace UnderratedAIO.Champions
             return false;
         }
 
-        private Obj_AI_Minion GetBestBarrel(List<Obj_AI_Minion> barrels,
-            Obj_AI_Hero target,
-            bool isMelee,
-            float moveDist = 0f)
+        private Obj_AI_Minion GetBestBarrel(List<Obj_AI_Minion> barrels, bool isMelee, float moveDist = 0f)
         {
             var meleeBarrels =
                 barrels.Where(
                     b =>
-                        player.Distance(b) < (isMelee ? Orbwalking.GetRealAutoAttackRange(b) + moveDist : Q.Range) &&
-                        KillableBarrel(b, isMelee));
+                        player.Distance(b) <
+                        (isMelee
+                            ? Orbwalking.GetRealAutoAttackRange(b) +
+                              (CombatHelper.IsFacing(player, b.Position) ? moveDist : 0f)
+                            : Q.Range) && KillableBarrel(b, isMelee));
             var secondaryBarrels = barrels.Select(b => b.Position).Concat(castedBarrels.Select(c => c.pos));
             var meleeDelay = isMelee ? 0.25f : 0;
             if (moveDist > 0f)
