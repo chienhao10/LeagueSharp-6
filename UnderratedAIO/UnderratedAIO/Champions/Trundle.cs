@@ -207,7 +207,7 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            if (E.IsReady() && config.Item("AutoEDash", true).GetValue<bool>())
+            if (false && E.IsReady() && config.Item("AutoEDash", true).GetValue<bool>())
             {
                 foreach (var data in HeroManager.Allies.Select(a => Program.IncDamages.GetAllyData(a.NetworkId)))
                 {
