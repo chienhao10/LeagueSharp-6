@@ -38,36 +38,65 @@ namespace UnderratedAIO.Champions
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
             HpBarDamageIndicator.DamageToUnit = ComboDamage;
             CustomEvents.Unit.OnDash += Unit_OnDash;
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+        }
+
+        private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (!config.Item("AutoEDash", true).GetValue<bool>())
+            {
+                return;
+            }
+            if (!E.IsReady())
+            {
+                return;
+            }
+            var hero = sender as Obj_AI_Hero;
+            if (hero != null && hero.ChampionName == "Tristana" && args.Slot == SpellSlot.W)
+            {
+                var dashIntPoint = sender.Position.Extend(args.End, 300);
+                if (dashIntPoint.Distance(player.Position) < 1000)
+                {
+                    E.Cast(dashIntPoint);
+                }
+            }
         }
 
         private void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
         {
-            return;
-            if (args.IsBlink)
+            if (!config.Item("AutoEDash", true).GetValue<bool>())
             {
                 return;
             }
-            if (!sender.IsEnemy && !(sender is Obj_AI_Hero))
+            if (args.IsBlink || !E.IsReady())
             {
                 return;
             }
-            if (args.StartPos.Distance(player) > E.Range && args.EndPos.Distance(player) > E.Range)
+            if (!sender.IsEnemy || !(sender is Obj_AI_Hero))
             {
                 return;
             }
-            Console.WriteLine("Dash!");
+            var hero = sender as Obj_AI_Hero;
+            if (hero.ChampionName == "Tristana")
+            {
+                return;
+            }
             var steps = 6f;
             var stepLength = args.StartPos.Distance(args.EndPos) / steps;
             for (int i = 1; i < steps + 1; i++)
             {
                 var p = args.StartPos.Extend(args.EndPos, stepLength * i);
-                if (p.IsWall() && p.Distance(args.StartPos) > args.Speed * 0.25f - E.Width &&
-                    p.Distance(player) < E.Range)
+                if (p.IsWall() && p.Distance(args.StartPos) > args.Speed * 0.25f - E.Width && p.Distance(player) < 1000)
                 {
-                    Console.WriteLine("Casted Cause wall");
-                    E.Cast(p);
+                    E.Cast(p.Extend(args.StartPos, E.Width));
                     return;
                 }
+            }
+            var predRange = Math.Min(args.Speed * 0.35f, args.StartPos.Distance(args.EndPos));
+            var dashIntPoint = args.StartPos.Extend(args.EndPos, predRange);
+            if (dashIntPoint.Distance(player) < 1000)
+            {
+                E.Cast(dashIntPoint);
             }
         }
 
@@ -178,6 +207,20 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
+            if (E.IsReady() && config.Item("AutoEDash", true).GetValue<bool>())
+            {
+                foreach (var data in HeroManager.Allies.Select(a => Program.IncDamages.GetAllyData(a.NetworkId)))
+                {
+                    foreach (var skillshot in
+                        data.Damages.Where(
+                            d =>
+                                d.SkillShot != null && d.SkillShot.SkillshotData.Slot == SpellSlot.R &&
+                                d.SkillShot.SkillshotData.ChampionName == "Blitzcrank"))
+                    {
+                        E.Cast(skillshot.Target.Position.Extend(skillshot.SkillShot.StartPosition.To3D(), E.Range * 2));
+                    }
+                }
+            }
         }
 
         private void Clear()
@@ -220,7 +263,8 @@ namespace UnderratedAIO.Champions
                     E.Cast(pos);
                 }
             }
-            if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
+            if (config.Item("usew", true).GetValue<bool>() && W.IsReady() &&
+                (!target.UnderTurret(true) || player.UnderTurret(true)))
             {
                 var pos = player.Position.Extend(Prediction.GetPrediction(target, 700).UnitPosition, W.Range / 2);
                 if (player.Distance(pos) < W.Range)
@@ -285,7 +329,7 @@ namespace UnderratedAIO.Champions
         private Vector3 GetVectorE(Obj_AI_Hero target)
         {
             var pos = Vector3.Zero;
-            var pred = Prediction.GetPrediction(target, 0.25f);
+            var pred = Prediction.GetPrediction(target, 0.28f);
             if (!target.IsMoving)
             {
                 return pos;
@@ -376,12 +420,13 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(Program.SPredictionMenu);
             menuM = Jungle.addJungleOptions(menuM);
             menuM.AddItem(new MenuItem("AutoETower", "Use E on tower aggro", true)).SetValue(true);
-            menuM.AddItem(new MenuItem("AutoEinterrupt", "Use E interrupt", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("AutoEinterrupt", "Use E to interrupt", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("AutoEDash", "Use E ond Dash", true)).SetValue(true);
+
             Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
             autoLeveler = new AutoLeveler(autolvlM);
             menuM.AddSubMenu(autolvlM);
             config.AddSubMenu(menuM);
-
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
@@ -415,7 +460,7 @@ namespace UnderratedAIO.Champions
             W.SetSkillshot(0.25f, 1000, float.MaxValue, false, SkillshotType.SkillshotCircle);
             E = new Spell(SpellSlot.E, 1000);
             E.SetSkillshot(0.25f, 100, float.MaxValue, false, SkillshotType.SkillshotCircle);
-            R = new Spell(SpellSlot.R, 700);
+            R = new Spell(SpellSlot.R, 650);
         }
     }
 }
