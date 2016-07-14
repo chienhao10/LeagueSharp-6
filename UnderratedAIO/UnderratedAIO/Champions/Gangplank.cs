@@ -687,13 +687,11 @@ namespace UnderratedAIO.Champions
         private Vector3 GetE(Vector3 barrel, Obj_AI_Hero target, float delay, List<Vector3> barrels)
         {
             var enemies =
-                Enumerable.Select(
-                    HeroManager.Enemies.Where(
-                        e =>
-                            e.IsValidTarget(1650) && e.Distance(barrel) > BarrelExplosionRange &&
-                            Prediction.GetPrediction(e, delay).Hitchance >= HitChance.High &&
-                            !barrels.Any(b => b.Distance(e.Position) < BarrelExplosionRange)),
-                    e => Prediction.GetPrediction(e, delay));
+                HeroManager.Enemies.Where(
+                    e =>
+                        e.IsValidTarget(1650) && e.Distance(barrel) > BarrelExplosionRange &&
+                        Prediction.GetPrediction(e, delay).Hitchance >= HitChance.High &&
+                        !barrels.Any(b => b.Distance(e.Position) < BarrelExplosionRange));
             var targetPred = Prediction.GetPrediction(target, delay);
             var pos = Vector3.Zero;
             pos =
@@ -706,7 +704,7 @@ namespace UnderratedAIO.Champions
                             HeroManager.Enemies.Count(e => e.Distance(p) < BarrelExplosionRange) > 0 &&
                             targetPred.CastPosition.Distance(p) < BarrelExplosionRange &&
                             target.Distance(p) < BarrelExplosionRange)
-                    .OrderByDescending(p => enemies.Count(e => e.UnitPosition.Distance(p) < BarrelExplosionRange))
+                    .OrderByDescending(p => enemies.Count(e => e.Distance(p) < BarrelExplosionRange))
                     .ThenBy(p => p.Distance(targetPred.CastPosition))
                     .FirstOrDefault();
             return pos;
@@ -719,13 +717,10 @@ namespace UnderratedAIO.Champions
                 return Vector3.Zero;
             }
             var enemies =
-                Enumerable.Select(
-                    HeroManager.Enemies.Where(
-                        e =>
-                            e.IsValidTarget(1650) && e.Distance(barrel) > BarrelExplosionRange &&
-                            Prediction.GetPrediction(e, delay).Hitchance >= HitChance.High &&
-                            !barrels.Any(b => b.Distance(e.Position) < BarrelExplosionRange)),
-                    e => Prediction.GetPrediction(e, delay));
+                HeroManager.Enemies.Where(
+                    e =>
+                        e.IsValidTarget(1650) && e.Distance(barrel) > BarrelExplosionRange &&
+                        !barrels.Any(b => b.Distance(e.Position) < BarrelExplosionRange));
             var targetPred = Prediction.GetPrediction(target, delay);
             var pos = Vector3.Zero;
             pos =
@@ -735,7 +730,7 @@ namespace UnderratedAIO.Champions
                             p.Distance(barrel) < BarrelConnectionRange && p.Distance(player.Position) < E.Range &&
                             barrels.Count(b => b.Distance(p) < BarrelExplosionRange) == 0 &&
                             targetPred.CastPosition.Distance(p) < (BarrelExplosionRange - 25) * 2)
-                    .OrderByDescending(p => enemies.Count(e => e.UnitPosition.Distance(p) < BarrelExplosionRange))
+                    .OrderByDescending(p => enemies.Count(e => e.Distance(p) < BarrelExplosionRange))
                     .ThenBy(p => p.Distance(targetPred.CastPosition))
                     .FirstOrDefault();
             return pos;
@@ -1119,7 +1114,7 @@ namespace UnderratedAIO.Champions
         private IEnumerable<Vector3> GetBarrelPoints(Vector3 point)
         {
             return
-                CombatHelper.PointsAroundTheTarget(point, BarrelConnectionRange, 20f)
+                CombatHelper.PointsAroundTheTarget(point, BarrelConnectionRange, 15f)
                     .Where(p => !p.IsWall() && p.Distance(point) > BarrelExplosionRange);
         }
 
