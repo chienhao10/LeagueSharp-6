@@ -952,4 +952,16 @@ namespace UnderratedAIO.Helpers
             return enemy.Spellbook.GetSpell(Slot).CooldownExpires - Game.Time < 0.5f;
         }
     }
+
+    internal static class Obj_AI_BaseExt
+    {
+        public static bool IsInAttackRange(this Obj_AI_Base target)
+        {
+            if (target == null)
+            {
+                return false;
+            }
+            return Orbwalking.GetRealAutoAttackRange(target) < ObjectManager.Player.Distance(target);
+        }
+    }
 }
