@@ -166,15 +166,7 @@ namespace UnderratedAIO.Helpers
                         .Select(m => m as AttackableUnit)
                         .ToList()
                         .Concat(
-                            ObjectManager.Get<Obj_BarracksDampener>()
-                                .Where(t => t.IsValidTarget() && t.Position.Distance(player.Position) < range))
-                        .ToList()
-                        .Concat(
                             ObjectManager.Get<Obj_AI_Turret>()
-                                .Where(t => t.IsValidTarget() && t.Position.Distance(player.Position) < range))
-                        .ToList()
-                        .Concat(
-                            ObjectManager.Get<Obj_HQ>()
                                 .Where(t => t.IsValidTarget() && t.Position.Distance(player.Position) < range))
                         .ToList();
                 if (isFarm)

@@ -83,13 +83,14 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
         }
 
         private void Game_OnUpdate(EventArgs args)
         {
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             orbwalker.SetOrbwalkingPoint(Vector3.Zero);
             switch (orbwalker.ActiveMode)
             {
@@ -333,13 +334,9 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
 
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM.AddSubMenu(Program.SPredictionMenu);
-            menuM = Jungle.addJungleOptions(menuM);
             menuM.AddItem(new MenuItem("gotoAxeMaxDist", "Max dist to catch axe", true))
                 .SetValue(new Slider(450, 200, 600));
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

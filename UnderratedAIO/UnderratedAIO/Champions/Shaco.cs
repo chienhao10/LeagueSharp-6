@@ -48,6 +48,10 @@ namespace UnderratedAIO.Champions
             {
                 orbwalker.SetAttack(true);
             }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -110,7 +114,6 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             if (R.IsReady() && ShacoClone)
             {
                 PetHandler.MovePet(config, orbwalker.ActiveMode);
@@ -285,8 +288,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
@@ -369,20 +370,12 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
             // Misc Settings
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM.AddItem(new MenuItem("ghostTarget", "Ghost target priority", true))
-                .SetValue(new StringList(new[] { "Targetselector", "Lowest health", "Closest to you" }, 0));
             menuM.AddItem(new MenuItem("ksq", "KS E", true)).SetValue(true);
             menuM.AddItem(new MenuItem("ks", "KS Q+E", true)).SetValue(true);
-            menuM = PetHandler.addItemOptons(menuM);
             menuM.AddItem(new MenuItem("stackBox", "Stack boxes", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
-            menuM = Jungle.addJungleOptions(menuM);
-
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

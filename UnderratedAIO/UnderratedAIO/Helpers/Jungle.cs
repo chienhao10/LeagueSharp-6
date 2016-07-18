@@ -19,11 +19,12 @@ namespace UnderratedAIO.Helpers
         public static readonly string[] bosses = { "TT_Spiderboss", "SRU_Dragon", "SRU_Baron" };
         public static SpellSlot smiteSlot = SpellSlot.Unknown;
         public static Spell smite;
+        public static Menu CommonmenuMenu;
 
-        public static Obj_AI_Minion GetNearest(Vector3 pos, float range = 1500f)
+        public static Obj_AI_Base GetNearest(Vector3 pos, float range = 1500f)
         {
             return
-                ObjectManager.Get<Obj_AI_Minion>()
+                MinionManager.GetMinions(pos, range, MinionTypes.All, MinionTeam.NotAlly)
                     .FirstOrDefault(
                         minion =>
                             minion.IsValidTarget() && minion.IsValid && minion.Distance(pos) < range &&
@@ -38,21 +39,33 @@ namespace UnderratedAIO.Helpers
 
         public static Menu addJungleOptions(Menu config)
         {
-            var mConfig = config;
             Menu menuS = new Menu("Smite ", "Smitesettings");
             menuS.AddItem(new MenuItem("useSmite", "Use Smite"))
                 .SetValue(new KeyBind("M".ToCharArray()[0], KeyBindType.Toggle))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
             menuS.AddItem(new MenuItem("smiteStatus", "Show status")).SetValue(false);
-            mConfig.AddSubMenu(menuS);
-            return mConfig;
+            config.AddSubMenu(menuS);
+            CommonmenuMenu = config;
+            Game.OnUpdate += Game_OnUpdate;
+            Drawing.OnDraw += Drawing_OnDraw;
+            return config;
         }
 
-        public static void ShowSmiteStatus(bool smite, bool status)
+        private static void Drawing_OnDraw(EventArgs args)
         {
-            if (status && smiteSlot != SpellSlot.Unknown)
+            ShowSmiteStatus();
+        }
+
+        private static void Game_OnUpdate(EventArgs args)
+        {
+            CastSmite();
+        }
+
+        public static void ShowSmiteStatus()
+        {
+            if (CommonmenuMenu.Item("smiteStatus").GetValue<bool>() && smiteSlot != SpellSlot.Unknown)
             {
-                if (smite)
+                if (CommonmenuMenu.Item("useSmite").GetValue<KeyBind>().Active)
                 {
                     Drawing.DrawCircle(player.Position, 570f, System.Drawing.Color.LimeGreen);
                 }
@@ -63,9 +76,9 @@ namespace UnderratedAIO.Helpers
             }
         }
 
-        public static void CastSmite(bool enabled)
+        public static void CastSmite()
         {
-            if (enabled && smiteSlot != SpellSlot.Unknown)
+            if (CommonmenuMenu.Item("useSmite").GetValue<KeyBind>().Active && smiteSlot != SpellSlot.Unknown)
             {
                 var target = GetNearest(player.Position);
                 bool smiteReady = ObjectManager.Player.Spellbook.CanUseSpell(smiteSlot) == SpellState.Ready;
@@ -93,7 +106,7 @@ namespace UnderratedAIO.Helpers
         private static readonly int[] SmitePurple = { 3713, 3726, 3725, 3724, 3723, 3933 };
 
         private static readonly int[] SmiteGrey = { 3711, 3722, 3721, 3720, 3719, 3932, 1410, 1409, 1408, 1411 };
-            // 1410, 1409, 1408, 1411
+        // 1410, 1409, 1408, 1411
 
         private static readonly int[] SmiteRed = { 3715, 3718, 3717, 3716, 3714, 3931, 1415, 1412, 1419, 1414, 1413 };
         //1414, 1413

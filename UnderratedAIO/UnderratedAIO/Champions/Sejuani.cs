@@ -68,13 +68,16 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
+
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -92,7 +95,6 @@ namespace UnderratedAIO.Champions
                     break;
             }
 
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             if (config.Item("manualR", true).GetValue<KeyBind>().Active && R.IsReady())
             {
                 CastR();
@@ -377,12 +379,7 @@ namespace UnderratedAIO.Champions
             menuU.AddItem(new MenuItem("useqint", "Use Q to interrupt", true)).SetValue(true);
             menuU.AddItem(new MenuItem("usergc", "Use R to anti gap closer", true)).SetValue(false);
             menuU.AddItem(new MenuItem("userint", "Use R to interrupt", true)).SetValue(false);
-            menuU = Jungle.addJungleOptions(menuU);
-
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuU.AddSubMenu(autolvlM);
+            menuU = DrawHelper.AddMisc(menuU);
 
             config.AddSubMenu(menuU);
             var sulti = new Menu("Don't ult on ", "dontult");

@@ -14,20 +14,23 @@ namespace UnderratedAIO.Helpers
     {
         private static Menu configMenu;
         public static AutoLevel autoLevel;
-        public bool enabled = true;
+        public static bool enabled = true;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
 
-        public AutoLeveler(Menu config)
+        public static Menu AddToMenu(Menu config)
         {
-            configMenu = config;
-            config.AddItem(new MenuItem(player.ChampionName + "order", "Skill order", true))
+            Menu menulvl = new Menu("Autoleveler ", "Autolevelersettings");
+            menulvl.AddItem(new MenuItem(player.ChampionName + "order", "Skill order", true))
                 .SetValue(new StringList(new[] { "Q->W->E", "Q->E->W", "W->Q->E", "W->E->Q", "E->Q->W", "E->W->Q" }, 0));
-            config.AddItem(new MenuItem(player.ChampionName + "Enabled", "Enabled")).SetValue(false);
-            config.AddItem(new MenuItem("Test", "Test Only"));
+            menulvl.AddItem(new MenuItem(player.ChampionName + "Enabled", "Enabled")).SetValue(false);
+            menulvl.AddItem(new MenuItem("Test", "Test Only"));
+            config.AddSubMenu(menulvl);
+            configMenu = config;
             autoLevel =
                 new AutoLevel(
                     GetTree(configMenu.Item(player.ChampionName + "order", true).GetValue<StringList>().SelectedIndex));
             Game.OnUpdate += Game_OnUpdate;
+            return configMenu;
         }
 
 
@@ -37,7 +40,7 @@ namespace UnderratedAIO.Helpers
             set { enabled = value; }
         }
 
-        private int[] GetTree(int p)
+        private static int[] GetTree(int p)
         {
             switch (p)
             {
@@ -63,7 +66,7 @@ namespace UnderratedAIO.Helpers
             return new int[] { 0, 1, 2, 0, 0, 3, 0, 1, 0, 1, 3, 1, 1, 2, 2, 3, 2, 2 };
         }
 
-        private void Game_OnUpdate(EventArgs args)
+        private static void Game_OnUpdate(EventArgs args)
         {
             if (enabled && configMenu.Item(player.ChampionName + "Enabled").GetValue<bool>())
             {

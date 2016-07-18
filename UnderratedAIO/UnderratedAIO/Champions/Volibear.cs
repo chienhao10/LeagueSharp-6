@@ -46,6 +46,10 @@ namespace UnderratedAIO.Champions
                 passivecd = false;
                 passivetime = 0f;
             }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -62,7 +66,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             var enemyForKs = HeroManager.Enemies.FirstOrDefault(h => W.CanCast(h) && Wdmg(h) > h.Health);
             if (enemyForKs != null && W.IsReady() && config.Item("ksW").GetValue<bool>())
             {
@@ -227,8 +230,6 @@ namespace UnderratedAIO.Champions
             }
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), 300);
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
         }
 
         private void DrawPassive()
@@ -353,13 +354,8 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
             // Misc settings
             Menu menuM = new Menu("Misc ", "Msettings");
-
-            menuM = Jungle.addJungleOptions(menuM);
             menuM.AddItem(new MenuItem("ksW", "KS with W")).SetValue(false);
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

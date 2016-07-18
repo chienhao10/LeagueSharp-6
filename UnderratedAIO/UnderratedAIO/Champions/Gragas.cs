@@ -136,9 +136,11 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             orbwalker.SetAttack(true);
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-
             Obj_AI_Hero target = TargetSelector.GetTarget(1300, TargetSelector.DamageType.Magical, true);
             var combodmg = 0f;
             if (target != null)
@@ -630,8 +632,6 @@ namespace UnderratedAIO.Champions
         {
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -809,11 +809,8 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("usewgc", "Use W gapclosers", true)).SetValue(false);
             menuM.AddItem(new MenuItem("useegc", "Use E gapclosers", true)).SetValue(true);
             menuM.AddItem(new MenuItem("autoQ", "Auto detonate Q", true)).SetValue(true);
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
+            menuM = DrawHelper.AddMisc(menuM);
+
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

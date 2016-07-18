@@ -168,8 +168,10 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            Orbwalking.Move = true;
-            Orbwalking.Attack = true;
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             if (forcedPos.IsValid() && !ToCursor)
             {
                 player.IssueOrder(GameObjectOrder.MoveTo, cgTarg.Position.Extend(forcedPos, 50));
@@ -187,6 +189,8 @@ namespace UnderratedAIO.Champions
                 ToCursor = false;
                 forcedPos = Vector3.Zero;
             }
+            Orbwalking.Move = true;
+            Orbwalking.Attack = true;
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -207,7 +211,6 @@ namespace UnderratedAIO.Champions
                     break;
             }
             Throw();
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             if (config.Item("autoW", true).GetValue<bool>() && W.IsReady() && !player.IsRecalling())
             {
                 var targ =
@@ -445,8 +448,6 @@ namespace UnderratedAIO.Champions
         {
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target != null && config.Item("targCircle", true).GetValue<Circle>().Active)
@@ -546,11 +547,7 @@ namespace UnderratedAIO.Champions
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
             menuC.AddItem(new MenuItem("targRange", "Target indicator", true)).SetValue(new Slider(300, 20, 600));
             menuM.AddItem(new MenuItem("DontOffQ", "Do not turn off Q", true)).SetValue(false);
-            menuM = Jungle.addJungleOptions(menuM);
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

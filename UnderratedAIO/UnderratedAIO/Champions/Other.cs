@@ -21,7 +21,6 @@ namespace UnderratedAIO.Champions
             ////Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Underrated AIO Common</font>");
             Jungle.setSmiteSlot();
             Game.OnUpdate += Game_OnGameUpdate;
-            Drawing.OnDraw += Game_OnDraw;
             Console.WriteLine(ObjectManager.Player.ChampionName);
         }
 
@@ -36,9 +35,12 @@ namespace UnderratedAIO.Champions
             {
                 orbwalker.Enabled = false;
             }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             if (config.Item("Enabledcomm").GetValue<bool>())
             {
-                autoLeveler.enabled = true;
                 switch (orbwalker.ActiveMode)
                 {
                     case Orbwalking.OrbwalkingMode.Combo:
@@ -53,11 +55,6 @@ namespace UnderratedAIO.Champions
                     default:
                         break;
                 }
-                Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-            }
-            else
-            {
-                autoLeveler.enabled = false;
             }
         }
 
@@ -81,15 +78,6 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        private void Game_OnDraw(EventArgs args)
-        {
-            if (config.Item("Enabledcomm").GetValue<bool>())
-            {
-                Jungle.ShowSmiteStatus(
-                    config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
-            }
-        }
-
         private void InitMenu()
         {
             config = new Menu("UnderratedAIO", "UnderratedAIO", true);
@@ -106,10 +94,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("useIgnite", "Ignite")).SetValue(true);
             config.AddSubMenu(menuC);
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("Enabledcomm", "Enable Utilies")).SetValue(true);
             config.AddItem(new MenuItem("Enabledorb", "Enable OrbWalker", true)).SetValue(false);

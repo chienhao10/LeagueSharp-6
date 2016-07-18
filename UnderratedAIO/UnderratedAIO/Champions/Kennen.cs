@@ -56,7 +56,10 @@ namespace UnderratedAIO.Champions
             {
                 orbwalker.SetAttack(true);
             }
-
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             Obj_AI_Hero target = getTarget();
             switch (orbwalker.ActiveMode)
             {
@@ -469,10 +472,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("DmgType", "Damage Type", true))
                 .SetValue(new StringList(new[] { "AP", "AD" }, 0));
 
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
+            menuM = DrawHelper.AddMisc(menuM);
 
             Menu autoQ = new Menu("Auto Harass", "autoQ");
             autoQ.AddItem(

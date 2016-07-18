@@ -82,8 +82,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("draweeflash", true).GetValue<Circle>(), EFlash.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             if (config.Item("drawallyhp", true).GetValue<bool>())
             {
                 DrawHealths();
@@ -164,6 +162,10 @@ namespace UnderratedAIO.Champions
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             Ulti();
             if (config.Item("useeflash", true).GetValue<KeyBind>().Active &&
                 player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerFlash")) == SpellState.Ready)
@@ -186,8 +188,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
-
             var bladeObj =
                 ObjectManager.Get<Obj_AI_Base>()
                     .Where(
@@ -641,13 +641,7 @@ namespace UnderratedAIO.Champions
             menuU.AddItem(new MenuItem("useeint", "Use E to interrupt", true)).SetValue(true);
             menuU.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
             menuU.AddItem(new MenuItem("atpercent", "   Under % health", true)).SetValue(new Slider(20, 0, 100));
-            menuU.AddSubMenu(Program.SPredictionMenu);
-            menuU = Jungle.addJungleOptions(menuU);
-
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuU.AddSubMenu(autolvlM);
+            menuU = DrawHelper.AddMisc(menuU);
 
             config.AddSubMenu(menuU);
             var sulti = new Menu("Don't ult on ", "dontult");

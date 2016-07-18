@@ -78,8 +78,11 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             orbwalker.SetMovement(true);
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -334,8 +337,6 @@ namespace UnderratedAIO.Champions
         {
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -414,10 +415,8 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("wardJump", "Ward jump", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
+
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

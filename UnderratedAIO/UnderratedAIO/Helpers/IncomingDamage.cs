@@ -93,6 +93,10 @@ namespace UnderratedAIO.Helpers
 
         private void CheckSkillShots()
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             if (!skillShotChecked)
             {
                 skillShotChecked = true;
@@ -214,51 +218,65 @@ namespace UnderratedAIO.Helpers
         {
             if (enabled)
             {
-                Obj_AI_Hero target = args.Target as Obj_AI_Hero;
-                if (target != null && target.Team != sender.Team)
+                try
                 {
-                    if (sender.IsValid && !sender.IsDead)
+                    Obj_AI_Hero target = args.Target as Obj_AI_Hero;
+                    if (target != null && target.Team != sender.Team)
                     {
-                        var data =
-                            IncomingDamagesAlly.Concat(IncomingDamagesEnemy)
-                                .FirstOrDefault(i => i.Hero.NetworkId == target.NetworkId);
-                        if (data != null)
+                        if (sender.IsValid && !sender.IsDead)
                         {
-                            var missileSpeed = (sender.Distance(target) / args.SData.MissileSpeed) +
-                                               args.SData.SpellCastTime;
-                            missileSpeed = missileSpeed > 1f ? 0.8f : missileSpeed;
-                            if (Orbwalking.IsAutoAttack(args.SData.Name))
+                            var data =
+                                IncomingDamagesAlly.Concat(IncomingDamagesEnemy)
+                                    .FirstOrDefault(i => i.Hero.NetworkId == target.NetworkId);
+                            if (data != null)
                             {
-                                var dmg =
-                                    (float) (sender.GetAutoAttackDamage(target, true) + ItemHandler.GetSheenDmg(target));
-                                if (args.SData.Name.ToLower().Contains("crit"))
+                                var missileSpeed = (sender.Distance(target) / args.SData.MissileSpeed) +
+                                                   args.SData.SpellCastTime;
+                                missileSpeed = missileSpeed > 1f ? 0.8f : missileSpeed;
+                                if (Orbwalking.IsAutoAttack(args.SData.Name))
                                 {
-                                    dmg = dmg * 2;
-                                }
-                                data.Damages.Add(
-                                    new Dmg(target, dmg, missileSpeed, !sender.Name.ToLower().Contains("turret")));
-                            }
-                            else
-                            {
-                                var hero = sender as Obj_AI_Hero;
-                                if (hero != null &&
-                                    !CombatHelper.BuffsList.Any(
-                                        b => args.Slot == b.Slot && hero.ChampionName == b.ChampionName))
-                                {
+                                    var dmg =
+                                        (float)
+                                            (sender.GetAutoAttackDamage(target, true) + ItemHandler.GetSheenDmg(target));
+                                    if (args.SData.Name.ToLower().Contains("crit"))
+                                    {
+                                        dmg = dmg * 2;
+                                    }
                                     data.Damages.Add(
-                                        new Dmg(
-                                            target,
-                                            (float) Damage.GetSpellDamage(hero, (Obj_AI_Base) args.Target, args.Slot),
-                                            missileSpeed, false,
-                                            SpellDatabase.CcList.Any(
-                                                cc =>
-                                                    cc.Slot == args.Slot &&
-                                                    cc.Champion.ChampionName == hero.ChampionName)));
+                                        new Dmg(target, dmg, missileSpeed, !sender.Name.ToLower().Contains("turret")));
+                                }
+                                else
+                                {
+                                    var hero = sender as Obj_AI_Hero;
+                                    if (hero == null)
+                                    {
+                                        return;
+                                    }
+                                    if (!DrawHelper.damagePredEnabled(hero.ChampionName, args.Slot))
+                                    {
+                                        return;
+                                    }
+                                    if (
+                                        !CombatHelper.BuffsList.Any(
+                                            b => args.Slot == b.Slot && hero.ChampionName == b.ChampionName))
+                                    {
+                                        data.Damages.Add(
+                                            new Dmg(
+                                                target,
+                                                (float)
+                                                    Damage.GetSpellDamage(hero, (Obj_AI_Base) args.Target, args.Slot),
+                                                missileSpeed, false,
+                                                SpellDatabase.CcList.Any(
+                                                    cc =>
+                                                        cc.Slot == args.Slot &&
+                                                        cc.Champion.ChampionName == hero.ChampionName)));
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                catch (Exception) {}
             }
         }
     }

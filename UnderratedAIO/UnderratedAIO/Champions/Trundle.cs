@@ -29,7 +29,7 @@ namespace UnderratedAIO.Champions
         {
             InitTrundle();
             InitMenu();
-            Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Trundle</font>");
+            //Game.PrintChat("<font color='#9933FF'>Soresu </font><font color='#FFFFFF'>- Trundle</font>");
             Game.OnUpdate += Game_OnUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Jungle.setSmiteSlot();
@@ -37,7 +37,6 @@ namespace UnderratedAIO.Champions
             Orbwalking.AfterAttack += AfterAttack;
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
             HpBarDamageIndicator.DamageToUnit = ComboDamage;
-            CustomEvents.Unit.OnDash += Unit_OnDash;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
         }
 
@@ -47,59 +46,25 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            if (!E.IsReady())
+            var hero = sender as Obj_AI_Hero;
+            if (!E.IsReady() || hero == null || sender.IsAlly)
             {
                 return;
             }
-            var hero = sender as Obj_AI_Hero;
-            if (hero != null && hero.ChampionName == "Tristana" && args.Slot == SpellSlot.W)
+            if (!DrawHelper.dashEnabled(hero.ChampionName))
             {
-                var dashIntPoint = sender.Position.Extend(args.End, 300);
+                return;
+            }
+            if (sender.Position.Distance(args.End) > 250 &&
+                CombatHelper.DashDatas.Any(d => d.ChampionName == hero.ChampionName && d.Slot == args.Slot))
+            {
+                var dashIntPoint = sender.Position.Extend(args.End, 250);
                 if (dashIntPoint.Distance(player.Position) < 1000)
                 {
                     E.Cast(dashIntPoint);
                 }
             }
         }
-
-        private void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
-        {
-            if (!config.Item("AutoEDash", true).GetValue<bool>())
-            {
-                return;
-            }
-            if (args.IsBlink || !E.IsReady())
-            {
-                return;
-            }
-            if (!sender.IsEnemy || !(sender is Obj_AI_Hero))
-            {
-                return;
-            }
-            var hero = sender as Obj_AI_Hero;
-            if (hero.ChampionName == "Tristana")
-            {
-                return;
-            }
-            var steps = 6f;
-            var stepLength = args.StartPos.Distance(args.EndPos) / steps;
-            for (int i = 1; i < steps + 1; i++)
-            {
-                var p = args.StartPos.Extend(args.EndPos, stepLength * i);
-                if (p.IsWall() && p.Distance(args.StartPos) > args.Speed * 0.25f - E.Width && p.Distance(player) < 1000)
-                {
-                    E.Cast(p.Extend(args.StartPos, E.Width));
-                    return;
-                }
-            }
-            var predRange = Math.Min(args.Speed * 0.35f, args.StartPos.Distance(args.EndPos));
-            var dashIntPoint = args.StartPos.Extend(args.EndPos, predRange);
-            if (dashIntPoint.Distance(player) < 1000)
-            {
-                E.Cast(dashIntPoint);
-            }
-        }
-
 
         private void AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
@@ -126,7 +91,7 @@ namespace UnderratedAIO.Champions
                     return;
                 }
                 if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed &&
-                    config.Item("useqH", true).GetValue<bool>())
+                    config.Item("useqH", true).GetValue<bool>() && target is Obj_AI_Hero)
                 {
                     float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
                     if (player.Mana > player.MaxMana * perc)
@@ -148,6 +113,10 @@ namespace UnderratedAIO.Champions
             Interrupter2.InterruptableTargetEventArgs args)
         {
             if (sender == null)
+            {
+                return;
+            }
+            if (!DrawHelper.IntEnabled(sender.ChampionName))
             {
                 return;
             }
@@ -184,13 +153,14 @@ namespace UnderratedAIO.Champions
                 config.Item("drawee", true).GetValue<Circle>(), config.Item("useeRange", true).GetValue<Slider>().Value);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
         }
 
         private void Game_OnUpdate(EventArgs args)
         {
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             orbwalker.SetOrbwalkingPoint(Vector3.Zero);
             switch (orbwalker.ActiveMode)
             {
@@ -417,15 +387,12 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
 
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM.AddSubMenu(Program.SPredictionMenu);
-            menuM = Jungle.addJungleOptions(menuM);
             menuM.AddItem(new MenuItem("AutoETower", "Use E on tower aggro", true)).SetValue(true);
             menuM.AddItem(new MenuItem("AutoEinterrupt", "Use E to interrupt", true)).SetValue(true);
             menuM.AddItem(new MenuItem("AutoEDash", "Use E ond Dash", true)).SetValue(true);
 
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

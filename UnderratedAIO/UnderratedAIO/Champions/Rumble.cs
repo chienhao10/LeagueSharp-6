@@ -69,7 +69,10 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -345,8 +348,6 @@ namespace UnderratedAIO.Champions
         {
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -470,11 +471,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("shieldPercent", "   Shield %", true)).SetValue(new Slider(50, 0, 100));
             menuM.AddItem(new MenuItem("Aggro", "   Aggro", true)).SetValue(new Slider(3, 0, 10));
             menuM.AddItem(new MenuItem("blockW", "   Don't silence me pls", true)).SetValue(true);
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

@@ -77,7 +77,10 @@ namespace UnderratedAIO.Helpers.SkillShot
                 var hero = (Obj_AI_Hero) skillshot.Caster;
                 //Check if the skillshot is already added.
                 var alreadyAdded = false;
-
+                if (!DrawHelper.damagePredEnabled(hero.ChampionName, skillshot.SkillshotData.Slot))
+                {
+                    return;
+                }
                 // Integration disabled
 
                 foreach (var item in ActiveSkillshots)

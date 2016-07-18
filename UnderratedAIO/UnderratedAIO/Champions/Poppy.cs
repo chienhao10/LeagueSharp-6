@@ -44,6 +44,10 @@ namespace UnderratedAIO.Champions
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             Obj_AI_Hero targetf = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Magical);
             if (config.Item("useeflashforced", true).GetValue<KeyBind>().Active)
             {
@@ -84,7 +88,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             if (!player.IsDead)
             {
                 foreach (var dashingEnemy in
@@ -292,8 +295,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
@@ -421,7 +422,6 @@ namespace UnderratedAIO.Champions
             Menu menuME = new Menu("Auto E", "MEsettings");
             menuME.AddItem(new MenuItem("useEint", "Use E interrupt", true)).SetValue(true);
             menuME.AddItem(new MenuItem("useEgap", "Use E on gapcloser near walls", true)).SetValue(true);
-            menuM = Jungle.addJungleOptions(menuM);
             foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsEnemy))
             {
                 menuMW.AddItem(new MenuItem("useAutoW" + hero.SkinName, hero.SkinName, true))
@@ -431,10 +431,7 @@ namespace UnderratedAIO.Champions
             menuMW.AddItem(new MenuItem("infoPAW", "0 is off"));
             menuM.AddSubMenu(menuMW);
             menuM.AddSubMenu(menuME);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

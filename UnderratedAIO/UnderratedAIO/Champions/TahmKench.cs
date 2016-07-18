@@ -63,8 +63,11 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             orbwalker.SetMovement(true);
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             blockW = false;
             if (config.Item("useDevour", true).GetValue<bool>() && W.IsReady() && !justQ)
             {
@@ -382,8 +385,6 @@ namespace UnderratedAIO.Champions
             var r = R.Level - 1;
             DrawHelper.DrawCircle(
                 config.Item("drawrr", true).GetValue<Circle>(), new int[] { 4000, 5000, 6000 }[r >= 1 ? r : 1]);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -521,11 +522,7 @@ namespace UnderratedAIO.Champions
             AllyDef.AddItem(new MenuItem("allyPrior", "Prioritize ally over damage enemy", true)).SetValue(true);
             AllyDef.AddItem(new MenuItem("useDevour", "Enabled", true)).SetValue(true);
             menuM.AddSubMenu(AllyDef);
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

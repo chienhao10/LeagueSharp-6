@@ -95,6 +95,10 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -112,7 +116,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             if (config.Item("EzAutoQ", true).GetValue<KeyBind>().Active && Q.IsReady() &&
                 config.Item("EzminmanaaQ", true).GetValue<Slider>().Value < player.ManaPercent &&
                 orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo && Orbwalking.CanMove(100))
@@ -400,8 +403,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             if (config.Item("ShowState", true).GetValue<bool>())
             {
@@ -527,14 +528,8 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLH);
             //Misc
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM = Jungle.addJungleOptions(menuM);
-
             menuM.AddItem(new MenuItem("DmgType", "Damage Type", true))
                 .SetValue(new StringList(new[] { "AP", "AD" }, 0));
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
             //Auto Harass
             Menu autoQ = new Menu("Auto Harass", "autoQ");
             autoQ.AddItem(
@@ -545,6 +540,7 @@ namespace UnderratedAIO.Champions
             autoQ.AddItem(new MenuItem("qHit", "Q hitChance", true).SetValue(new Slider(4, 1, 4)));
             autoQ.AddItem(new MenuItem("ShowState", "Show always", true)).SetValue(true);
             menuM.AddSubMenu(autoQ);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.Item("EzAutoQ", true).Permashow(true, "Auto Q");
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

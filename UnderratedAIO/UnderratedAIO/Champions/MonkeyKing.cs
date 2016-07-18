@@ -22,10 +22,8 @@ namespace UnderratedAIO.Champions
         public static AutoLeveler autoLeveler;
         public static Spell Q, W, E, R;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
-        public bool justQ, justE, Aggro, justW;
-        public static float DamageTaken, DamageTakenTime, UltiCheck;
-        public static int DamageCount, DamageTakenLastId;
-        public List<int> aggroList = new List<int>();
+        public bool justQ, justE, justW;
+        public static float UltiCheck;
         public static Vector3 point;
 
         public MonkeyKing()
@@ -40,15 +38,6 @@ namespace UnderratedAIO.Champions
             HpBarDamageIndicator.DamageToUnit = ComboDamage;
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
-            Obj_AI_Hero.OnAggro += Obj_AI_Hero_OnAggro;
-        }
-
-        private void Obj_AI_Hero_OnAggro(Obj_AI_Base sender, GameObjectAggroEventArgs args)
-        {
-            if (sender.IsEnemy && args.NetworkId == player.NetworkId && !aggroList.Contains(sender.NetworkId))
-            {
-                aggroList.Add(sender.NetworkId);
-            }
         }
 
 
@@ -111,7 +100,7 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            if ((wActive && (!Q.IsReady() || Aggro || justW)) || rActive)
+            if ((wActive && (!Q.IsReady() || justW)) || rActive)
             {
                 orbwalker.SetAttack(false);
             }
@@ -119,19 +108,11 @@ namespace UnderratedAIO.Champions
             {
                 orbwalker.SetAttack(true);
             }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             Rmovement();
-            if (W.IsReady() && !Aggro && ((DamageTaken > 60 && DamageCount >= 3) || aggroList.Count >= 3))
-            {
-                Aggro = true;
-                Utility.DelayAction.Add(800, () => Aggro = false);
-            }
-            if (System.Environment.TickCount - DamageTakenTime > 1500)
-            {
-                DamageTakenTime = System.Environment.TickCount;
-                DamageTaken = 0f;
-                DamageCount = 0;
-                aggroList.Clear();
-            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -148,7 +129,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
         }
 
         private void Rmovement()
@@ -280,7 +260,8 @@ namespace UnderratedAIO.Champions
                   config.Item("wHealth", true).GetValue<Slider>().Value > player.HealthPercent &&
                   Orbwalking.GetRealAutoAttackRange(target) > player.Distance(target) &&
                   CombatHelper.IsFacing(target, player.Position, 45)) ||
-                 (config.Item("wOnFocus", true).GetValue<bool>() && Aggro)))
+                 (config.Item("wOnFocus", true).GetValue<bool>() &&
+                  Program.IncDamages.GetAllyData(player.NetworkId).DamageCount >= 3)))
             {
                 W.Cast(config.Item("packets").GetValue<bool>());
             }
@@ -329,8 +310,6 @@ namespace UnderratedAIO.Champions
         {
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -380,20 +359,6 @@ namespace UnderratedAIO.Champions
             {
                 justW = true;
                 Utility.DelayAction.Add(config.Item("wMinTime", true).GetValue<Slider>().Value, () => justW = false);
-            }
-            Obj_AI_Hero target = args.Target as Obj_AI_Hero;
-            if (target != null && target.IsMe)
-            {
-                if (sender.IsValid && !sender.IsDead && sender.IsEnemy)
-                {
-                    if (Orbwalking.IsAutoAttack(args.SData.Name) && DamageTakenLastId != sender.NetworkId)
-                    {
-                        var dmg = (float) sender.GetAutoAttackDamage(target, true);
-                        DamageTaken += dmg;
-                        DamageCount++;
-                        DamageTakenLastId = sender.NetworkId;
-                    }
-                }
             }
         }
 
@@ -447,11 +412,7 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM.AddItem(new MenuItem("Interrupt", "Cast R to interrupt spells", true)).SetValue(false);
-            menuM = Jungle.addJungleOptions(menuM);
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

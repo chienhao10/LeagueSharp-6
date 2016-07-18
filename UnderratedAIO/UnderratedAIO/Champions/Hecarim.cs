@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using SharpDX.Direct3D9;
-using SPrediction;
 using UnderratedAIO.Helpers;
-using UnderratedAIO.Helpers.SkillShot;
-using Environment = UnderratedAIO.Helpers.Environment;
+using Color = System.Drawing.Color;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
-using Prediction = LeagueSharp.Common.Prediction;
 
 namespace UnderratedAIO.Champions
 {
@@ -58,14 +50,16 @@ namespace UnderratedAIO.Champions
                 config.Item("drawee", true).GetValue<Circle>(), config.Item("useeRange", true).GetValue<Slider>().Value);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
         }
 
         private void Game_OnUpdate(EventArgs args)
         {
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             orbwalker.SetOrbwalkingPoint(Vector3.Zero);
+            orbwalker.SetAttack(true);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -115,8 +109,8 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            var jungleMobQ = Jungle.GetNearest(player.Position, Q.Range);
             var Qminis = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly);
+            var jungleMobQ = Qminis.Where(m => m.MaxHealth > 900).OrderByDescending(m => m.MaxHealth).FirstOrDefault();
             if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() &&
                 (Qminis.Count >= config.Item("qMinHit", true).GetValue<Slider>().Value || jungleMobQ != null ||
                  (Qminis.Count(m => m.Health < Q.GetDamage(m)) > 0 && !Orbwalking.CanAttack())))
@@ -134,10 +128,19 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
+            foreach (var b in player.Buffs)
+            {
+                Console.WriteLine(b.Name);
+            }
             Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical, true);
             if (target == null)
             {
                 return;
+            }
+            if (player.HasBuff("hecarimrampspeed") &&
+                player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
+            {
+                orbwalker.SetAttack(false);
             }
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target))
             {
@@ -161,7 +164,11 @@ namespace UnderratedAIO.Champions
                 {
                     R.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
                 }
-                R.CastIfWillHit(target, config.Item("useRMinHit", true).GetValue<Slider>().Value);
+                var rPred = Prediction.GetPrediction(target, R.Delay, R.Width, R.Speed);
+                if (rPred.AoeTargetsHitCount >= config.Item("useRMinHit", true).GetValue<Slider>().Value)
+                {
+                    R.Cast(rPred.CastPosition);
+                }
             }
             if (config.Item("useItems").GetValue<bool>())
             {
@@ -169,8 +176,7 @@ namespace UnderratedAIO.Champions
             }
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
-            if (config.Item("useIgnite", true).GetValue<bool>() &&
-                ignitedmg > HealthPrediction.GetHealthPrediction(target, 1000) && hasIgnite &&
+            if (config.Item("useIgnite", true).GetValue<bool>() && ignitedmg > target.Health && hasIgnite &&
                 !CombatHelper.CheckCriticalBuffs(target) &&
                 ((player.HealthPercent < 35) ||
                  (target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target) + 25)))
@@ -178,7 +184,6 @@ namespace UnderratedAIO.Champions
                 player.Spellbook.CastSpell(player.GetSpellSlot("SummonerDot"), target);
             }
         }
-
 
         private void InitMenu()
         {
@@ -230,13 +235,9 @@ namespace UnderratedAIO.Champions
             config.AddSubMenu(menuLC);
 
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM.AddSubMenu(Program.SPredictionMenu);
-            menuM = Jungle.addJungleOptions(menuM);
             menuM.AddItem(new MenuItem("AutoRinterrupt", "Use R to interrupt", true)).SetValue(true);
             menuM.AddItem(new MenuItem("AutoW", "Use W to heal min", true)).SetValue(new Slider(100, 50, 500));
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

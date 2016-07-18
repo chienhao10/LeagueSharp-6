@@ -118,6 +118,12 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
+            orbwalker.SetAttack(true);
+            orbwalker.SetMovement(true);
             var barrels =
                 GetBarrels()
                     .Where(
@@ -130,9 +136,6 @@ namespace UnderratedAIO.Champions
                                   config.Item("comboPrior", true).GetValue<StringList>().SelectedIndex == 1 ||
                                   (Q.IsReady() && !QMana) || !config.Item("useq", true).GetValue<bool>());
 
-            orbwalker.SetAttack(true);
-            orbwalker.SetMovement(true);
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -666,17 +669,17 @@ namespace UnderratedAIO.Champions
                                 second.Distance(b) < BarrelConnectionRange);
                     foreach (var third in thirdBarrels)
                     {
-                        if (EnemiesInBarrelRange(third, 1f - meleeDelay))
+                        if (EnemiesInBarrelRange(third, 1.25f - meleeDelay))
                         {
                             return melee;
                         }
                     }
-                    if (EnemiesInBarrelRange(second, 0.75f - meleeDelay))
+                    if (EnemiesInBarrelRange(second, 1f - meleeDelay))
                     {
                         return melee;
                     }
                 }
-                if (EnemiesInBarrelRange(melee.Position, 0.5f - meleeDelay))
+                if (EnemiesInBarrelRange(melee.Position, 0.75f - meleeDelay))
                 {
                     return melee;
                 }
@@ -690,7 +693,6 @@ namespace UnderratedAIO.Champions
                 HeroManager.Enemies.Where(
                     e =>
                         e.IsValidTarget(1650) && e.Distance(barrel) > BarrelExplosionRange &&
-                        Prediction.GetPrediction(e, delay).Hitchance >= HitChance.High &&
                         !barrels.Any(b => b.Distance(e.Position) < BarrelExplosionRange));
             var targetPred = Prediction.GetPrediction(target, delay);
             var pos = Vector3.Zero;
@@ -701,7 +703,6 @@ namespace UnderratedAIO.Champions
                             !p.IsWall() && p.Distance(barrel) < BarrelConnectionRange &&
                             p.Distance(player.Position) < E.Range &&
                             barrels.Count(b => b.Distance(p) < BarrelExplosionRange) == 0 &&
-                            HeroManager.Enemies.Count(e => e.Distance(p) < BarrelExplosionRange) > 0 &&
                             targetPred.CastPosition.Distance(p) < BarrelExplosionRange &&
                             target.Distance(p) < BarrelExplosionRange)
                     .OrderByDescending(p => enemies.Count(e => e.Distance(p) < BarrelExplosionRange))
@@ -843,8 +844,6 @@ namespace UnderratedAIO.Champions
                     Render.Circle.DrawCircle(barrel.Position, BarrelConnectionRange, drawecr.Color, 7);
                 }
             }
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             if (config.Item("drawW", true).GetValue<bool>())
             {
@@ -1213,11 +1212,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("AutoQBarrel", "AutoQ barrel near enemies", true)).SetValue(false);
             menuM.AddItem(new MenuItem("comboPrior", "   Combo priority", true))
                 .SetValue(new StringList(new[] { "E-Q", "E-AA", }, 0));
-            menuM = Jungle.addJungleOptions(menuM);
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

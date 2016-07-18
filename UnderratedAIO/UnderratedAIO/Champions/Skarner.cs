@@ -54,6 +54,10 @@ namespace UnderratedAIO.Champions
                 orbwalker.SetAttack(true);
                 orbwalker.SetMovement(true);
             }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -70,7 +74,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
         }
 
         private void Combo()
@@ -110,9 +113,13 @@ namespace UnderratedAIO.Champions
                   dist > config.Item("useeMinRange").GetValue<Slider>().Value) || target.Health < ComboDamage(target)))
             {
                 if (Program.IsSPrediction)
+                {
                     E.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     E.Cast(target, config.Item("packets").GetValue<bool>());
+                }
             }
             if (config.Item("user").GetValue<bool>() && R.CanCast(target) &&
                 (!config.Item("ult" + target.SkinName).GetValue<bool>() || player.CountEnemiesInRange(1500) == 1) &&
@@ -164,9 +171,13 @@ namespace UnderratedAIO.Champions
             if (config.Item("useeH").GetValue<bool>() && E.CanCast(target))
             {
                 if (Program.IsSPrediction)
+                {
                     E.SPredictionCast(target, HitChance.High);
+                }
                 else
+                {
                     E.Cast(target, config.Item("packets").GetValue<bool>());
+                }
             }
         }
 
@@ -219,8 +230,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
@@ -302,14 +311,7 @@ namespace UnderratedAIO.Champions
             menuLC.AddItem(new MenuItem("minmana", "Keep X% mana")).SetValue(new Slider(1, 1, 100));
             config.AddSubMenu(menuLC);
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM = Jungle.addJungleOptions(menuM);
-
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddItem(new MenuItem("Interrupt", "Use R interrupt")).SetValue(true);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
+            menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

@@ -49,6 +49,10 @@ namespace UnderratedAIO.Champions
                 orbwalker.SetAttack(true);
                 orbwalker.SetMovement(true);
             }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -64,7 +68,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
         }
 
         private void Clear()
@@ -134,7 +137,7 @@ namespace UnderratedAIO.Champions
                 player.IssueOrder(GameObjectOrder.AutoAttack, target);
             }
             if (config.Item("usee", true).GetValue<bool>() && E.IsReady() && !Q.IsReady() && !GarenQ && !GarenE &&
-                player.CountEnemiesInRange(E.Range) > 0)
+                !Orbwalking.CanAttack() && !player.IsWindingUp && player.CountEnemiesInRange(E.Range) > 0)
             {
                 E.Cast(config.Item("packets").GetValue<bool>());
             }
@@ -188,8 +191,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawaa", true).GetValue<Circle>(), player.AttackRange);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
             if (R.IsReady() && config.Item("drawrkillable", true).GetValue<bool>())
             {
@@ -358,12 +359,7 @@ namespace UnderratedAIO.Champions
             // Misc Settings
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM.AddItem(new MenuItem("useqAAA", "Use Q after AA", true)).SetValue(true);
-            menuM = Jungle.addJungleOptions(menuM);
-
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
             var sulti = new Menu("TeamFight Ult block", "dontult");

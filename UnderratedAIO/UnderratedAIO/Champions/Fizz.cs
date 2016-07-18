@@ -71,7 +71,10 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -282,8 +285,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -397,15 +398,11 @@ namespace UnderratedAIO.Champions
 
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM.AddItem(new MenuItem("useegc", "Use E gapclosers", true)).SetValue(false);
-            menuM.AddSubMenu(Program.SPredictionMenu);
             Menu menuE = new Menu("Auto E ", "Esettings");
             menuE.AddItem(new MenuItem("autoECC", "Before CC", true)).SetValue(true);
             menuE.AddItem(new MenuItem("autoEdmg2", "Before Damage in % Health", true)).SetValue(new Slider(20, 1, 100));
             menuM.AddSubMenu(menuE);
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

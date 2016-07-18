@@ -141,6 +141,10 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             Orbwalking.Attack = true;
             switch (orbwalker.ActiveMode)
             {
@@ -184,7 +188,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
             if (config.Item("autoQ", true).GetValue<bool>() && Q.IsReady() && !player.IsRecalling() &&
                 orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
             {
@@ -629,8 +632,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), 700f);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             if (wPos.IsValid() && config.Item("drawW", true).GetValue<bool>())
             {
@@ -799,12 +800,7 @@ namespace UnderratedAIO.Champions
             menuKS.AddItem(new MenuItem("ksQ", "Use Q", true)).SetValue(false);
             menuKS.AddItem(new MenuItem("ksR", "Use R", true)).SetValue(false);
             menuM.AddSubMenu(menuKS);
-            menuM = Jungle.addJungleOptions(menuM);
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-            menuM.AddSubMenu(Program.SPredictionMenu);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

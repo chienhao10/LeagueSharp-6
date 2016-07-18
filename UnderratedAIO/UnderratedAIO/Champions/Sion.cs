@@ -91,7 +91,10 @@ namespace UnderratedAIO.Champions
                 orbwalker.SetAttack(true);
                 orbwalker.SetMovement(true);
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -417,8 +420,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawqq", true).GetValue<Circle>(), Q.Range);
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -544,10 +545,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("AshieldDmg", "   Min dmg in shield %", true)).SetValue(new Slider(100, 1, 100));
             menuM.AddItem(new MenuItem("minmanaAgg", "   Min mana", true)).SetValue(new Slider(50, 1, 100));
             menuM.AddItem(new MenuItem("NoRlock", "Disable camera lock", true)).SetValue(false);
-            menuM = Jungle.addJungleOptions(menuM);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

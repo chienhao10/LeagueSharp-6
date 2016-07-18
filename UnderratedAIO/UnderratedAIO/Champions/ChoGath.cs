@@ -62,6 +62,14 @@ namespace UnderratedAIO.Champions
             {
                 E.Cast();
             }*/
+            if (config.Item("useRJ", true).GetValue<bool>() || config.Item("useSmite").GetValue<KeyBind>().Active)
+            {
+                Jungle();
+            }
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -77,10 +85,6 @@ namespace UnderratedAIO.Champions
                     break;
                 default:
                     break;
-            }
-            if (config.Item("useRJ", true).GetValue<bool>() || config.Item("useSmite").GetValue<KeyBind>().Active)
-            {
-                Jungle();
             }
         }
 
@@ -126,13 +130,6 @@ namespace UnderratedAIO.Champions
                     1000f + player.FlatMagicDamageMod * 0.7f + Helpers.Jungle.smiteDamage(target) >= target.Health)
                 {
                     R.Cast(target, config.Item("packets").GetValue<bool>());
-                }
-                if (config.Item("useSmite").GetValue<KeyBind>().Active && Helpers.Jungle.smite.CanCast(target) &&
-                    smiteReady && Helpers.Jungle.smiteSlot != SpellSlot.Unknown &&
-                    player.Distance(target) <= Helpers.Jungle.smite.Range &&
-                    Helpers.Jungle.smiteDamage(target) >= target.Health)
-                {
-                    Helpers.Jungle.CastSmite(target);
                 }
             }
         }
@@ -352,8 +349,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawrrflash", true).GetValue<Circle>(), RFlash.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
         }
 
@@ -457,18 +452,11 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("useQgc", "Use Q on gapclosers", true)).SetValue(false);
             menuM.AddItem(new MenuItem("useWint", "Use W to interrupt", true)).SetValue(true);
             menuM.AddItem(new MenuItem("useWgc", "Use W on gapclosers", true)).SetValue(false);
-            menuM = Helpers.Jungle.addJungleOptions(menuM);
-
             menuM.AddItem(new MenuItem("useRJ", "Use R in jungle", true)).SetValue(false);
             menuM.AddItem(new MenuItem("useRSJ", "Use R+Smite", true)).SetValue(false);
             menuM.AddItem(new MenuItem("priorizeSmite", "Use smite if possible", true)).SetValue(false);
             menuM.AddItem(new MenuItem("useFlashJ", "Use Flash+R to steal buffs", true)).SetValue(true);
-            menuM.AddSubMenu(Program.SPredictionMenu);
-
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
-
+            menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

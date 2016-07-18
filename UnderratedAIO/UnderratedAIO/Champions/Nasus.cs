@@ -70,6 +70,10 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
+            if (FpsBalancer.CheckCounter())
+            {
+                return;
+            }
             Obj_AI_Hero target = TargetSelector.GetTarget(950, TargetSelector.DamageType.Physical);
             switch (orbwalker.ActiveMode)
             {
@@ -91,7 +95,6 @@ namespace UnderratedAIO.Champions
                 default:
                     break;
             }
-            Jungle.CastSmite(config.Item("useSmite").GetValue<KeyBind>().Active);
         }
 
         private void Combo(Obj_AI_Hero target)
@@ -266,8 +269,6 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawee", true).GetValue<Circle>(), E.Range);
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
-            Helpers.Jungle.ShowSmiteStatus(
-                config.Item("useSmite").GetValue<KeyBind>().Active, config.Item("smiteStatus").GetValue<bool>());
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
         }
 
@@ -338,14 +339,10 @@ namespace UnderratedAIO.Champions
             menuLC.AddItem(new MenuItem("minmana", "Keep X% mana")).SetValue(new Slider(1, 1, 100));
             config.AddSubMenu(menuLC);
             Menu menuM = new Menu("Misc ", "Msettings");
-            menuM = Jungle.addJungleOptions(menuM);
-
             menuM.AddItem(new MenuItem("autoQ", "Auto Q")).SetValue(true);
             menuM.AddItem(new MenuItem("Rdamage", "Combo damage with R")).SetValue(true);
             menuM.AddItem(new MenuItem("Qdamage", "Combo damage with Q")).SetValue(true);
-            Menu autolvlM = new Menu("AutoLevel", "AutoLevel");
-            autoLeveler = new AutoLeveler(autolvlM);
-            menuM.AddSubMenu(autolvlM);
+            menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);

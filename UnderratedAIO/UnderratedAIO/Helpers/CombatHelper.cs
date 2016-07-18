@@ -52,19 +52,19 @@ namespace UnderratedAIO.Helpers
                     new DashData("Jax", SpellSlot.Q), new DashData("Jayce", SpellSlot.Q),
                     new DashData("Kalista", SpellSlot.Unknown), new DashData("Khazix", SpellSlot.E),
                     new DashData("Kindred", SpellSlot.Q), new DashData("LeBlanc", SpellSlot.E),
-                    new DashData("Jax", SpellSlot.Q), new DashData("LeeSin", SpellSlot.Q),
-                    new DashData("LeeSin", SpellSlot.W), new DashData("Lucian", SpellSlot.E),
-                    new DashData("MonkeyKing", SpellSlot.E), new DashData("Nautilus", SpellSlot.Q),
-                    new DashData("Nidalee", SpellSlot.W), new DashData("Pantheon", SpellSlot.W),
-                    new DashData("Poppy", SpellSlot.E), new DashData("Quinn", SpellSlot.E),
-                    new DashData("Renekton", SpellSlot.E), new DashData("Rengar", SpellSlot.Unknown),
-                    new DashData("Riven", SpellSlot.Q), new DashData("Riven", SpellSlot.E),
-                    new DashData("Quinn", SpellSlot.E), new DashData("Sejuani", SpellSlot.Q),
-                    new DashData("Shyvana", SpellSlot.R), new DashData("Shen", SpellSlot.E),
-                    new DashData("Thresh", SpellSlot.Q), new DashData("Tristana", SpellSlot.W),
-                    new DashData("Tryndamere", SpellSlot.E), new DashData("Vi", SpellSlot.Q),
-                    new DashData("Wukong", SpellSlot.E), new DashData("XinZhao", SpellSlot.E),
-                    new DashData("Yasuo", SpellSlot.E), new DashData("Zac", SpellSlot.E)
+                    new DashData("LeeSin", SpellSlot.Q), new DashData("LeeSin", SpellSlot.W),
+                    new DashData("Lucian", SpellSlot.E), new DashData("MonkeyKing", SpellSlot.E),
+                    new DashData("Nautilus", SpellSlot.Q), new DashData("Nidalee", SpellSlot.W),
+                    new DashData("Pantheon", SpellSlot.W), new DashData("Poppy", SpellSlot.E),
+                    new DashData("Quinn", SpellSlot.E), new DashData("Renekton", SpellSlot.E),
+                    new DashData("Rengar", SpellSlot.Unknown), new DashData("Riven", SpellSlot.Q),
+                    new DashData("Riven", SpellSlot.E), new DashData("Quinn", SpellSlot.E),
+                    new DashData("Sejuani", SpellSlot.Q), new DashData("Shyvana", SpellSlot.R),
+                    new DashData("Shen", SpellSlot.E), new DashData("Thresh", SpellSlot.Q),
+                    new DashData("Tristana", SpellSlot.W), new DashData("Tryndamere", SpellSlot.E),
+                    new DashData("Vi", SpellSlot.Q), new DashData("Wukong", SpellSlot.E),
+                    new DashData("XinZhao", SpellSlot.E), new DashData("Yasuo", SpellSlot.E),
+                    new DashData("Zac", SpellSlot.E)
                 });
 
         private static List<int> defItems =
