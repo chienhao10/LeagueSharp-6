@@ -101,7 +101,7 @@ namespace UnderratedAIO.Champions
                 if (Q.CanCast(target) && !target.IsDashing() &&
                     (MarkOfStorm(target) > 1 || (MarkOfStorm(target) > 0 && player.Distance(target) < W.Range)))
                 {
-                    Q.Cast(target, config.Item("packets").GetValue<bool>());
+                    Q.Cast(target);
                 }
             }
             if (config.Item("autow", true).GetValue<bool>() && W.IsReady() && MarkOfStorm(target) > 1 &&
@@ -109,7 +109,7 @@ namespace UnderratedAIO.Champions
             {
                 if (player.Distance(target) < W.Range)
                 {
-                    W.Cast(config.Item("packets").GetValue<bool>());
+                    W.Cast();
                 }
             }
             if (config.Item("KenAutoQ", true).GetValue<KeyBind>().Active && Q.IsReady() &&
@@ -120,8 +120,7 @@ namespace UnderratedAIO.Champions
                 if (target != null && Q.CanCast(target) && target.IsValidTarget())
                 {
                     Q.CastIfHitchanceEquals(
-                        target, CombatHelper.GetHitChance(config.Item("qHit", true).GetValue<Slider>().Value),
-                        config.Item("packets").GetValue<bool>());
+                        target, CombatHelper.GetHitChance(config.Item("qHit", true).GetValue<Slider>().Value));
                 }
             }
         }
@@ -140,7 +139,7 @@ namespace UnderratedAIO.Champions
                             player.Distance(m) < W.Range);
             if (config.Item("usewLH", true).GetValue<bool>() && W.IsReady() && targetW != null)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -158,7 +157,7 @@ namespace UnderratedAIO.Champions
                   !player.HasBuff("KennenLightningRush") && targetE.Count() > 1) ||
                  (player.HasBuff("KennenLightningRush") && targetE.FirstOrDefault() == null)))
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
                 return;
             }
             if (config.Item("useqClear", true).GetValue<bool>() && Q.IsReady())
@@ -168,7 +167,7 @@ namespace UnderratedAIO.Champions
             if (W.IsReady() && targetW.Count() >= config.Item("minw", true).GetValue<Slider>().Value &&
                 !player.HasBuff("KennenLightningRush"))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             var moveTo = targetE.FirstOrDefault();
 
@@ -208,14 +207,14 @@ namespace UnderratedAIO.Champions
                     if (target.Distance(player) < Orbwalking.GetRealAutoAttackRange(target) && !Orbwalking.CanAttack() &&
                         Orbwalking.CanMove(100))
                     {
-                        if (Q.Cast(target, config.Item("packets").GetValue<bool>()).IsCasted())
+                        if (Q.Cast(target).IsCasted())
                         {
                             Orbwalking.Orbwalker.AddToBlackList(target.NetworkId);
                         }
                     }
                     else if (target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target))
                     {
-                        if (Q.Cast(target, config.Item("packets").GetValue<bool>()).IsCasted())
+                        if (Q.Cast(target).IsCasted())
                         {
                             Orbwalking.Orbwalker.AddToBlackList(target.NetworkId);
                         }
@@ -238,12 +237,12 @@ namespace UnderratedAIO.Champions
             if (config.Item("useqLC", true).GetValue<bool>() && Q.CanCast(target) && Orbwalking.CanMove(100) &&
                 !target.IsDashing())
             {
-                Q.Cast(target, config.Item("packets").GetValue<bool>());
+                Q.Cast(target);
             }
             if (config.Item("usewLC", true).GetValue<bool>() && W.IsReady() && W.Range < player.Distance(target) &&
                 target.HasBuff("kennenmarkofstorm"))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -282,7 +281,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, HitChance.High);
                 }
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady())
@@ -292,12 +291,12 @@ namespace UnderratedAIO.Champions
                     if (HeroManager.Enemies.Count(e => e.Distance(player) < R.Range && MarkOfStorm(e) > 0) ==
                         player.CountEnemiesInRange(R.Range))
                     {
-                        W.Cast(config.Item("packets").GetValue<bool>());
+                        W.Cast();
                     }
                 }
                 else if (W.Range > player.Distance(target) && MarkOfStorm(target) > 0)
                 {
-                    W.Cast(config.Item("packets").GetValue<bool>());
+                    W.Cast();
                 }
             }
             if (config.Item("usee", true).GetValue<bool>() && !target.UnderTurret(true) && E.IsReady() &&
@@ -307,7 +306,7 @@ namespace UnderratedAIO.Champions
                   MarkOfStorm(target) > 0 &&
                   CombatHelper.IsPossibleToReachHim(target, 1f, new float[5] { 2f, 2f, 2f, 2f, 2f }[Q.Level - 1]))))
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
 
             if (R.IsReady() && !player.HasBuffOfType(BuffType.Snare) &&
@@ -323,7 +322,7 @@ namespace UnderratedAIO.Champions
                          e.IsValidTarget(config.Item("userrange", true).GetValue<Slider>().Value) &&
                          e.HealthPercent < 75)))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -486,7 +485,7 @@ namespace UnderratedAIO.Champions
 
             config.AddSubMenu(menuM);
             config.Item("KenAutoQ", true).Permashow(true, "Auto Q");
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

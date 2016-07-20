@@ -90,7 +90,7 @@ namespace UnderratedAIO.Champions
             if (unit.IsMe && target is Obj_AI_Hero && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
                 config.Item("usew", true).GetValue<bool>() && checkFuryMode(SpellSlot.W, (Obj_AI_Base) target))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (unit.IsMe && target is Obj_AI_Hero && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed &&
                 config.Item("useCH", true).GetValue<StringList>().SelectedIndex == 0)
@@ -125,14 +125,14 @@ namespace UnderratedAIO.Champions
                     return;
                 }
 
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
                 return;
             }
             if (args.Unit.IsMe && W.IsReady() && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed &&
                 config.Item("usewH", true).GetValue<bool>() && args.Target is Obj_AI_Hero &&
                 config.Item("useCH", true).GetValue<StringList>().SelectedIndex != 0)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -186,7 +186,7 @@ namespace UnderratedAIO.Champions
                     {
                         if (E.CanCast(closeGapTarget))
                         {
-                            E.Cast(closeGapTarget.Position, config.Item("packets").GetValue<bool>());
+                            E.Cast(closeGapTarget.Position);
                             lastE = System.Environment.TickCount;
                             return;
                         }
@@ -200,7 +200,7 @@ namespace UnderratedAIO.Champions
                   (Environment.Minion.countMinionsInrange(player.Position, Q.Range) +
                    player.CountEnemiesInRange(Q.Range) > 3 && fury))))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
             var distance = player.Distance(target.Position);
             if (config.Item("usee", true).GetValue<bool>() && lastE.Equals(0) && E.CanCast(target) &&
@@ -208,7 +208,7 @@ namespace UnderratedAIO.Champions
                  (((W.IsReady() && canBeOpWIthQ(target.Position) && !rene) ||
                    (distance > target.Distance(player.Position.Extend(target.Position, E.Range)) - distance)))))
             {
-                E.Cast(target.Position, config.Item("packets").GetValue<bool>());
+                E.Cast(target.Position);
                 lastE = System.Environment.TickCount;
                 return;
             }
@@ -221,7 +221,7 @@ namespace UnderratedAIO.Champions
                 var time = System.Environment.TickCount - lastE;
                 if (time > 3600f || combodamage > target.Health || (player.Distance(target) > E.Range - 100))
                 {
-                    E.Cast(target.Position, config.Item("packets").GetValue<bool>());
+                    E.Cast(target.Position);
                     lastE = 0;
                 }
             }
@@ -230,7 +230,7 @@ namespace UnderratedAIO.Champions
                  data.DamageTaken > 30) ||
                 config.Item("userindanger", true).GetValue<Slider>().Value < player.CountEnemiesInRange(R.Range))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -285,7 +285,7 @@ namespace UnderratedAIO.Champions
                         {
                             lastEpos = player.ServerPosition;
                             Utility.DelayAction.Add(4100, () => lastEpos = new Vector3());
-                            E.Cast(closeGapTarget.Position, config.Item("packets").GetValue<bool>());
+                            E.Cast(closeGapTarget.Position);
                             lastE = System.Environment.TickCount;
                             return;
                         }
@@ -293,7 +293,7 @@ namespace UnderratedAIO.Champions
                         {
                             lastEpos = player.ServerPosition;
                             Utility.DelayAction.Add(4100, () => lastEpos = new Vector3());
-                            E.Cast(target.Position, config.Item("packets").GetValue<bool>());
+                            E.Cast(target.Position);
                             lastE = System.Environment.TickCount;
                             return;
                         }
@@ -313,14 +313,14 @@ namespace UnderratedAIO.Champions
                         {
                             return;
                         }
-                        if (E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
+                        if (E.CastIfHitchanceEquals(target, HitChance.High))
                         {
                             lastE = System.Environment.TickCount;
                         }
                     }
                     if (rene && E.CanCast(target) && !lastE.Equals(0) && System.Environment.TickCount - lastE > 3600)
                     {
-                        E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                        E.CastIfHitchanceEquals(target, HitChance.High);
                     }
                     if (player.Distance(target) < Orbwalking.GetRealAutoAttackRange(target) && Q.IsReady() &&
                         E.IsReady() && E.IsReady())
@@ -335,7 +335,7 @@ namespace UnderratedAIO.Champions
 
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
 
             if (config.Item("useCH", true).GetValue<StringList>().SelectedIndex == 0 && !lastE.Equals(0) && rene &&
@@ -343,7 +343,7 @@ namespace UnderratedAIO.Champions
             {
                 if (lastEpos.IsValid())
                 {
-                    E.Cast(player.Position.Extend(lastEpos, 350f), config.Item("packets").GetValue<bool>());
+                    E.Cast(player.Position.Extend(lastEpos, 350f));
                 }
             }
         }
@@ -355,7 +355,7 @@ namespace UnderratedAIO.Champions
                 if (Environment.Minion.countMinionsInrange(player.Position, Q.Range) >=
                     config.Item("minimumMini", true).GetValue<Slider>().Value)
                 {
-                    Q.Cast(config.Item("packets").GetValue<bool>());
+                    Q.Cast();
                     return;
                 }
             }
@@ -370,7 +370,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (bestPosition.MinionsHit >= 2)
                     {
-                        E.Cast(bestPosition.Position, config.Item("packets").GetValue<bool>());
+                        E.Cast(bestPosition.Position);
                     }
                 }
             }
@@ -537,7 +537,7 @@ namespace UnderratedAIO.Champions
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

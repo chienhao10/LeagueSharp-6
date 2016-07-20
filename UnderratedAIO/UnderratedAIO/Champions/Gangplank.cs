@@ -18,10 +18,10 @@ namespace UnderratedAIO.Champions
         public static AutoLeveler autoLeveler;
         public static Spell Q, W, E, R;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
-        public static bool justQ, justE, chain;
+        public static bool justQ, justE, chain, blockedE, movingToBarrel;
         public Vector3 ePos;
         public const int BarrelExplosionRange = 325;
-        public const int BarrelConnectionRange = 660;
+        public const int BarrelConnectionRange = 670;
         public List<Barrel> savedBarrels = new List<Barrel>();
         public List<CastedBarrel> castedBarrels = new List<CastedBarrel>();
         public double[] Rwave = new double[] { 50, 70, 90 };
@@ -40,6 +40,36 @@ namespace UnderratedAIO.Champions
             Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             GameObject.OnCreate += GameObjectOnOnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
+            Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+        }
+
+        private void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+            if (args.Slot == SpellSlot.E && config.Item("barrelCorrection", true).GetValue<bool>() &&
+                Game.CursorPos.Distance(args.StartPosition) < 50)
+            {
+                var barrel =
+                    GetBarrels()
+                        .Where(
+                            b =>
+                                b.Distance(Game.CursorPos) > BarrelConnectionRange &&
+                                b.Distance(Game.CursorPos) < BarrelConnectionRange * 2 &&
+                                b.Position.Extend(Game.CursorPos, BarrelConnectionRange).Distance(args.StartPosition) <
+                                BarrelExplosionRange)
+                        .OrderBy(b => b.Distance(Game.CursorPos))
+                        .FirstOrDefault();
+                if (barrel != null && !blockedE)
+                {
+                    args.Process = false;
+                    blockedE = true;
+                    Utility.DelayAction.Add(
+                        5, () =>
+                        {
+                            E.Cast(barrel.Position.Extend(Game.CursorPos, BarrelConnectionRange));
+                            blockedE = false;
+                        });
+                }
+            }
         }
 
 
@@ -122,8 +152,10 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
+            orbwalker.SetOrbwalkingPoint(Game.CursorPos);
             orbwalker.SetAttack(true);
             orbwalker.SetMovement(true);
+            movingToBarrel = false;
             var barrels =
                 GetBarrels()
                     .Where(
@@ -196,7 +228,6 @@ namespace UnderratedAIO.Champions
             if (config.Item("EQtoCursor", true).GetValue<KeyBind>().Active && E.IsReady() && Q.IsReady())
             {
                 orbwalker.SetMovement(false);
-
                 var barrel =
                     GetBarrels()
                         .Where(
@@ -272,8 +303,7 @@ namespace UnderratedAIO.Champions
                                 !KillableBarrel(o, true));
                 if (meleeRangeBarrel != null && Orbwalking.CanAttack())
                 {
-                    orbwalker.SetAttack(false);
-                    player.IssueOrder(GameObjectOrder.AttackUnit, meleeRangeBarrel);
+                    orbwalker.SetOrbwalkingPoint(meleeRangeBarrel.Position);
                     return;
                 }
                 var barrel =
@@ -293,12 +323,11 @@ namespace UnderratedAIO.Champions
                     Orbwalking.CanAttack() && NeedToBeDestroyed.IsInAttackRange())
                 {
                     Console.WriteLine("NeedToBeDestroyed");
-                    orbwalker.SetAttack(false);
                     player.IssueOrder(GameObjectOrder.AttackUnit, NeedToBeDestroyed);
                 }
             }
 
-            if (config.Item("AutoQBarrel", true).GetValue<bool>())
+            if (config.Item("AutoQBarrel", true).GetValue<bool>() && !movingToBarrel)
             {
                 if (BlowUpBarrel(barrels, shouldAAbarrel, false))
                 {
@@ -347,7 +376,7 @@ namespace UnderratedAIO.Champions
 
                 if (mini != null && !justE)
                 {
-                    Q.CastOnUnit(mini, config.Item("packets").GetValue<bool>());
+                    Q.CastOnUnit(mini);
                 }
             }
         }
@@ -374,7 +403,7 @@ namespace UnderratedAIO.Champions
 
                 if (mini != null)
                 {
-                    Q.CastOnUnit(mini, config.Item("packets").GetValue<bool>());
+                    Q.CastOnUnit(mini);
                     return;
                 }
             }
@@ -447,7 +476,7 @@ namespace UnderratedAIO.Champions
                     if (Q.IsReady() && KillableBarrel(barrel) &&
                         Killable.Any(t => HealthPrediction.LaneClearHealthPrediction(t, 1000) <= 0))
                     {
-                        Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                        Q.CastOnUnit(barrel);
                     }
 
 
@@ -455,7 +484,7 @@ namespace UnderratedAIO.Champions
                     {
                         if (Q.IsReady() && minis.Count == Killable.Count() && KillableBarrel(barrel))
                         {
-                            Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                            Q.CastOnUnit(barrel);
                         }
                         else
                         {
@@ -473,7 +502,7 @@ namespace UnderratedAIO.Champions
                     else if (Q.IsReady() && KillableBarrel(barrel) &&
                              minis.Count >= config.Item("eMinHit", true).GetValue<Slider>().Value)
                     {
-                        Q.CastOnUnit(barrel, config.Item("packets").GetValue<bool>());
+                        Q.CastOnUnit(barrel);
                     }
 
                     return;
@@ -495,7 +524,7 @@ namespace UnderratedAIO.Champions
                 if (bestPositionE.MinionsHit >= config.Item("eMinHit", true).GetValue<Slider>().Value &&
                     bestPositionE.Position.Distance(ePos) > 400)
                 {
-                    E.Cast(bestPositionE.Position, config.Item("packets").GetValue<bool>());
+                    E.Cast(bestPositionE.Position);
                 }
             }
         }
@@ -597,21 +626,22 @@ namespace UnderratedAIO.Champions
         {
             if (barrels.Any())
             {
-                var moveDist = movetoBarrel ? 250 : 0;
+                var moveDist = movetoBarrel ? config.Item("movetoBarrelDist", true).GetValue<Slider>().Value : 0;
                 var bestBarrelMelee = GetBestBarrel(barrels, true, moveDist);
                 var bestBarrelQ = GetBestBarrel(barrels, false);
                 if (bestBarrelMelee != null && shouldAAbarrel)
                 {
-                    orbwalker.SetAttack(false);
-                    if (Orbwalking.CanAttack())
+                    if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
                     {
-                        if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
+                        movingToBarrel = true;
+                        orbwalker.SetOrbwalkingPoint(bestBarrelMelee.Position);
+                        orbwalker.SetAttack(false);
+                    }
+                    else
+                    {
+                        if (KillableBarrel(bestBarrelMelee, true))
                         {
-                            player.IssueOrder(GameObjectOrder.MoveTo, bestBarrelMelee.Position);
-                        }
-                        else
-                        {
-                            player.IssueOrder(GameObjectOrder.AttackUnit, bestBarrelMelee);
+                            orbwalker.ForceTarget(bestBarrelMelee);
                         }
                     }
                     return true;
@@ -645,7 +675,7 @@ namespace UnderratedAIO.Champions
                         (isMelee
                             ? Orbwalking.GetRealAutoAttackRange(b) +
                               (CombatHelper.IsFacing(player, b.Position) ? moveDist : 0f)
-                            : Q.Range) && KillableBarrel(b, isMelee));
+                            : Q.Range) && KillableBarrel(b, isMelee, 265));
             var secondaryBarrels = barrels.Select(b => b.Position).Concat(castedBarrels.Select(c => c.pos));
             var meleeDelay = isMelee ? 0.25f : 0;
             if (moveDist > 0f)
@@ -740,11 +770,17 @@ namespace UnderratedAIO.Champions
         private Vector3 GetEPos(List<Obj_AI_Minion> barrels, Obj_AI_Hero target, bool isMelee)
         {
             var barrelPositions = barrels.Select(b => b.Position).Concat(castedBarrels.Select(c => c.pos)).ToList();
+            var moveDist = config.Item("movetoBarrel", true).GetValue<bool>()
+                ? config.Item("movetoBarrelDist", true).GetValue<Slider>().Value
+                : 0;
             var barrelsInCloseRange =
                 barrels.Where(
                     b =>
-                        player.Distance(b) < (isMelee ? Orbwalking.GetRealAutoAttackRange(b) : Q.Range) &&
-                        KillableBarrel(b, isMelee, -265))
+                        player.Distance(b) <
+                        (isMelee
+                            ? Orbwalking.GetRealAutoAttackRange(b) +
+                              (CombatHelper.IsFacing(player, b.Position) ? moveDist : 0f)
+                            : Q.Range) && KillableBarrel(b, isMelee, -265))
                     .Select(b => b.Position)
                     .Concat(castedBarrels.Select(c => c.pos));
             var meleeDelay = isMelee ? 0.25f : 0;
@@ -782,7 +818,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+            Q.CastOnUnit(target);
         }
 
         private void CastE(Obj_AI_Hero target, List<Obj_AI_Minion> barrels)
@@ -818,7 +854,7 @@ namespace UnderratedAIO.Champions
             if (bestPoint.IsValid() &&
                 !savedBarrels.Any(b => b.barrel.Position.Distance(bestPoint) < BarrelConnectionRange))
             {
-                E.Cast(bestPoint, config.Item("packets").GetValue<bool>());
+                E.Cast(bestPoint);
             }
         }
 
@@ -828,7 +864,7 @@ namespace UnderratedAIO.Champions
             var pos = target.Position.Extend(ePred.CastPosition, BarrelExplosionRange);
             if (pos.Distance(ePos) > 400 && !justE)
             {
-                E.Cast(pos, config.Item("packets").GetValue<bool>());
+                E.Cast(pos);
             }
         }
 
@@ -843,6 +879,14 @@ namespace UnderratedAIO.Champions
                 {
                     Render.Circle.DrawCircle(barrel.Position, BarrelConnectionRange, drawecr.Color, 7);
                 }
+            }
+            if (config.Item("drawMTB", true).GetValue<bool>())
+            {
+                Render.Circle.DrawCircle(
+                    player.Position,
+                    Math.Max(
+                        config.Item("movetoBarrelDist", true).GetValue<Slider>().Value + 200 - player.BoundingRadius -
+                        60, 250), Color.DarkSlateGray, 5);
             }
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
             if (config.Item("drawW", true).GetValue<bool>())
@@ -971,9 +1015,8 @@ namespace UnderratedAIO.Champions
                     if (time < 0)
                     {
                         Drawing.DrawText(
-                            barrelData.barrel.HPBarPosition.X - time.ToString().Length * 5 + 40,
-                            barrelData.barrel.HPBarPosition.Y - 20, Color.DarkOrange,
-                            string.Format("{0:0.00}", time).Replace("-", ""));
+                            barrelData.barrel.HPBarPosition.X - -20, barrelData.barrel.HPBarPosition.Y - 20,
+                            Color.DarkOrange, string.Format("{0:0.00}", time).Replace("-", ""));
                     }
                 }
             }
@@ -1000,13 +1043,6 @@ namespace UnderratedAIO.Champions
                     }
                 }
                 catch (Exception) {}
-            }
-            var point2s =
-                CombatHelper.PointsAroundTheTarget(Game.CursorPos, BarrelConnectionRange, 20f, 12)
-                    .Where(p => p.Distance(Game.CursorPos) > BarrelExplosionRange);
-            foreach (var p in point2s)
-            {
-                //Render.Circle.DrawCircle(p, 57, Color.Yellow, 7);
             }
         }
 
@@ -1153,7 +1189,8 @@ namespace UnderratedAIO.Champions
             menuD.AddItem(new MenuItem("drawWcd", "Draw E countdown", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawEmini", "Draw killable minions around E", true)).SetValue(true);
             menuD.AddItem(new MenuItem("drawcombo", "Draw combo damage", true)).SetValue(true);
-            menuD.AddItem(new MenuItem("drawEQ", "Draw EQ to cursor", true)).SetValue(true);
+            menuD.AddItem(new MenuItem("drawEQ", "Draw EQ to cursor", true)).SetValue(false);
+            menuD.AddItem(new MenuItem("drawMTB", "Draw Move to barrel range", true)).SetValue(false);
             menuD.AddItem(new MenuItem("drawKillableSL", "Show killable targets with R", true))
                 .SetValue(new StringList(new[] { "OFF", "Above HUD", "Under GP" }, 1));
             menuD.AddItem(new MenuItem("drawQpass", "Draw notification about Silver serpents", true)).SetValue(true);
@@ -1172,7 +1209,8 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("eStacksC", "   Keep stacks", true))
                 .SetTooltip("You can set up how many barrels you want to keep to \"Use E to extend range\"")
                 .SetValue(new Slider(0, 0, 5));
-            menuC.AddItem(new MenuItem("movetoBarrel", "Move to barrel to AA", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("movetoBarrel", "Move to barrel to AA", true)).SetValue(false);
+            menuC.AddItem(new MenuItem("movetoBarrelDist", "   Max distance", true)).SetValue(new Slider(300, 0, 450));
             menuC.AddItem(new MenuItem("EQtoCursor", "EQ to cursor", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
@@ -1212,9 +1250,10 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("AutoQBarrel", "AutoQ barrel near enemies", true)).SetValue(false);
             menuM.AddItem(new MenuItem("comboPrior", "   Combo priority", true))
                 .SetValue(new StringList(new[] { "E-Q", "E-AA", }, 0));
+            menuM.AddItem(new MenuItem("barrelCorrection", "Barrel placement correction", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

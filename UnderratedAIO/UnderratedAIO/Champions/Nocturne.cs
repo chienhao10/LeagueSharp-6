@@ -86,17 +86,17 @@ namespace UnderratedAIO.Champions
             {
                 if (dist < 550)
                 {
-                    Q.CastIfHitchanceEquals(target, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, HitChance.Medium);
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, HitChance.High);
                 }
             }
             if (config.Item("usee", true).GetValue<bool>() && E.CanCast(eTarget) &&
                 dist < config.Item("useeMaxRange", true).GetValue<Slider>().Value)
             {
-                E.Cast(eTarget, config.Item("packets").GetValue<bool>());
+                E.Cast(eTarget);
             }
             if (config.Item("user", true).GetValue<bool>() && R.IsReady())
             {
@@ -113,7 +113,7 @@ namespace UnderratedAIO.Champions
                  (player.HealthPercent < 40 && target.HealthPercent < 40 && target.CountAlliesInRange(1000) == 1 &&
                   target.CountEnemiesInRange(1000) == 1)))
             {
-                R.Cast(target, config.Item("packets").GetValue<bool>());
+                R.Cast(target);
                 lastR = System.Environment.TickCount;
             }
             if (config.Item("user", true).GetValue<bool>() && !lastR.Equals(0) && R.CanCast(target) &&
@@ -126,7 +126,7 @@ namespace UnderratedAIO.Champions
                 if (time > 3500f || player.Distance(target) > E.Range || cmbdmg > target.Health ||
                     (player.HealthPercent < 40 && target.HealthPercent < 40))
                 {
-                    R.Cast(target, config.Item("packets").GetValue<bool>());
+                    R.Cast(target);
                     lastR = 0f;
                 }
             }
@@ -167,7 +167,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() &&
                 bestPositionQ.MinionsHit >= config.Item("qhitLC", true).GetValue<Slider>().Value)
             {
-                Q.Cast(bestPositionQ.Position, config.Item("packets").GetValue<bool>());
+                Q.Cast(bestPositionQ.Position);
             }
         }
 
@@ -188,7 +188,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
-                Q.Cast(target, config.Item("packets").GetValue<bool>());
+                Q.Cast(target);
             }
         }
 
@@ -325,7 +325,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

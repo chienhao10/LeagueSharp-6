@@ -69,7 +69,7 @@ namespace UnderratedAIO.Champions
             var enemyForKs = HeroManager.Enemies.FirstOrDefault(h => W.CanCast(h) && Wdmg(h) > h.Health);
             if (enemyForKs != null && W.IsReady() && config.Item("ksW").GetValue<bool>())
             {
-                W.CastOnUnit(enemyForKs, config.Item("packets").GetValue<bool>());
+                W.CastOnUnit(enemyForKs);
             }
         }
 
@@ -88,11 +88,11 @@ namespace UnderratedAIO.Champions
             if (config.Item("usewH").GetValue<bool>() && W.CanCast(target) && CanW &&
                 (config.Item("maxHealthH").GetValue<Slider>().Value / 100f) * target.MaxHealth > target.Health)
             {
-                W.Cast(target, config.Item("packets").GetValue<bool>());
+                W.Cast(target);
             }
             if (config.Item("useeH").GetValue<bool>() && E.CanCast(target))
             {
-                E.Cast(target, config.Item("packets").GetValue<bool>());
+                E.Cast(target);
             }
         }
 
@@ -102,13 +102,13 @@ namespace UnderratedAIO.Champions
             if (mob != null && config.Item("usewLCSteal").GetValue<bool>() && CanW && W.CanCast(mob) &&
                 player.CalcDamage(mob, Damage.DamageType.Physical, Wdmg(mob)) > mob.Health)
             {
-                W.Cast(mob, config.Item("packets").GetValue<bool>());
+                W.Cast(mob);
             }
             if (mob != null && config.Item("usewbsmite").GetValue<bool>() && CanW && W.CanCast(mob) &&
                 Jungle.SmiteReady(config.Item("useSmite").GetValue<KeyBind>().Active) &&
                 player.CalcDamage(mob, Damage.DamageType.Physical, Wdmg(mob)) + Jungle.smiteDamage(mob) > mob.Health)
             {
-                W.Cast(mob, config.Item("packets").GetValue<bool>());
+                W.Cast(mob);
             }
             float perc = config.Item("minmana").GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc)
@@ -119,7 +119,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useeLC").GetValue<bool>() && E.IsReady() &&
                 config.Item("ehitLC").GetValue<Slider>().Value <= minions.Count)
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
         }
 
@@ -163,13 +163,13 @@ namespace UnderratedAIO.Champions
                 player.Distance(target) >= config.Item("useqmin").GetValue<Slider>().Value &&
                 player.Distance(target) < (player.MoveSpeed * MsBonus(target)) * 3.0f)
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
             if (config.Item("usew").GetValue<bool>() && CanW && W.CanCast(target) &&
                 (player.CalcDamage(target, Damage.DamageType.Physical, Wdmg(target)) > target.Health ||
                  player.HealthPercent < 10))
             {
-                W.Cast(target, config.Item("packets").GetValue<bool>());
+                W.Cast(target);
             }
             if (config.Item("usee").GetValue<bool>() && E.CanCast(target) &&
                 ((config.Item("useenotccd").GetValue<bool>() &&
@@ -177,14 +177,14 @@ namespace UnderratedAIO.Champions
                    !target.HasBuffOfType(BuffType.Stun) && !target.HasBuffOfType(BuffType.Suppression))) ||
                  !config.Item("useenotccd").GetValue<bool>()))
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
             if (R.IsReady() && player.HealthPercent > 20 &&
                 ((config.Item("user").GetValue<bool>() && player.Distance(target) < 200 &&
                   ComboDamage(target) + R.GetDamage(target) * 10 > target.Health && ComboDamage(target) < target.Health) ||
                  (config.Item("usertf").GetValue<Slider>().Value <= player.CountEnemiesInRange(300))))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
@@ -358,7 +358,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

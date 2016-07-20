@@ -56,7 +56,7 @@ namespace UnderratedAIO.Champions
         {
             if (R.IsReady() && config.Item("Interrupt", true).GetValue<bool>() && sender.Distance(player) < R.Range)
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -114,13 +114,13 @@ namespace UnderratedAIO.Champions
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
-                Q.CastIfHitchanceEquals(target, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                Q.CastIfHitchanceEquals(target, HitChance.Medium);
             }
             if (config.Item("usewH", true).GetValue<bool>() && W.IsReady())
             {
                 if (player.Distance(target) < W.Range)
                 {
-                    W.Cast(config.Item("packets").GetValue<bool>());
+                    W.Cast();
                 }
             }
         }
@@ -132,7 +132,7 @@ namespace UnderratedAIO.Champions
             {
                 if (target != null && Q.CanCast(target))
                 {
-                    Q.Cast(target.Position, config.Item("packets").GetValue<bool>());
+                    Q.Cast(target.Position);
                 }
                 else
                 {
@@ -140,7 +140,7 @@ namespace UnderratedAIO.Champions
                         Q.GetLineFarmLocation(MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly));
                     if (bestPositionQ.MinionsHit >= config.Item("qMinHit", true).GetValue<Slider>().Value)
                     {
-                        Q.Cast(bestPositionQ.Position, config.Item("packets").GetValue<bool>());
+                        Q.Cast(bestPositionQ.Position);
                     }
                 }
             }
@@ -148,14 +148,14 @@ namespace UnderratedAIO.Champions
             {
                 if (target != null && target.Distance(player) < W.Range)
                 {
-                    W.Cast(config.Item("packets").GetValue<bool>());
+                    W.Cast();
                 }
                 else
                 {
                     if (Environment.Minion.countMinionsInrange(player.Position, W.Range) >=
                         config.Item("wMinHit", true).GetValue<Slider>().Value)
                     {
-                        W.Cast(config.Item("packets").GetValue<bool>());
+                        W.Cast();
                     }
                 }
             }
@@ -233,7 +233,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("usew", true).GetValue<bool>() && W.CanCast(target) && !E.IsCharging)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
@@ -257,7 +257,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) && target.IsValidTarget() &&
                 !E.IsCharging)
             {
-                Q.CastIfHitchanceEquals(target, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                Q.CastIfHitchanceEquals(target, HitChance.Medium);
             }
 
             if (R.IsReady() && config.Item("user", true).GetValue<bool>() &&
@@ -265,7 +265,7 @@ namespace UnderratedAIO.Champions
                 !target.HasBuffOfType(BuffType.Knockback) && !target.HasBuffOfType(BuffType.Knockup) &&
                 !target.HasBuffOfType(BuffType.Stun))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -286,22 +286,22 @@ namespace UnderratedAIO.Champions
                 }
                 if (eFlyPred.CastPosition.Distance(player.Position) < E.Range)
                 {
-                    E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, HitChance.High);
                 }
                 else if (eFlyPred.UnitPosition.Distance(player.Position) < E.Range && target.Distance(player) < 500f)
                 {
-                    E.CastIfHitchanceEquals(target, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, HitChance.Medium);
                 }
                 else if ((eFlyPred.CastPosition.Distance(player.Position) < E.Range &&
                           eRanges[E.Level - 1] - eFlyPred.CastPosition.Distance(player.Position) < 200) ||
                          (CombatHelper.GetAngle(player, eFlyPred.CastPosition) > 35))
                 {
-                    E.CastIfHitchanceEquals(target, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, HitChance.Medium);
                 }
                 else if (eFlyPred.CastPosition.Distance(player.Position) < E.Range && zacETime != 0 &&
                          System.Environment.TickCount - zacETime > 2500)
                 {
-                    E.CastIfHitchanceEquals(target, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, HitChance.Medium);
                 }
             }
             else if (enemyPred.UnitPosition.Distance(player.Position) < eRanges[E.Level - 1] &&
@@ -322,7 +322,7 @@ namespace UnderratedAIO.Champions
             {
                 if (target.Distance(player.Position) < E.Range)
                 {
-                    E.Cast(target, config.Item("packets").GetValue<bool>());
+                    E.Cast(target);
                 }
             }
             else if (target.Distance(player.Position) < eRanges[E.Level - 1])
@@ -461,7 +461,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Cast R to interrupt spells", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

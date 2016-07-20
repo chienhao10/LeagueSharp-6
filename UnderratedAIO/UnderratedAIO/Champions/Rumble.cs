@@ -124,7 +124,7 @@ namespace UnderratedAIO.Champions
                  System.Environment.TickCount - lastE > config.Item("HeDelay", true).GetValue<Slider>().Value ||
                  getEdamage(target) > target.Health))
             {
-                E.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>());
+                E.CastIfHitchanceEquals(target, HitChance.VeryHigh);
             }
         }
 
@@ -248,7 +248,7 @@ namespace UnderratedAIO.Champions
                    System.Environment.TickCount - lastE > config.Item("eDelay", true).GetValue<Slider>().Value)) ||
                  edmg > target.Health))
             {
-                E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                E.CastIfHitchanceEquals(target, HitChance.High);
             }
             if (W.IsReady() && config.Item("wSpeed", true).GetValue<bool>() && ActiveQ && preventSilence(W) &&
                 target.Distance(player) < Q.Range &&
@@ -474,7 +474,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

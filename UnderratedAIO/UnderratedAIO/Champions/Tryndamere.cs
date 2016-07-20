@@ -96,7 +96,7 @@ namespace UnderratedAIO.Champions
             if (pred.Hitchance >= HitChance.High && poly.IsInside(pred.UnitPosition) &&
                 poly.IsInside(target.ServerPosition))
             {
-                E.Cast(pos, config.Item("packets").GetValue<bool>());
+                E.Cast(pos);
             }
         }
 
@@ -109,7 +109,7 @@ namespace UnderratedAIO.Champions
             if (E.IsReady() && config.Item("useeLC", true).GetValue<bool>() &&
                 bestPosition.MinionsHit >= config.Item("eMinHit", true).GetValue<Slider>().Value)
             {
-                E.Cast(bestPosition.Position, config.Item("packets").GetValue<bool>());
+                E.Cast(bestPosition.Position);
             }
         }
 
@@ -140,7 +140,7 @@ namespace UnderratedAIO.Champions
                 (!player.HasBuff("UndyingRage") || CombatHelper.GetBuffTime(player.GetBuff("UndyingRage")) < 0.4f) &&
                 !justR)
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
 
             if (E.IsReady() && config.Item("usee", true).GetValue<bool>() && !player.IsWindingUp &&
@@ -159,7 +159,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("user", true).GetValue<bool>() && R.IsReady() && data.IsAboutToDie)
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -247,7 +247,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

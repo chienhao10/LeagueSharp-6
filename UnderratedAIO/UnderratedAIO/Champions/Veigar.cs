@@ -210,7 +210,7 @@ namespace UnderratedAIO.Champions
             {
                 if ((((justQ && targ.Health > Q.GetDamage(targ) || targ.CountEnemiesInRange(W.Width) > 1)) || !justQ))
                 {
-                    W.Cast(targ, config.Item("packets").GetValue<bool>());
+                    W.Cast(targ);
                 }
             }
             if (config.Item("autoE", true).GetValue<bool>() && targ != null && E.IsReady() && !player.IsRecalling())
@@ -262,11 +262,11 @@ namespace UnderratedAIO.Champions
                 {
                     if (enemyR.CountEnemiesInRange(2000) == 1)
                     {
-                        R.CastOnUnit(enemyR, config.Item("packets").GetValue<bool>());
+                        R.CastOnUnit(enemyR);
                     }
                     else if (!config.Item("ult" + enemyR.SkinName, true).GetValue<bool>())
                     {
-                        R.CastOnUnit(enemyR, config.Item("packets").GetValue<bool>());
+                        R.CastOnUnit(enemyR);
                     }
                 }
             }
@@ -300,7 +300,7 @@ namespace UnderratedAIO.Champions
                 if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
                     tarPered.Hitchance >= HitChance.VeryHigh)
                 {
-                    W.Cast(tarPered.CastPosition, config.Item("packets").GetValue<bool>());
+                    W.Cast(tarPered.CastPosition);
                 }
             }
         }
@@ -319,7 +319,7 @@ namespace UnderratedAIO.Champions
                     W.GetCircularFarmLocation(MinionManager.GetMinions(W.Range, MinionTypes.All, MinionTeam.NotAlly));
                 if (bestPositionW.MinionsHit >= config.Item("wMinHit", true).GetValue<Slider>().Value)
                 {
-                    W.Cast(bestPositionW.Position, config.Item("packets").GetValue<bool>());
+                    W.Cast(bestPositionW.Position);
                 }
             }
         }
@@ -352,7 +352,7 @@ namespace UnderratedAIO.Champions
                     if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
                         tarPered.Hitchance >= HitChance.High)
                     {
-                        W.Cast(target.Position, config.Item("packets").GetValue<bool>());
+                        W.Cast(target.Position);
                     }
                 }
                 else
@@ -360,7 +360,7 @@ namespace UnderratedAIO.Champions
                     if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
                         tarPered.Hitchance >= HitChance.VeryHigh && !config.Item("startWithE", true).GetValue<bool>())
                     {
-                        W.Cast(tarPered.CastPosition, config.Item("packets").GetValue<bool>());
+                        W.Cast(tarPered.CastPosition);
                     }
                 }
             }
@@ -444,12 +444,12 @@ namespace UnderratedAIO.Champions
 
                     if (killWithW || (targetHP < R.GetDamage(target) && !justQ && CheckW(target)))
                     {
-                        R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                        R.CastOnUnit(target);
                     }
 
                     if ((killWithIgnite || killWithIgniteAndW) && CheckW(target) && player.Distance(target) < 600)
                     {
-                        R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                        R.CastOnUnit(target);
                         IgniteTarget = target;
                         Utility.DelayAction.Add(
                             200, () =>
@@ -463,7 +463,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (target.Health < R.GetDamage(target))
                     {
-                        R.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                        R.CastOnUnit(target);
                     }
                 }
             }
@@ -507,7 +507,7 @@ namespace UnderratedAIO.Champions
                     if (pos.IsValid() && pos.Distance(player.Position) < E.Range &&
                         targE.Hitchance >= HitChance.VeryHigh)
                     {
-                        E.Cast(edge ? pos.Extend(player.Position, 375) : pos, config.Item("packets").GetValue<bool>());
+                        E.Cast(edge ? pos.Extend(player.Position, 375) : pos);
                     }
                 }
                 else
@@ -515,7 +515,7 @@ namespace UnderratedAIO.Champions
                     var targE = getBestEVector3(target, minHits);
                     if (targE != Vector3.Zero)
                     {
-                        E.Cast(targE, config.Item("packets").GetValue<bool>());
+                        E.Cast(targE);
                     }
                 }
             }
@@ -537,7 +537,7 @@ namespace UnderratedAIO.Champions
                 var pred = Q.GetSPrediction(target);
                 if (pred.CollisionResult.Units.Count < 2)
                 {
-                    Q.Cast(pred.CastPosition, config.Item("packets").GetValue<bool>());
+                    Q.Cast(pred.CastPosition);
                 }
             }
             else
@@ -547,7 +547,7 @@ namespace UnderratedAIO.Champions
                     player.Position.To2D(), new List<Vector2>() { targQ.CastPosition.To2D() });
                 if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) && collision.Count < 2)
                 {
-                    Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, HitChance.High);
                 }
             }
         }
@@ -598,7 +598,7 @@ namespace UnderratedAIO.Champions
                         {
                             if (collision.Count == 1)
                             {
-                                Q.Cast(minion, config.Item("packets").GetValue<bool>());
+                                Q.Cast(minion);
                             }
                             else
                             {
@@ -617,7 +617,7 @@ namespace UnderratedAIO.Champions
                                 }
                                 else
                                 {
-                                    Q.Cast(minion, config.Item("packets").GetValue<bool>());
+                                    Q.Cast(minion);
                                 }
                             }
                         }
@@ -802,7 +802,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(menuKS);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
             switch (config.Item("predType", true).GetValue<StringList>().SelectedIndex)

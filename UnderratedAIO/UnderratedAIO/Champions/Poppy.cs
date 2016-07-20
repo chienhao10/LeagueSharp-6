@@ -37,7 +37,7 @@ namespace UnderratedAIO.Champions
         {
             if (config.Item("useEint", true).GetValue<bool>() && E.IsReady() && E.CanCast(sender))
             {
-                E.CastOnUnit(sender, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(sender);
             }
         }
 
@@ -149,26 +149,26 @@ namespace UnderratedAIO.Champions
                     {
                         player.Spellbook.CastSpell(player.GetSpellSlot("SummonerFlash"), bestpos);
                         Utility.DelayAction.Add(
-                            100, () => E.CastOnUnit(target, config.Item("packets").GetValue<bool>()));
+                            100, () => E.CastOnUnit(target));
                     }
                     if (E.CanCast(target) &&
                         (CheckWalls(player, target) ||
                          target.Health < E.GetDamage(target) + player.GetAutoAttackDamage(target, true)))
                     {
-                        E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                        E.CastOnUnit(target);
                     }
                     if (E.CanCast(target) && Q.IsReady() && Q.Instance.ManaCost + E.Instance.ManaCost > player.Mana &&
                         target.Health <
                         E.GetDamage(target) + Q.GetDamage(target) + player.GetAutoAttackDamage(target, true))
                     {
-                        E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                        E.CastOnUnit(target);
                     }
                 }
                 else
                 {
                     if (E.CanCast(target))
                     {
-                        E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                        E.CastOnUnit(target);
                     }
                 }
             }
@@ -176,7 +176,7 @@ namespace UnderratedAIO.Champions
                 Orbwalking.CanMove(100) && target.Distance(player) < Q.Range &&
                 (player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target) || !Orbwalking.CanAttack()))
             {
-                Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                Q.CastIfHitchanceEquals(target, HitChance.High);
             }
 
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready &&
@@ -220,7 +220,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (R.IsCharging && targ != null && R.CanCast(targ) && R.Range > 1000 && R.Range > targ.Distance(player))
                 {
-                    R.CastIfHitchanceEquals(targ, HitChance.Medium, config.Item("packets").GetValue<bool>());
+                    R.CastIfHitchanceEquals(targ, HitChance.Medium);
                 }
                 if (R.IsCharging && targ != null && R.Range < 1000)
                 {
@@ -247,7 +247,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (R.IsCharging && R.CanCast(target) && R.Range > target.Distance(player) && cond)
                 {
-                    R.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    R.CastIfHitchanceEquals(target, HitChance.High);
                 }
             }
         }
@@ -262,14 +262,14 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useeLC", true).GetValue<bool>() && E.CanCast(mob) && CheckWalls(player, mob))
             {
-                E.CastOnUnit(mob, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(mob);
             }
             MinionManager.FarmLocation bestPositionQ =
                 Q.GetLineFarmLocation(MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly));
             if (bestPositionQ.MinionsHit >= config.Item("qMinHit", true).GetValue<Slider>().Value &&
                 config.Item("useqLC", true).GetValue<bool>())
             {
-                Q.Cast(bestPositionQ.Position, config.Item("packets").GetValue<bool>());
+                Q.Cast(bestPositionQ.Position);
             }
         }
 
@@ -285,7 +285,7 @@ namespace UnderratedAIO.Champions
                 Orbwalking.CanMove(100) && target.Distance(player) < Q.Range &&
                 (player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target) || !Orbwalking.CanAttack()))
             {
-                Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                Q.CastIfHitchanceEquals(target, HitChance.High);
             }
         }
 
@@ -303,7 +303,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useEgap", true).GetValue<bool>() && E.IsReady() && E.CanCast(gapcloser.Sender) &&
                 CheckWalls(player, gapcloser.Sender))
             {
-                E.CastOnUnit(gapcloser.Sender, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(gapcloser.Sender);
             }
         }
 
@@ -433,7 +433,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(menuME);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

@@ -64,7 +64,7 @@ namespace UnderratedAIO.Champions
                 args.EndPos.Distance(player.Position) > Q.Range &&
                 args.EndPos.Distance(player) > args.StartPos.Distance(player))
             {
-                Q.CastOnUnit(sender, config.Item("packets").GetValue<bool>());
+                Q.CastOnUnit(sender);
             }
         }
 
@@ -181,7 +181,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useqH", true).GetValue<bool>() && Orbwalking.CanMove(100) && !player.IsWindingUp &&
                 Q.CanCast(target))
             {
-                Q.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                Q.CastOnUnit(target);
             }
         }
 
@@ -211,13 +211,13 @@ namespace UnderratedAIO.Champions
                 {
                     if (!Orbwalking.CanAttack() && mini.Distance(player) <= Orbwalking.GetRealAutoAttackRange(mini))
                     {
-                        Q.CastOnUnit(mini, config.Item("packets").GetValue<bool>());
+                        Q.CastOnUnit(mini);
                         return;
                     }
                     if (Orbwalking.CanMove(100) && !player.IsWindingUp &&
                         mini.Distance(player) > Orbwalking.GetRealAutoAttackRange(mini))
                     {
-                        Q.CastOnUnit(mini, config.Item("packets").GetValue<bool>());
+                        Q.CastOnUnit(mini);
                         return;
                     }
                 }
@@ -253,7 +253,7 @@ namespace UnderratedAIO.Champions
                          (Q.GetDamage(target) > target.Health) &&
                          (player.HealthPercent < 50 || player.CountAlliesInRange(900) > 0)))
                     {
-                        if (Q.CastOnUnit(target, config.Item("packets").GetValue<bool>()))
+                        if (Q.CastOnUnit(target))
                         {
                             HandleECombo();
                         }
@@ -262,7 +262,7 @@ namespace UnderratedAIO.Champions
                          Q.GetDamage(target) > target.Health) || player.HealthPercent < 35f ||
                         target.Distance(player) > Orbwalking.GetRealAutoAttackRange(target))
                     {
-                        if (Q.CastOnUnit(target, config.Item("packets").GetValue<bool>()))
+                        if (Q.CastOnUnit(target))
                         {
                             HandleECombo();
                         }
@@ -270,7 +270,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    if (Q.CastOnUnit(target, config.Item("packets").GetValue<bool>()))
+                    if (Q.CastOnUnit(target))
                     {
                         HandleECombo();
                     }
@@ -419,7 +419,7 @@ namespace UnderratedAIO.Champions
 
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

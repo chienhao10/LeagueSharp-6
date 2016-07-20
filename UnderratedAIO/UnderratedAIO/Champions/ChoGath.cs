@@ -42,14 +42,14 @@ namespace UnderratedAIO.Champions
             {
                 if (Q.CanCast(sender))
                 {
-                    Q.Cast(sender, config.Item("packets").GetValue<bool>());
+                    Q.Cast(sender);
                 }
             }
             if (config.Item("useWint", true).GetValue<bool>())
             {
                 if (W.CanCast(sender))
                 {
-                    W.Cast(sender, config.Item("packets").GetValue<bool>());
+                    W.Cast(sender);
                 }
             }
         }
@@ -111,7 +111,7 @@ namespace UnderratedAIO.Champions
                     {
                         player.Spellbook.CastSpell(
                             player.GetSpellSlot("SummonerFlash"), player.Position.Extend(target.Position, 400));
-                        //Utility.DelayAction.Add(50, () => R.Cast(target, config.Item("packets").GetValue<bool>()));
+                        //Utility.DelayAction.Add(50, () => R.Cast(target));
                     }
                 }
                 if (config.Item("useRJ", true).GetValue<bool>() && R.CanCast(target) &&
@@ -119,7 +119,7 @@ namespace UnderratedAIO.Champions
                     player.GetSpell(SpellSlot.R).ManaCost <= player.Mana &&
                     1000f + player.FlatMagicDamageMod * 0.7f >= target.Health)
                 {
-                    R.Cast(target, config.Item("packets").GetValue<bool>());
+                    R.Cast(target);
                 }
                 if (Helpers.Jungle.smiteSlot == SpellSlot.Unknown)
                 {
@@ -129,7 +129,7 @@ namespace UnderratedAIO.Champions
                     target.CountEnemiesInRange(750f) > 0 && config.Item("useRSJ", true).GetValue<bool>() && smiteReady &&
                     1000f + player.FlatMagicDamageMod * 0.7f + Helpers.Jungle.smiteDamage(target) >= target.Health)
                 {
-                    R.Cast(target, config.Item("packets").GetValue<bool>());
+                    R.Cast(target);
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (bestPositionW.MinionsHit >= config.Item("whitLC", true).GetValue<Slider>().Value)
                     {
-                        W.Cast(bestPositionW.Position, config.Item("packets").GetValue<bool>());
+                        W.Cast(bestPositionW.Position);
                     }
                 }
             }
@@ -177,7 +177,7 @@ namespace UnderratedAIO.Champions
                 MinionManager.FarmLocation bestPositionQ = Q.GetCircularFarmLocation(minionsForQ);
                 if (Q.IsReady() && bestPositionQ.MinionsHit > config.Item("qhitLC", true).GetValue<Slider>().Value)
                 {
-                    Q.Cast(bestPositionQ.Position, config.Item("packets").GetValue<bool>());
+                    Q.Cast(bestPositionQ.Position);
                 }
             }
         }
@@ -189,14 +189,14 @@ namespace UnderratedAIO.Champions
             {
                 if (target.IsValidTarget(Q.Range) && Q.IsReady())
                 {
-                    Q.Cast(target, config.Item("packets").GetValue<bool>());
+                    Q.Cast(target);
                 }
             }
             if (config.Item("useeH", true).GetValue<bool>())
             {
                 if (target.IsValidTarget(W.Range) && W.IsReady())
                 {
-                    W.Cast(target, config.Item("packets").GetValue<bool>());
+                    W.Cast(target);
                 }
             }
             if (config.Item("useeH", true).GetValue<bool>() && !VorpalSpikes && E.GetHitCount() > 0)
@@ -300,7 +300,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    W.Cast(target, config.Item("packets").GetValue<bool>());
+                    W.Cast(target);
                 }
             }
             if (config.Item("UseFlashC", true).GetValue<bool>() && !flashRblock && R.IsReady() && hasFlash &&
@@ -311,7 +311,7 @@ namespace UnderratedAIO.Champions
             {
                 player.Spellbook.CastSpell(
                     player.GetSpellSlot("SummonerFlash"), player.Position.Extend(target.Position, 400));
-                Utility.DelayAction.Add(50, () => R.Cast(target, config.Item("packets").GetValue<bool>()));
+                Utility.DelayAction.Add(50, () => R.Cast(target));
             }
             var rtarget =
                 HeroManager.Enemies.Where(e => e.IsValidTarget() && R.CanCast(e))
@@ -320,7 +320,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("user", true).GetValue<bool>() && rtarget != null &&
                 player.GetSpellDamage(target, SpellSlot.R) > rtarget.Health)
             {
-                R.Cast(rtarget, config.Item("packets").GetValue<bool>());
+                R.Cast(rtarget);
             }
         }
 
@@ -330,14 +330,14 @@ namespace UnderratedAIO.Champions
             {
                 if (gapcloser.Sender.IsValidTarget(Q.Range) && Q.IsReady())
                 {
-                    Q.Cast(gapcloser.End, config.Item("packets").GetValue<bool>());
+                    Q.Cast(gapcloser.End);
                 }
             }
             if (config.Item("useWgc", true).GetValue<bool>())
             {
                 if (gapcloser.Sender.IsValidTarget(W.Range) && W.IsReady())
                 {
-                    W.Cast(gapcloser.End, config.Item("packets").GetValue<bool>());
+                    W.Cast(gapcloser.End);
                 }
             }
         }
@@ -458,7 +458,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("useFlashJ", "Use Flash+R to steal buffs", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

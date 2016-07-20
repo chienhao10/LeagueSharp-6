@@ -73,7 +73,7 @@ namespace UnderratedAIO.Champions
             var dist = sender.Distance(player) < 750;
             if (E.IsReady() && config.Item("Interrupt", true).GetValue<bool>() && dist && CanStun(sender))
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
             if (stance == Stance.Bear && dist && CanStun(sender))
             {
@@ -297,7 +297,7 @@ namespace UnderratedAIO.Champions
                     target, new float[5] { 0.15f, 0.2f, 0.25f, 0.3f, 0.35f }[Q.Level - 1],
                     new float[5] { 2f, 2.25f, 2.5f, 2.75f, 3f }[Q.Level - 1]) && !justR2)
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
                 return;
             }
             if ((target.Health > R.GetDamage(target) || player.Mana < Q.ManaCost * 2) && isInRange)
@@ -337,7 +337,7 @@ namespace UnderratedAIO.Champions
         {
             if (!player.HasBuff("udyrtigerpunch"))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
         }
 
@@ -345,7 +345,7 @@ namespace UnderratedAIO.Champions
         {
             if (!player.HasBuff("udyrturtleactivation"))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -353,7 +353,7 @@ namespace UnderratedAIO.Champions
         {
             if (!player.HasBuff("udyrphoenixactivation"))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -503,7 +503,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Use E to interupt", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

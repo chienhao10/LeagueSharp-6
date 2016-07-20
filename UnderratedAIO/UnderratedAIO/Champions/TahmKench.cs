@@ -234,7 +234,7 @@ namespace UnderratedAIO.Champions
         {
             if (W.IsReady() && MinionInYou && WSkillShot.CanCast(target))
             {
-                WSkillShot.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                WSkillShot.CastIfHitchanceEquals(target, HitChance.High);
             }
             if (W.IsReady() && !SomebodyInYou && WSkillShot.CanCast(target) &&
                 player.Distance(target) > config.Item("usewminiRange", true).GetValue<Slider>().Value)
@@ -299,7 +299,7 @@ namespace UnderratedAIO.Champions
             }
             if (W.IsReady() && config.Item("usewLC", true).GetValue<bool>() && MinionInYou)
             {
-                WSkillShot.Cast(bestPosition.Position, config.Item("packets").GetValue<bool>());
+                WSkillShot.Cast(bestPosition.Position);
             }
         }
 
@@ -362,7 +362,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, hitChance);
                 }
             }
             else if (player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
@@ -373,7 +373,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, hitChance, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, hitChance);
                 }
             }
         }
@@ -525,7 +525,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

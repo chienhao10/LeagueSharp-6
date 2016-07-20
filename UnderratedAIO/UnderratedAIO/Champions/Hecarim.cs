@@ -98,7 +98,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
         }
 
@@ -115,14 +115,14 @@ namespace UnderratedAIO.Champions
                 (Qminis.Count >= config.Item("qMinHit", true).GetValue<Slider>().Value || jungleMobQ != null ||
                  (Qminis.Count(m => m.Health < Q.GetDamage(m)) > 0 && !Orbwalking.CanAttack())))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
             if (config.Item("usewLC", true).GetValue<bool>() && W.IsReady() &&
                 (MinionManager.GetMinions(W.Range, MinionTypes.All, MinionTeam.NotAlly).Count >=
                  config.Item("wMinHit", true).GetValue<Slider>().Value || jungleMobQ != null) &&
                 Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken > 50 && player.HealthPercent < 98)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -144,25 +144,25 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
             if (config.Item("usew", true).GetValue<bool>() && W.IsInRange(target) &&
                 Program.IncDamages.GetAllyData(player.NetworkId).DamageTaken > 50 && player.HealthPercent < 98)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (config.Item("usee", true).GetValue<bool>() &&
                 player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target) + 50 &&
                 player.Distance(target) < config.Item("useeRange", true).GetValue<Slider>().Value && E.IsReady())
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
             if (config.Item("user", true).GetValue<bool>() && R.IsReady() && R.CanCast(target))
             {
                 if (config.Item("useRbeforeCC", true).GetValue<bool>() &&
                     Program.IncDamages.GetAllyData(player.NetworkId).AnyCC)
                 {
-                    R.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    R.CastIfHitchanceEquals(target, HitChance.High);
                 }
                 var rPred = Prediction.GetPrediction(target, R.Delay, R.Width, R.Speed);
                 if (rPred.AoeTargetsHitCount >= config.Item("useRMinHit", true).GetValue<Slider>().Value)
@@ -240,7 +240,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

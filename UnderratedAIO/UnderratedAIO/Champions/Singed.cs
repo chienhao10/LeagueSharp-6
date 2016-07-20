@@ -53,7 +53,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (args.Target.IsMe && E.CanCast(sender))
                     {
-                        E.CastOnUnit(sender, config.Item("packets").GetValue<bool>());
+                        E.CastOnUnit(sender);
                     }
                 }
             }
@@ -67,7 +67,7 @@ namespace UnderratedAIO.Champions
             if (sender.IsEnemy && sender is Obj_AI_Hero && config.Item("OnDash", true).GetValue<bool>() && E.IsReady() &&
                 args.StartPos.Distance(player.Position) < E.Range)
             {
-                E.CastOnUnit(sender, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(sender);
             }
             if (config.Item("GapCloser", true).GetValue<bool>() && sender.IsEnemy && sender is Obj_AI_Hero &&
                 args.EndPos.Distance(player.Position) < E.Range && !forcedPos.IsValid())
@@ -79,8 +79,7 @@ namespace UnderratedAIO.Champions
                     {
                         forcedPos = Vector3.Zero;
                         E.CastOnUnit(
-                            HeroManager.Enemies.FirstOrDefault(h => h.NetworkId == sender.NetworkId),
-                            config.Item("packets").GetValue<bool>());
+                            HeroManager.Enemies.FirstOrDefault(h => h.NetworkId == sender.NetworkId));
                     });
             }
         }
@@ -92,7 +91,7 @@ namespace UnderratedAIO.Champions
             {
                 if (E.CanCast(sender))
                 {
-                    E.CastOnUnit(sender, config.Item("packets").GetValue<bool>());
+                    E.CastOnUnit(sender);
                 }
                 else
                 {
@@ -130,7 +129,7 @@ namespace UnderratedAIO.Champions
             if (Q.Instance.ToggleState == 1 && System.Environment.TickCount - poisonTime > 1200)
             {
                 poisonTime = System.Environment.TickCount + 1200;
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
             if (Q.Instance.ToggleState == 2)
             {
@@ -146,7 +145,7 @@ namespace UnderratedAIO.Champions
             }
             if (Q.Instance.ToggleState == 2 && System.Environment.TickCount - poisonTime > 1200)
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
         }
 
@@ -182,7 +181,7 @@ namespace UnderratedAIO.Champions
                 player.IssueOrder(GameObjectOrder.MoveTo, pos);
                 if (player.Distance(pos) < 10)
                 {
-                    E.CastOnUnit(cgTarg, config.Item("packets").GetValue<bool>());
+                    E.CastOnUnit(cgTarg);
 
                     player.IssueOrder(GameObjectOrder.MoveTo, cgTarg);
                 }
@@ -223,7 +222,7 @@ namespace UnderratedAIO.Champions
                         .FirstOrDefault();
                 if (targ != null)
                 {
-                    W.Cast(targ, config.Item("packets").GetValue<bool>());
+                    W.Cast(targ);
                 }
             }
             if (config.Item("singedFlee", true).GetValue<KeyBind>().Active)
@@ -281,7 +280,7 @@ namespace UnderratedAIO.Champions
                           Math.Min(300, new double[] { 6, 6.5, 7, 7.5, 8 }[E.Level] / 100 * buff.MaxHealth);
                 if (E.CanCast(buff) && Damage.CalcDamage(player, buff, Damage.DamageType.Magical, dmg) > buff.Health)
                 {
-                    E.CastOnUnit(buff, config.Item("packets").GetValue<bool>());
+                    E.CastOnUnit(buff);
                 }
             }
             if (player.Mana < player.MaxMana * perc)
@@ -393,7 +392,7 @@ namespace UnderratedAIO.Champions
                 if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
                     tarPered.Hitchance >= HitChance.VeryHigh)
                 {
-                    W.Cast(tarPered.CastPosition, config.Item("packets").GetValue<bool>());
+                    W.Cast(tarPered.CastPosition);
                 }
             }
             if (R.IsReady() && config.Item("user", true).GetValue<bool>() &&
@@ -404,7 +403,7 @@ namespace UnderratedAIO.Champions
                   (config.Item("rkeepManaE", true).GetValue<bool>() &&
                    player.Mana - R.Instance.ManaCost > E.Instance.ManaCost))))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
@@ -431,7 +430,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (E.CanCast(target))
                 {
-                    E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                    E.CastOnUnit(target);
                 }
                 else if (target.Distance(player) < E.Range + 100)
                 {
@@ -549,7 +548,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("DontOffQ", "Do not turn off Q", true)).SetValue(false);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

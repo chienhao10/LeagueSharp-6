@@ -74,7 +74,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    if (E.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
+                    if (E.CastIfHitchanceEquals(target, HitChance.High))
                     {
                         return;
                     }
@@ -250,7 +250,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, HitChance.VeryHigh);
                 }
             }
             if (Q.IsReady() && config.Item("useqH", true).GetValue<bool>() && savedQ != null &&
@@ -306,7 +306,7 @@ namespace UnderratedAIO.Champions
                      ObjectManager.Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.NotAlly)
                      .Count(m => HealthPrediction.GetHealthPrediction(m, 600) < 0 || m.Health < 35) > 0))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
 
             float perc = config.Item("minmana", true).GetValue<Slider>().Value / 100f;
@@ -323,7 +323,7 @@ namespace UnderratedAIO.Champions
                         QExplosionRange);
                 if (bestPositionQ.MinionsHit > config.Item("qMinHit", true).GetValue<Slider>().Value)
                 {
-                    Q.Cast(bestPositionQ.Position, config.Item("packets").GetValue<bool>());
+                    Q.Cast(bestPositionQ.Position);
                     return;
                 }
             }
@@ -337,7 +337,7 @@ namespace UnderratedAIO.Champions
 
                 if (bestPositionE.MinionsHit >= config.Item("eMinHit", true).GetValue<Slider>().Value)
                 {
-                    E.Cast(bestPositionE.Position, config.Item("packets").GetValue<bool>());
+                    E.Cast(bestPositionE.Position);
                 }
             }
             if (W.IsReady() && config.Item("usewLC", true).GetValue<bool>() &&
@@ -345,7 +345,7 @@ namespace UnderratedAIO.Champions
                     ObjectManager.Player.ServerPosition, Q.Range, MinionTypes.All, MinionTeam.NotAlly)
                     .Count(m => m.Health > 600) > 0)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -383,7 +383,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    if (Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>()))
+                    if (Q.CastIfHitchanceEquals(target, HitChance.High))
                     {
                         return;
                     }
@@ -405,12 +405,12 @@ namespace UnderratedAIO.Champions
                 player.Distance(target) < 300 && Orbwalking.CanMove(100) &&
                 target.Health > combodmg - getWdamage(target))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (R.IsReady())
             {
                 if (R.CastIfWillHit(
-                    target, config.Item("Rmin", true).GetValue<Slider>().Value, config.Item("packets").GetValue<bool>()))
+                    target, config.Item("Rmin", true).GetValue<Slider>().Value))
                 {
                     return;
                 }
@@ -505,7 +505,7 @@ namespace UnderratedAIO.Champions
                     {
                         R.Cast(pred.CastPosition);
                     }
-                    //R.CastIfHitchanceEquals(target, HitChance.VeryHigh, config.Item("packets").GetValue<bool>());
+                    //R.CastIfHitchanceEquals(target, HitChance.VeryHigh);
                     return;
                 }
             }
@@ -813,7 +813,7 @@ namespace UnderratedAIO.Champions
 
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

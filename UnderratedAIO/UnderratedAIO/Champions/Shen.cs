@@ -59,7 +59,7 @@ namespace UnderratedAIO.Champions
             {
                 if (config.Item("autotauntattower", true).GetValue<bool>() && E.CanCast(s))
                 {
-                    E.Cast(s, config.Item("packets").GetValue<bool>());
+                    E.Cast(s);
                 }
             }
         }
@@ -73,7 +73,7 @@ namespace UnderratedAIO.Champions
             }
             if (unit.IsValidTarget(E.Range) && E.IsReady())
             {
-                E.Cast(unit, config.Item("packets").GetValue<bool>());
+                E.Cast(unit);
             }
         }
 
@@ -229,7 +229,7 @@ namespace UnderratedAIO.Champions
             if (gapcloser.Sender.IsValidTarget(E.Range) && E.IsReady() &&
                 player.Distance(gapcloser.Sender.Position) < 400)
             {
-                E.Cast(gapcloser.End, config.Item("packets").GetValue<bool>());
+                E.Cast(gapcloser.End);
             }
         }
 
@@ -357,9 +357,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (enemiesBehind > 0)
                     {
-                        E.Cast(
-                            player.ServerPosition.Extend(pred.CastPosition, E.Range),
-                            config.Item("packets").GetValue<bool>());
+                        E.Cast(player.ServerPosition.Extend(pred.CastPosition, E.Range));
                     }
                     else
                     {
@@ -368,16 +366,14 @@ namespace UnderratedAIO.Champions
                             E.Cast(
                                 player.ServerPosition.Extend(
                                     pred.CastPosition,
-                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
-                                config.Item("packets").GetValue<bool>());
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)));
                         }
                         else
                         {
                             E.Cast(
                                 player.ServerPosition.Extend(
                                     pred.CastPosition,
-                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
-                                config.Item("packets").GetValue<bool>());
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)));
                         }
                     }
                 }
@@ -396,9 +392,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (enemiesBehind > 0)
                     {
-                        E.Cast(
-                            player.ServerPosition.Extend(pred.CastPosition.To3D2(), E.Range),
-                            config.Item("packets").GetValue<bool>());
+                        E.Cast(player.ServerPosition.Extend(pred.CastPosition.To3D2(), E.Range));
                     }
                     else
                     {
@@ -407,16 +401,14 @@ namespace UnderratedAIO.Champions
                             E.Cast(
                                 player.ServerPosition.Extend(
                                     pred.CastPosition.To3D2(),
-                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
-                                config.Item("packets").GetValue<bool>());
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)));
                         }
                         else
                         {
                             E.Cast(
                                 player.ServerPosition.Extend(
                                     pred.CastPosition.To3D2(),
-                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
-                                config.Item("packets").GetValue<bool>());
+                                    player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)));
                         }
                     }
                 }
@@ -507,17 +499,14 @@ namespace UnderratedAIO.Champions
                         {
                             if (enemiesBehind > 0)
                             {
-                                E.Cast(
-                                    player.ServerPosition.Extend(pred.CastPosition, E.Range),
-                                    config.Item("packets").GetValue<bool>());
+                                E.Cast(player.ServerPosition.Extend(pred.CastPosition, E.Range));
                             }
                             else
                             {
                                 E.Cast(
                                     player.ServerPosition.Extend(
                                         pred.CastPosition,
-                                        player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)),
-                                    config.Item("packets").GetValue<bool>());
+                                        player.Distance(pred.CastPosition) + Orbwalking.GetRealAutoAttackRange(target)));
                             }
                         });
                     player.Spellbook.CastSpell(player.GetSpellSlot("SummonerFlash"), getPosToEflash(target.Position));
@@ -653,7 +642,7 @@ namespace UnderratedAIO.Champions
                 }
             }
             config.AddSubMenu(sulti);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

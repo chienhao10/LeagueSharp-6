@@ -48,7 +48,7 @@ namespace UnderratedAIO.Champions
                 case Orbwalking.OrbwalkingMode.Combo:
                     if (config.Item("useq", true).GetValue<bool>() && Q.IsReady() && target is Obj_AI_Hero)
                     {
-                        Q.Cast(config.Item("packets").GetValue<bool>());
+                        Q.Cast();
                         Orbwalking.ResetAutoAttackTimer();
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
                     }
@@ -57,7 +57,7 @@ namespace UnderratedAIO.Champions
                     if (config.Item("useqH", true).GetValue<bool>() && Q.IsReady() && target is Obj_AI_Hero &&
                         config.Item("minmanaH", true).GetValue<Slider>().Value < player.ManaPercent)
                     {
-                        Q.Cast(config.Item("packets").GetValue<bool>());
+                        Q.Cast();
                         Orbwalking.ResetAutoAttackTimer();
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
                     }
@@ -69,7 +69,7 @@ namespace UnderratedAIO.Champions
                          player.GetAutoAttackDamage((Obj_AI_Base) target) + Q.GetDamage((Obj_AI_Base) target) ||
                          target.Health > player.GetAutoAttackDamage((Obj_AI_Base) target, true) * 4))
                     {
-                        Q.Cast(config.Item("packets").GetValue<bool>());
+                        Q.Cast();
                         Orbwalking.ResetAutoAttackTimer();
                         player.IssueOrder(GameObjectOrder.AutoAttack, target);
                     }
@@ -85,7 +85,7 @@ namespace UnderratedAIO.Champions
         {
             if (R.IsReady() && config.Item("Interrupt", true).GetValue<bool>() && sender.Distance(player) < R.Range)
             {
-                R.Cast(player, config.Item("packets").GetValue<bool>());
+                R.Cast(player);
             }
         }
 
@@ -195,7 +195,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useeH", true).GetValue<bool>() && E.CanCast(target))
             {
-                E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(target);
             }
         }
 
@@ -217,7 +217,7 @@ namespace UnderratedAIO.Champions
                     Environment.Minion.countMinionsInrange(bestPos.Position, 180f) >=
                     config.Item("eMinHit", true).GetValue<Slider>().Value)
                 {
-                    E.CastOnUnit(bestPos, config.Item("packets").GetValue<bool>());
+                    E.CastOnUnit(bestPos);
                 }
             }
         }
@@ -251,7 +251,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) &&
                 target.Health < player.GetAutoAttackDamage(target) + Q.GetDamage(target))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
                 player.IssueOrder(GameObjectOrder.AutoAttack, target);
             }
             if (config.Item("usew", true).GetValue<bool>() && !Q.IsReady() && !qActive && !player.UnderTurret(true) &&
@@ -263,16 +263,16 @@ namespace UnderratedAIO.Champions
                  (config.Item("wOnFocus", true).GetValue<bool>() &&
                   Program.IncDamages.GetAllyData(player.NetworkId).DamageCount >= 3)))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (R.IsReady() && config.Item("userone", true).GetValue<bool>() && canKill && !eActive && !Q.IsReady() &&
                 player.Distance(target) < R.Range && player.HealthPercent < 55 && player.HealthPercent > 10)
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
             if (R.IsReady() && config.Item("Rmin", true).GetValue<Slider>().Value <= player.CountEnemiesInRange(R.Range))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
             if (config.Item("useItems").GetValue<bool>())
             {
@@ -282,7 +282,7 @@ namespace UnderratedAIO.Champions
                 (config.Item("eMinRange", true).GetValue<Slider>().Value < player.Distance(target) ||
                  player.HealthPercent < 20 || (player.CountEnemiesInRange(800) == 1 && target.HealthPercent < 20)))
             {
-                E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(target);
             }
         }
 
@@ -414,7 +414,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Cast R to interrupt spells", true)).SetValue(false);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

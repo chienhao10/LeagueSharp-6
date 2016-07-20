@@ -64,7 +64,7 @@ namespace UnderratedAIO.Champions
         {
             if (config.Item("usewgc", true).GetValue<bool>() && gapcloser.End.Distance(player.Position) < 200)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -116,18 +116,18 @@ namespace UnderratedAIO.Champions
                 data.DamageCount >= config.Item("wMinAggro", true).GetValue<Slider>().Value &&
                 player.ManaPercent > config.Item("minmanaAgg", true).GetValue<Slider>().Value)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (data != null && !activatedW && config.Item("AshieldB", true).GetValue<bool>() && W.IsReady() &&
                 (data.DamageTaken > player.Health ||
                  data.DamageTaken > getWShield() / 100f * config.Item("AshieldDmg", true).GetValue<Slider>().Value))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (data != null && activatedW && data.DamageTaken > player.GetBuff("sionwshieldstacks").Count &&
                 data.DamageTaken < player.Health)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -213,7 +213,7 @@ namespace UnderratedAIO.Champions
                     var qMini = minions.FirstOrDefault();
                     if (qMini != null)
                     {
-                        Q.Cast(qMini.Position, config.Item("packets").GetValue<bool>());
+                        Q.Cast(qMini.Position);
                     }
                 }
             }
@@ -233,14 +233,14 @@ namespace UnderratedAIO.Champions
                 config.Item("wMinHit", true).GetValue<Slider>().Value <=
                 Environment.Minion.countMinionsInrange(player.Position, W.Range))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             if (W.IsReady() && activatedW && config.Item("usewLC", true).GetValue<bool>() &&
                 MinionManager.GetMinions(
                     ObjectManager.Player.ServerPosition, W.Range, MinionTypes.All, MinionTeam.NotAlly)
                     .Count(m => HealthPrediction.GetHealthPrediction(m, 500) < 0) > 0)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
         }
 
@@ -285,7 +285,7 @@ namespace UnderratedAIO.Champions
                     (data.DamageTaken > getWShield() / 100 * config.Item("shieldDmg", true).GetValue<Slider>().Value) ||
                     (target.Distance(player) < W.Range && config.Item("usewir", true).GetValue<bool>()))
                 {
-                    W.Cast(config.Item("packets").GetValue<bool>());
+                    W.Cast();
                 }
             }
             if (activatedW && config.Item("usew", true).GetValue<bool>() && W.IsReady() &&
@@ -293,7 +293,7 @@ namespace UnderratedAIO.Champions
                 (target.Health < W.GetDamage(target) ||
                  (W.IsInRange(target) && !W.IsInRange(Prediction.GetPrediction(target, 0.2f).UnitPosition))))
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             var comboDmg = ComboDamage(target);
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
@@ -308,7 +308,7 @@ namespace UnderratedAIO.Champions
             {
                 if (Q.IsReady() && player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target))
                 {
-                    Q.Cast(config.Item("packets").GetValue<bool>());
+                    Q.Cast();
                 }
                 return;
             }
@@ -332,13 +332,13 @@ namespace UnderratedAIO.Champions
             }
             if (!activatedW && W.IsReady() && data.AnyCC)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
 
             if (config.Item("userCC", true).GetValue<bool>() && player.Distance(target) < Q.Range &&
                 HeroManager.Enemies.FirstOrDefault(e => e.Distance(Game.CursorPos) < 300) != null && data.AnyCC)
             {
-                R.Cast(Game.CursorPos, config.Item("packets").GetValue<bool>());
+                R.Cast(Game.CursorPos);
             }
         }
 
@@ -548,7 +548,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

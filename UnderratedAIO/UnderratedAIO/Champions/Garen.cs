@@ -75,7 +75,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useeLC", true).GetValue<bool>() && E.IsReady() && !GarenE &&
                 Environment.Minion.countMinionsInrange(player.Position, E.Range) > 2)
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
         }
 
@@ -84,7 +84,7 @@ namespace UnderratedAIO.Champions
             if (unit.IsMe && Q.IsReady() && config.Item("useqAAA", true).GetValue<bool>() && !GarenE && target.IsEnemy &&
                 target is Obj_AI_Hero)
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
                 player.IssueOrder(GameObjectOrder.AutoAttack, target);
             }
         }
@@ -124,22 +124,22 @@ namespace UnderratedAIO.Champions
                 player.Distance(target) > Orbwalking.GetRealAutoAttackRange(target) &&
                 CombatHelper.IsPossibleToReachHim(target, 0.30f, new float[5] { 1.5f, 2f, 2.5f, 3f, 3.5f }[Q.Level - 1]))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
             if (config.Item("useq", true).GetValue<bool>() && Q.IsReady() && !GarenQ &&
                 (!GarenE || (Q.IsReady() && Damage.GetSpellDamage(player, target, SpellSlot.Q) > target.Health)))
             {
                 if (GarenE)
                 {
-                    E.Cast(config.Item("packets").GetValue<bool>());
+                    E.Cast();
                 }
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
                 player.IssueOrder(GameObjectOrder.AutoAttack, target);
             }
             if (config.Item("usee", true).GetValue<bool>() && E.IsReady() && !Q.IsReady() && !GarenQ && !GarenE &&
                 !Orbwalking.CanAttack() && !player.IsWindingUp && player.CountEnemiesInRange(E.Range) > 0)
             {
-                E.Cast(config.Item("packets").GetValue<bool>());
+                E.Cast();
             }
             var targHP = target.Health + 20 - CombatHelper.IgniteDamage(target);
             var rLogic = config.Item("user", true).GetValue<bool>() && R.IsReady() && target.IsValidTarget() &&
@@ -151,11 +151,11 @@ namespace UnderratedAIO.Champions
                 {
                     if (GarenE)
                     {
-                        E.Cast(config.Item("packets").GetValue<bool>());
+                        E.Cast();
                     }
                     else
                     {
-                        R.Cast(target, config.Item("packets").GetValue<bool>());
+                        R.Cast(target);
                     }
                 }
             }
@@ -163,7 +163,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("usew", true).GetValue<bool>() && W.IsReady() && target.IsFacing(player) &&
                 data.DamageTaken > 40)
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
             }
             bool hasFlash = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerFlash")) == SpellState.Ready;
             if (config.Item("useFlash", true).GetValue<bool>() && hasFlash && rLogic &&
@@ -176,7 +176,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (GarenE)
                 {
-                    E.Cast(config.Item("packets").GetValue<bool>());
+                    E.Cast();
                 }
                 else if (!player.Position.Extend(target.Position, 425f).IsWall()) {}
                 {
@@ -368,7 +368,7 @@ namespace UnderratedAIO.Champions
                 sulti.AddItem(new MenuItem("ult" + hero.SkinName, hero.SkinName, true)).SetValue(false);
             }
             config.AddSubMenu(sulti);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

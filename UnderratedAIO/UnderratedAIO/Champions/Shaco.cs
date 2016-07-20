@@ -150,14 +150,14 @@ namespace UnderratedAIO.Champions
             {
                 if (target.Distance(player) < Q.Range)
                 {
-                    Q.Cast(Prediction.GetPrediction(target, 0.5f).UnitPosition, config.Item("packets").GetValue<bool>());
+                    Q.Cast(Prediction.GetPrediction(target, 0.5f).UnitPosition);
                 }
                 else
                 {
                     if (!CheckWalls(target) || Environment.Map.GetPath(player, target.Position) < dist)
                     {
                         Q.Cast(
-                            player.Position.Extend(target.Position, Q.Range), config.Item("packets").GetValue<bool>());
+                            player.Position.Extend(target.Position, Q.Range));
                     }
                 }
             }
@@ -169,12 +169,12 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target))
             {
-                E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(target);
             }
             if (config.Item("user", true).GetValue<bool>() && R.IsReady() && !ShacoClone && target.HealthPercent < 75 &&
                 cmbDmg < target.Health && target.HealthPercent > cmbDmg && target.HealthPercent > 25)
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
             if (config.Item("useIgnite").GetValue<bool>() &&
                 player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > target.Health && hasIgnite)
@@ -238,7 +238,7 @@ namespace UnderratedAIO.Champions
                         p => !p.IsWall() && p.Distance(player.Position) < W.Range && p.Distance(target.Position) > 350);
             if (best != null && best.IsValid())
             {
-                W.Cast(best, config.Item("packets").GetValue<bool>());
+                W.Cast(best);
             }
         }
 
@@ -261,7 +261,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useeH", true).GetValue<bool>() && E.CanCast(target))
             {
-                E.Cast(target, config.Item("packets").GetValue<bool>());
+                E.Cast(target);
             }
         }
 
@@ -272,14 +272,14 @@ namespace UnderratedAIO.Champions
             if (config.Item("usewLC", true).GetValue<bool>() && W.IsReady() &&
                 bestPosition.MinionsHit > config.Item("whitLC", true).GetValue<Slider>().Value)
             {
-                W.Cast(bestPosition.Position, config.Item("packets").GetValue<bool>());
+                W.Cast(bestPosition.Position);
             }
             var mob = Jungle.GetNearest(player.Position);
 
             if (config.Item("useeLC", true).GetValue<bool>() && E.IsReady() && mob != null &&
                 mob.Health < E.GetDamage(mob))
             {
-                E.Cast(mob, config.Item("packets").GetValue<bool>());
+                E.Cast(mob);
             }
         }
 
@@ -378,7 +378,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

@@ -124,8 +124,7 @@ namespace UnderratedAIO.Champions
                 if (target != null && Q.CanCast(target) && target.IsValidTarget())
                 {
                     Q.CastIfHitchanceEquals(
-                        target, CombatHelper.GetHitChance(config.Item("qHit", true).GetValue<Slider>().Value),
-                        config.Item("packets").GetValue<bool>());
+                        target, CombatHelper.GetHitChance(config.Item("qHit", true).GetValue<Slider>().Value));
                 }
             }
         }
@@ -168,7 +167,7 @@ namespace UnderratedAIO.Champions
                         if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) &&
                             targQ.Hitchance >= HitChance.High)
                         {
-                            Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
+                            Q.Cast(targQ.CastPosition);
                         }
                     }
                 }
@@ -185,7 +184,7 @@ namespace UnderratedAIO.Champions
                     if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position) &&
                         tarPered.Hitchance >= HitChance.High)
                     {
-                        W.Cast(tarPered.CastPosition, config.Item("packets").GetValue<bool>());
+                        W.Cast(tarPered.CastPosition);
                     }
                 }
             }
@@ -242,7 +241,7 @@ namespace UnderratedAIO.Champions
                     if (Q.Range - 100 > targQ.CastPosition.Distance(player.Position) &&
                         targQ.Hitchance >= HitChance.High)
                     {
-                        Q.Cast(targQ.CastPosition, config.Item("packets").GetValue<bool>());
+                        Q.Cast(targQ.CastPosition);
                         return;
                     }
                 }
@@ -260,7 +259,7 @@ namespace UnderratedAIO.Champions
                     var tarPered = W.GetPrediction(target);
                     if (W.Range - 80 > tarPered.CastPosition.Distance(player.Position))
                     {
-                        W.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                        W.CastIfHitchanceEquals(target, HitChance.High);
                         return;
                     }
                 }
@@ -273,13 +272,12 @@ namespace UnderratedAIO.Champions
                     config.Item("usermin", true).GetValue<Slider>().Value < dist && 3000 > dist &&
                     target.Health < R.GetDamage(target) * 0.7 && target.CountAlliesInRange(600) < 1)
                 {
-                    R.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                    R.CastIfHitchanceEquals(target, HitChance.High);
                 }
                 if (target.CountAlliesInRange(700) > 0)
                 {
                     R.CastIfWillHit(
-                        target, config.Item("usertf", true).GetValue<Slider>().Value,
-                        config.Item("packets").GetValue<bool>());
+                        target, config.Item("usertf", true).GetValue<Slider>().Value);
                 }
             }
             bool canKill = cmbDmg > target.Health;
@@ -340,7 +338,7 @@ namespace UnderratedAIO.Champions
             var pos = bestPositons.OrderBy(p => target.Distance(p)).FirstOrDefault();
             if (pos != null && pos.IsValid())
             {
-                E.Cast(pos, config.Item("packets").GetValue<bool>());
+                E.Cast(pos);
             }
         }
 
@@ -381,14 +379,14 @@ namespace UnderratedAIO.Champions
                         if (minion.Distance(player) <= player.AttackRange && !Orbwalking.CanAttack() &&
                             Orbwalking.CanMove(100))
                         {
-                            if (Q.Cast(minion, config.Item("packets").GetValue<bool>()).IsCasted())
+                            if (Q.Cast(minion).IsCasted())
                             {
                                 Orbwalking.Orbwalker.AddToBlackList(minion.NetworkId);
                             }
                         }
                         else if (minion.Distance(player) > player.AttackRange)
                         {
-                            if (Q.Cast(minion, config.Item("packets").GetValue<bool>()).IsCasted())
+                            if (Q.Cast(minion).IsCasted())
                             {
                                 Orbwalking.Orbwalker.AddToBlackList(minion.NetworkId);
                             }
@@ -543,7 +541,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.Item("EzAutoQ", true).Permashow(true, "Auto Q");
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

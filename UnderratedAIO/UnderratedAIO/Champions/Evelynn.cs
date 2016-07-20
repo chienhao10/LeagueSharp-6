@@ -160,7 +160,7 @@ namespace UnderratedAIO.Champions
             orbwalker.ForceTarget(target);
             if (config.Item("useeLC", true).GetValue<bool>() && E.CanCast(target))
             {
-                E.CastOnUnit(target, config.Item("packets").GetValue<bool>());
+                E.CastOnUnit(target);
             }
         }
 
@@ -276,7 +276,7 @@ namespace UnderratedAIO.Champions
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

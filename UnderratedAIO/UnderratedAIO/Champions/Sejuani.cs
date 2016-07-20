@@ -39,7 +39,7 @@ namespace UnderratedAIO.Champions
             if (unit.IsMe && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && W.IsReady() &&
                 config.Item("usew", true).GetValue<bool>())
             {
-                W.Cast(config.Item("packets").GetValue<bool>());
+                W.Cast();
                 Orbwalking.ResetAutoAttackTimer();
             }
         }
@@ -50,14 +50,14 @@ namespace UnderratedAIO.Champions
             {
                 if (unit.IsValidTarget(Q.Range) && Q.IsReady() && me.Distance(unit) < Q.Range)
                 {
-                    Q.Cast(unit.Position, config.Item("packets").GetValue<bool>());
+                    Q.Cast(unit.Position);
                 }
             }
             if (config.Item("userint", true).GetValue<bool>())
             {
                 if (unit.IsValidTarget(R.Range) && R.IsReady() && me.Distance(unit) < R.Range)
                 {
-                    R.Cast(unit.Position, config.Item("packets").GetValue<bool>());
+                    R.Cast(unit.Position);
                 }
             }
         }
@@ -108,7 +108,7 @@ namespace UnderratedAIO.Champions
                 HeroManager.Enemies.Where(i => !i.IsDead && me.Distance(i) < R.Range)
                     .OrderByDescending(l => l.CountEnemiesInRange(350f)))
             {
-                R.CastIfHitchanceEquals(enemy, HitChance.High, config.Item("packets").GetValue<bool>());
+                R.CastIfHitchanceEquals(enemy, HitChance.High);
                 break;
             }
         }
@@ -119,14 +119,14 @@ namespace UnderratedAIO.Champions
             {
                 if (gapcloser.Sender.IsValidTarget(Q.Range) && Q.IsReady() && me.Distance(gapcloser.End) < Q.Range)
                 {
-                    Q.Cast(gapcloser.End, config.Item("packets").GetValue<bool>());
+                    Q.Cast(gapcloser.End);
                 }
             }
             if (config.Item("usergc", true).GetValue<bool>())
             {
                 if (gapcloser.Sender.IsValidTarget(R.Range) && R.IsReady() && me.Distance(gapcloser.End) < R.Range)
                 {
-                    R.Cast(gapcloser.End, config.Item("packets").GetValue<bool>());
+                    R.Cast(gapcloser.End);
                 }
             }
         }
@@ -181,7 +181,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (bestPosition.MinionsHit >= 2)
                     {
-                        Q.Cast(bestPosition.Position, config.Item("packets").GetValue<bool>());
+                        Q.Cast(bestPosition.Position);
                     }
                 }
             }
@@ -202,7 +202,7 @@ namespace UnderratedAIO.Champions
             {
                 if (target != null && !config.Item("ult" + target.SkinName, true).GetValue<bool>())
                 {
-                    R.Cast(target, config.Item("packets").GetValue<bool>());
+                    R.Cast(target);
                 }
             }
             else
@@ -217,7 +217,7 @@ namespace UnderratedAIO.Champions
                             config.Item("useRmin", true).GetValue<Slider>().Value && target.Distance(i.Position) < 350f)
                         .OrderByDescending(l => l.Position.CountEnemiesInRange(350f)))
                 {
-                    R.Cast(enemy, config.Item("packets").GetValue<bool>());
+                    R.Cast(enemy);
                     return;
                 }
             }
@@ -262,7 +262,7 @@ namespace UnderratedAIO.Champions
                     }
                     else
                     {
-                        Q.CastIfHitchanceEquals(target, HitChance.High, config.Item("packets").GetValue<bool>());
+                        Q.CastIfHitchanceEquals(target, HitChance.High);
                     }
                 }
             }
@@ -388,7 +388,7 @@ namespace UnderratedAIO.Champions
                 sulti.AddItem(new MenuItem("ult" + hero.SkinName, hero.SkinName, true)).SetValue(false);
             }
             config.AddSubMenu(sulti);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddSubMenu(Program.SPredictionMenu);
             config.AddToMainMenu();

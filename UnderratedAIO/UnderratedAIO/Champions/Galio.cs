@@ -45,7 +45,7 @@ namespace UnderratedAIO.Champions
             {
                 if (player.Mana > R.Instance.ManaCost + W.Instance.ManaCost)
                 {
-                    W.Cast(player, config.Item("packets").GetValue<bool>());
+                    W.Cast(player);
                 }
             }
         }
@@ -136,7 +136,7 @@ namespace UnderratedAIO.Champions
                     CombatHelper.CheckInterrupt(best, R.Range))
                 {
                     player.Spellbook.CastSpell(player.GetSpellSlot("SummonerFlash"), best);
-                    Utility.DelayAction.Add(50, () => { R.Cast(config.Item("packets").GetValue<bool>()); });
+                    Utility.DelayAction.Add(50, () => { R.Cast(); });
                     justR = true;
                     Utility.DelayAction.Add(200, () => justR = false);
                     orbwalker.SetAttack(false);
@@ -175,7 +175,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, hitC);
                 }
             }
             if (config.Item("useeH", true).GetValue<bool>() && E.CanCast(target))
@@ -186,7 +186,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, hitC);
                 }
             }
         }
@@ -205,7 +205,7 @@ namespace UnderratedAIO.Champions
 
                 if (bestPositionQ.MinionsHit >= config.Item("qMinHit", true).GetValue<Slider>().Value)
                 {
-                    Q.Cast(bestPositionQ.Position, config.Item("packets").GetValue<bool>());
+                    Q.Cast(bestPositionQ.Position);
                 }
             }
             if (config.Item("useeLC", true).GetValue<bool>() && E.IsReady())
@@ -217,7 +217,7 @@ namespace UnderratedAIO.Champions
 
                 if (bestPositionE.MinionsHit >= config.Item("eMinHit", true).GetValue<Slider>().Value)
                 {
-                    E.Cast(bestPositionE.Position, config.Item("packets").GetValue<bool>());
+                    E.Cast(bestPositionE.Position);
                 }
             }
         }
@@ -271,7 +271,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    Q.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                    Q.CastIfHitchanceEquals(target, hitC);
                 }
             }
             if (config.Item("usee", true).GetValue<bool>() && E.CanCast(target))
@@ -282,7 +282,7 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    E.CastIfHitchanceEquals(target, hitC, config.Item("packets").GetValue<bool>());
+                    E.CastIfHitchanceEquals(target, hitC);
                 }
             }
         }
@@ -298,7 +298,7 @@ namespace UnderratedAIO.Champions
                     (incDamage.DamageCount >= config.Item("Wmin", true).GetValue<Slider>().Value ||
                      CheckDamageToW(incDamage)) && (combo || (!combo && CheckAutoW())))
                 {
-                    W.Cast(incDamage.Hero, config.Item("packets").GetValue<bool>());
+                    W.Cast(incDamage.Hero);
                     return;
                 }
             }
@@ -337,7 +337,7 @@ namespace UnderratedAIO.Champions
         {
             if (CombatHelper.CheckInterrupt(player.Position, R.Range))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
         }
 
@@ -473,7 +473,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

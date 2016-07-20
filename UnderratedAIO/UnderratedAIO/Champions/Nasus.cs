@@ -39,7 +39,7 @@ namespace UnderratedAIO.Champions
                 orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && tar.HasBuffOfType(BuffType.Slow) &&
                 target.Health > Q.GetDamage(tar) + player.GetAutoAttackDamage(tar) + 50)
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
                 Orbwalking.ResetAutoAttackTimer();
             }
         }
@@ -52,7 +52,7 @@ namespace UnderratedAIO.Champions
                  (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear && target.Health > 1000 &&
                   config.Item("useqLC").GetValue<bool>())))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
         }
 
@@ -64,7 +64,7 @@ namespace UnderratedAIO.Champions
                   !target.HasBuffOfType(BuffType.Slow)) ||
                  target.Health < Q.GetDamage(target) + player.GetAutoAttackDamage(target)))
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
         }
 
@@ -118,7 +118,7 @@ namespace UnderratedAIO.Champions
                 (config.Item("usertf").GetValue<Slider>().Value <= player.CountEnemiesInRange(600) &&
                  player.HealthPercent < 80))
             {
-                R.Cast(config.Item("packets").GetValue<bool>());
+                R.Cast();
             }
             var ignitedmg = (float) player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
@@ -132,7 +132,7 @@ namespace UnderratedAIO.Champions
                 if (((config.Item("keepManaForR").GetValue<bool>() && R.IsReady()) || !R.IsReady()) &&
                     player.Mana > R.Instance.ManaCost + W.Instance.ManaCost)
                 {
-                    W.Cast(target, config.Item("packets").GetValue<bool>());
+                    W.Cast(target);
                 }
             }
             if (((config.Item("keepManaForR").GetValue<bool>() && R.IsReady()) || !R.IsReady()) &&
@@ -147,7 +147,7 @@ namespace UnderratedAIO.Champions
                     if (E.Range > ePred.CastPosition.Distance(player.Position) &&
                         target.Distance(ePred.CastPosition) < 400)
                     {
-                        E.Cast(ePred.CastPosition, config.Item("packets").GetValue<bool>());
+                        E.Cast(ePred.CastPosition);
                     }
                     else
                     {
@@ -155,8 +155,7 @@ namespace UnderratedAIO.Champions
                             target.Distance(ePred.CastPosition) < 400)
                         {
                             E.Cast(
-                                player.Position.Extend(target.Position, E.Range),
-                                config.Item("packets").GetValue<bool>());
+                                player.Position.Extend(target.Position, E.Range));
                         }
                     }
                 }
@@ -187,7 +186,7 @@ namespace UnderratedAIO.Champions
             if (config.Item("useeLC").GetValue<bool>() && E.IsReady() &&
                 bestPositionE.MinionsHit >= config.Item("ehitLC").GetValue<Slider>().Value)
             {
-                E.Cast(bestPositionE.Position, config.Item("packets").GetValue<bool>());
+                E.Cast(bestPositionE.Position);
             }
         }
 
@@ -202,7 +201,7 @@ namespace UnderratedAIO.Champions
                             Q.GetDamage(m) + player.GetAutoAttackDamage(m));
             if (minions != null)
             {
-                Q.Cast(config.Item("packets").GetValue<bool>());
+                Q.Cast();
             }
         }
 
@@ -226,14 +225,14 @@ namespace UnderratedAIO.Champions
                 var ePred = E.GetPrediction(target);
                 if (E.Range > ePred.CastPosition.Distance(player.Position) && target.Distance(ePred.CastPosition) < 400)
                 {
-                    E.Cast(ePred.CastPosition, config.Item("packets").GetValue<bool>());
+                    E.Cast(ePred.CastPosition);
                 }
                 else
                 {
                     if (ePred.CastPosition.Distance(player.Position) < 925 && target.Distance(ePred.CastPosition) < 400)
                     {
                         E.Cast(
-                            player.Position.Extend(target.Position, E.Range), config.Item("packets").GetValue<bool>());
+                            player.Position.Extend(target.Position, E.Range));
                     }
                 }
             }
@@ -345,7 +344,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            config.AddItem(new MenuItem("packets", "Use Packets")).SetValue(false);
+            
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
