@@ -120,7 +120,7 @@ namespace UnderratedAIO.Champions
             var barrel = savedBarrels.FirstOrDefault(b => b.barrel.NetworkId == targetB.NetworkId);
             if (barrel != null)
             {
-                var time = targetB.Health * getEActivationDelay() * 1000 + delay;
+                var time = (targetB.Health * getEActivationDelay() * 1000) + delay;
                 if ((System.Environment.TickCount - barrel.time +
                      (melee ? (sender.AttackCastDelay) : missileTravelTime) * 1000) > time)
                 {
@@ -300,10 +300,10 @@ namespace UnderratedAIO.Champions
                         .FirstOrDefault(
                             o =>
                                 o.Health > 1 && o.Distance(player) < Orbwalking.GetRealAutoAttackRange(o) &&
-                                !KillableBarrel(o, true));
+                                !KillableBarrel(o, true, 265));
                 if (meleeRangeBarrel != null && Orbwalking.CanAttack())
                 {
-                    orbwalker.SetOrbwalkingPoint(meleeRangeBarrel.Position);
+                    player.IssueOrder(GameObjectOrder.AttackUnit, meleeRangeBarrel);
                     return;
                 }
                 var barrel =
@@ -319,17 +319,18 @@ namespace UnderratedAIO.Champions
                 {
                     Q.CastOnUnit(barrel);
                 }
-                if (NeedToBeDestroyed != null && NeedToBeDestroyed.IsValidTarget() && NeedToBeDestroyed.IsValidTarget() &&
-                    Orbwalking.CanAttack() && NeedToBeDestroyed.IsInAttackRange())
-                {
-                    Console.WriteLine("NeedToBeDestroyed");
-                    player.IssueOrder(GameObjectOrder.AttackUnit, NeedToBeDestroyed);
-                }
             }
-
+            if (NeedToBeDestroyed != null && NeedToBeDestroyed.IsValidTarget() && NeedToBeDestroyed.IsValidTarget() &&
+                Orbwalking.CanAttack() && NeedToBeDestroyed.IsInAttackRange())
+            {
+                Console.WriteLine("NeedToBeDestroyed");
+                player.IssueOrder(GameObjectOrder.AttackUnit, NeedToBeDestroyed);
+            }
             if (config.Item("AutoQBarrel", true).GetValue<bool>() && !movingToBarrel)
             {
-                if (BlowUpBarrel(barrels, shouldAAbarrel, false))
+                var target = TargetSelector.GetTarget(
+                    1650, TargetSelector.DamageType.Physical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
+                if (target != null && BlowUpBarrel(barrels, shouldAAbarrel, false, target))
                 {
                     if (!chain)
                     {
@@ -415,7 +416,7 @@ namespace UnderratedAIO.Champions
             var dontQ = false;
             //Blow up barrels
             if (config.Item("useqH", true).GetValue<bool>() &&
-                BlowUpBarrel(barrels, shouldAAbarrel, config.Item("movetoBarrel", true).GetValue<bool>()))
+                BlowUpBarrel(barrels, shouldAAbarrel, config.Item("movetoBarrel", true).GetValue<bool>(), target))
             {
                 if (!chain)
                 {
@@ -567,7 +568,7 @@ namespace UnderratedAIO.Champions
             var dontQ = false;
 
             //Blow up barrels
-            if (BlowUpBarrel(barrels, shouldAAbarrel, config.Item("movetoBarrel", true).GetValue<bool>()))
+            if (BlowUpBarrel(barrels, shouldAAbarrel, config.Item("movetoBarrel", true).GetValue<bool>(), target))
             {
                 if (!chain)
                 {
@@ -622,14 +623,19 @@ namespace UnderratedAIO.Champions
             }
         }
 
-        private bool BlowUpBarrel(List<Obj_AI_Minion> barrels, bool shouldAAbarrel, bool movetoBarrel)
+        private bool BlowUpBarrel(List<Obj_AI_Minion> barrels,
+            bool shouldAAbarrel,
+            bool movetoBarrel,
+            Obj_AI_Hero target)
         {
             if (barrels.Any())
             {
                 var moveDist = movetoBarrel ? config.Item("movetoBarrelDist", true).GetValue<Slider>().Value : 0;
-                var bestBarrelMelee = GetBestBarrel(barrels, true, moveDist);
-                var bestBarrelQ = GetBestBarrel(barrels, false);
-                if (bestBarrelMelee != null && shouldAAbarrel)
+                var bestBarrelMelee = GetBestBarrel(barrels, true, target, moveDist);
+                var bestBarrelQ = GetBestBarrel(barrels, false, target);
+                if (bestBarrelMelee != null && shouldAAbarrel &&
+                    HeroManager.Enemies.FirstOrDefault(
+                        e => e.Distance(bestBarrelMelee) < player.Distance(bestBarrelMelee)) == null)
                 {
                     if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
                     {
@@ -639,7 +645,7 @@ namespace UnderratedAIO.Champions
                     }
                     else
                     {
-                        if (KillableBarrel(bestBarrelMelee, true))
+                        if (KillableBarrel(bestBarrelMelee, true) && Orbwalking.CanAttack())
                         {
                             orbwalker.ForceTarget(bestBarrelMelee);
                         }
@@ -666,7 +672,10 @@ namespace UnderratedAIO.Champions
             return false;
         }
 
-        private Obj_AI_Minion GetBestBarrel(List<Obj_AI_Minion> barrels, bool isMelee, float moveDist = 0f)
+        private Obj_AI_Minion GetBestBarrel(List<Obj_AI_Minion> barrels,
+            bool isMelee,
+            Obj_AI_Hero target,
+            float moveDist = 0f)
         {
             var meleeBarrels =
                 barrels.Where(
@@ -776,6 +785,7 @@ namespace UnderratedAIO.Champions
             var barrelsInCloseRange =
                 barrels.Where(
                     b =>
+                        player.Distance(b) < target.Distance(b) &&
                         player.Distance(b) <
                         (isMelee
                             ? Orbwalking.GetRealAutoAttackRange(b) +
@@ -1157,13 +1167,13 @@ namespace UnderratedAIO.Champions
         {
             if (player.Level >= 13)
             {
-                return 0.5f;
+                return 0.475f;
             }
             if (player.Level >= 7)
             {
-                return 1f;
+                return 0.975f;
             }
-            return 2f;
+            return 1.975f;
         }
 
         private void InitMenu()
