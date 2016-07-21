@@ -19,7 +19,7 @@ namespace UnderratedAIO.Champions
         public static Menu config;
         public static Orbwalking.Orbwalker orbwalker;
         public static AutoLeveler autoLeveler;
-        public static Spell Q, W, E, R;
+        public static Spell Q, W, E, E2, R;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
         public static bool justQ, useIgnite, justE, canUlt, justR;
         public Vector3 qPos, rPos;
@@ -129,9 +129,11 @@ namespace UnderratedAIO.Champions
             Q.SetSkillshot(0.3f, 110f, 1000f, false, SkillshotType.SkillshotCircle);
             W = new Spell(SpellSlot.W, 0);
             E = new Spell(SpellSlot.E, 600);
-            E.SetSkillshot(0.5f, 250, 1200, true, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.25f, 200, 1200, true, SkillshotType.SkillshotLine);
+            E2 = new Spell(SpellSlot.E, 600);
+            E2.SetSkillshot(0f, 200, 2000, true, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, 1050);
-            R.SetSkillshot(0.25f, 300, 1750, false, SkillshotType.SkillshotCircle);
+            R.SetSkillshot(0.25f, 150, 1750, false, SkillshotType.SkillshotCircle);
         }
 
         private void Game_OnGameUpdate(EventArgs args)
@@ -396,10 +398,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("usee", true).GetValue<bool>())
             {
-                if (E.CanCast(target))
-                {
-                    CastE(target);
-                }
+                CastE(target);
             }
             if (W.IsReady() && (!SimpleQ || !Q.IsReady()) && config.Item("usew", true).GetValue<bool>() &&
                 player.Distance(target) < 300 && Orbwalking.CanMove(100) &&
@@ -409,8 +408,7 @@ namespace UnderratedAIO.Champions
             }
             if (R.IsReady())
             {
-                if (R.CastIfWillHit(
-                    target, config.Item("Rmin", true).GetValue<Slider>().Value))
+                if (R.CastIfWillHit(target, config.Item("Rmin", true).GetValue<Slider>().Value))
                 {
                     return;
                 }
@@ -614,6 +612,11 @@ namespace UnderratedAIO.Champions
 
         private void CastE(Obj_AI_Hero target)
         {
+            if (player.Distance(target) < 200)
+            {
+                E.Cast(target.Position);
+                return;
+            }
             if (E.CanCast(target))
             {
                 if (Program.IsSPrediction)
@@ -622,7 +625,12 @@ namespace UnderratedAIO.Champions
                 }
                 else
                 {
-                    E.CastIfHitchanceEquals(target, HitChance.High);
+                    var pred = E.GetPrediction(target);
+                    var pred2 = E2.GetPrediction(target);
+                    if (pred2.Hitchance > HitChance.Low)
+                    {
+                        E.Cast(pred.CastPosition);
+                    }
                 }
             }
         }
@@ -779,7 +787,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("rtoq", "   To Q", true)).SetValue(true);
             menuC.AddItem(new MenuItem("rtoturret", "   To turret", true)).SetValue(false);
             menuC.AddItem(new MenuItem("rtokill", "   To kill", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("Rmin", "Use R teamfigh", true)).SetValue(new Slider(2, 1, 5));
+            menuC.AddItem(new MenuItem("Rmin", "Use R teamfight", true)).SetValue(new Slider(2, 1, 5));
             menuC.AddItem(new MenuItem("insec", "E-R combo to Q", true))
                 .SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))
                 .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
@@ -813,7 +821,7 @@ namespace UnderratedAIO.Champions
 
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
