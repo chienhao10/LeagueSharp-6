@@ -50,6 +50,11 @@ namespace UnderratedAIO.Champions
             {
                 W.Cast();
             }
+            if (config.Item("useegc", true).GetValue<bool>() && gapcloser.End.Distance(player.Position) < E.Range &&
+                E.CanCast(gapcloser.Sender))
+            {
+                E.Cast(gapcloser.Sender);
+            }
         }
 
         private void Unit_OnDash(Obj_AI_Base sender, Dash.DashItem args)
