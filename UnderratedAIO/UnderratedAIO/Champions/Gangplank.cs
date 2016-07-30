@@ -45,6 +45,12 @@ namespace UnderratedAIO.Champions
 
         private void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
+            if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo ||
+                (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed && config.Item("useeH", true).GetValue<bool>()))
+            {
+                return;
+            }
+
             if (args.Slot == SpellSlot.E && config.Item("barrelCorrection", true).GetValue<bool>() &&
                 Game.CursorPos.Distance(args.StartPosition) < 50)
             {
