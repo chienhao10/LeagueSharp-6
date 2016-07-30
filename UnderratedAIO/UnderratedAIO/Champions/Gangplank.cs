@@ -338,6 +338,15 @@ namespace UnderratedAIO.Champions
                         Utility.DelayAction.Add(450, () => chain = false);
                     }
                 }
+                if (Q.IsReady())
+                {
+                    foreach (var barrel in
+                        barrels.Where(b => KillableBarrel(b) && b.CountEnemiesInRange(BarrelExplosionRange) > 0))
+                    {
+                        Q.Cast(barrel);
+                        return;
+                    }
+                }
             }
             for (int i = 0; i < castedBarrels.Count; i++)
             {
