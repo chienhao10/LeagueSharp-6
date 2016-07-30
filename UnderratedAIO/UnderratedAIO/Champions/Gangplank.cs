@@ -120,9 +120,9 @@ namespace UnderratedAIO.Champions
             var barrel = savedBarrels.FirstOrDefault(b => b.barrel.NetworkId == targetB.NetworkId);
             if (barrel != null)
             {
-                var time = (targetB.Health * getEActivationDelay() * 1000) + delay;
-                if ((System.Environment.TickCount - barrel.time +
-                     (melee ? (sender.AttackCastDelay) : missileTravelTime) * 1000) > time)
+                var t = System.Environment.TickCount - barrel.time - 2 * getEActivationDelay() * 1000;
+                t = Math.Abs(Math.Min(t, 0)) + delay;
+                if (t - ((melee ? (sender.AttackCastDelay) : missileTravelTime) * 1000) <= 0)
                 {
                     return true;
                 }
@@ -132,13 +132,13 @@ namespace UnderratedAIO.Champions
 
         private float GetQTime(Obj_AI_Base targetB)
         {
-            return player.Distance(targetB) / 2800f + Q.Delay;
+            return player.Distance(targetB) / (player.Crit < 0.05f ? 2600f : 3000f) + Q.Delay;
         }
 
         private void InitGangPlank()
         {
             Q = new Spell(SpellSlot.Q, 590f); //2600f
-            Q.SetTargetted(0.25f, 2200f);
+            Q.SetTargetted(0.25f, 2600f);
             W = new Spell(SpellSlot.W);
             E = new Spell(SpellSlot.E, 950);
             E.SetSkillshot(0.8f, 50, float.MaxValue, false, SkillshotType.SkillshotCircle);
@@ -303,7 +303,7 @@ namespace UnderratedAIO.Champions
                                 !KillableBarrel(o, true, 265));
                 if (meleeRangeBarrel != null && Orbwalking.CanAttack())
                 {
-                    player.IssueOrder(GameObjectOrder.AttackUnit, meleeRangeBarrel);
+                    orbwalker.ForceTarget(meleeRangeBarrel);
                     return;
                 }
                 var barrel =
@@ -320,8 +320,8 @@ namespace UnderratedAIO.Champions
                     Q.CastOnUnit(barrel);
                 }
             }
-            if (NeedToBeDestroyed != null && NeedToBeDestroyed.IsValidTarget() && NeedToBeDestroyed.IsValidTarget() &&
-                Orbwalking.CanAttack() && NeedToBeDestroyed.IsInAttackRange())
+            if (NeedToBeDestroyed != null && NeedToBeDestroyed.IsValidTarget() && Orbwalking.CanAttack() &&
+                NeedToBeDestroyed.IsInAttackRange())
             {
                 Console.WriteLine("NeedToBeDestroyed");
                 player.IssueOrder(GameObjectOrder.AttackUnit, NeedToBeDestroyed);
@@ -1134,24 +1134,27 @@ namespace UnderratedAIO.Champions
                     }
                 }
             }
-            if (sender.IsEnemy && args.Target != null && sender is Obj_AI_Hero && sender.Distance(player) < E.Range)
+            if (sender.IsEnemy && args.Target != null && sender is Obj_AI_Hero && sender.Distance(player) < 2000)
             {
-                var targetBarrels =
-                    savedBarrels.Where(
-                        b =>
-                            b.barrel.NetworkId == args.Target.NetworkId &&
-                            KillableBarrel(
-                                b.barrel, sender.IsMelee, 0, (Obj_AI_Hero) sender,
-                                sender.Distance(b.barrel) / args.SData.MissileSpeed));
-                foreach (var barrelData in targetBarrels)
+                var targetBarrel =
+                    savedBarrels.FirstOrDefault(b => b.barrel != null && b.barrel.NetworkId == args.Target.NetworkId);
+                if (targetBarrel != null)
                 {
-                    if (Orbwalking.CanAttack() && NeedToBeDestroyed.IsInAttackRange())
+                    if (KillableBarrel(targetBarrel.barrel, true, 0, (Obj_AI_Hero) sender, args.SData.MissileSpeed))
                     {
-                        NeedToBeDestroyed = barrelData.barrel;
-                        Utility.DelayAction.Add(230, () => NeedToBeDestroyed = null);
+                        savedBarrels.Remove(targetBarrel);
+                        return;
                     }
-                    savedBarrels.Remove(barrelData);
-                    return;
+
+
+                    var delay = (int) (sender.Distance(targetBarrel.barrel.Position) / args.SData.MissileSpeed * 1000f);
+                    var t = System.Environment.TickCount - targetBarrel.time - 1 * getEActivationDelay() * 1000;
+                    t = Math.Abs(Math.Min(t, 0)) - GetQTime(targetBarrel.barrel);
+                    if (t - delay <= 1 * getEActivationDelay() &&
+                        !KillableBarrel(targetBarrel.barrel, true, 0, (Obj_AI_Hero) sender))
+                    {
+                        targetBarrel.time -= 5000;
+                    }
                 }
             }
         }
