@@ -164,10 +164,17 @@ namespace UnderratedAIO.Champions
             }
             MinionManager.FarmLocation bestPositionQ =
                 Q.GetLineFarmLocation(MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly));
-            if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() &&
-                bestPositionQ.MinionsHit >= config.Item("qhitLC", true).GetValue<Slider>().Value)
+            if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady())
             {
-                Q.Cast(bestPositionQ.Position);
+                if (bestPositionQ.MinionsHit >= config.Item("qhitLC", true).GetValue<Slider>().Value)
+                {
+                    Q.Cast(bestPositionQ.Position);
+                }
+                var jungleMob = Jungle.GetNearest(player.Position, Q.Range * 0.75f);
+                if (jungleMob != null && jungleMob.Health > player.GetAutoAttackDamage(jungleMob, true) * 2)
+                {
+                    Q.Cast(jungleMob.Position);
+                }
             }
         }
 
@@ -325,7 +332,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

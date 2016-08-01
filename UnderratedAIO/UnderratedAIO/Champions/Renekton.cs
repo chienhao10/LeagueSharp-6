@@ -32,19 +32,11 @@ namespace UnderratedAIO.Champions
             Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.BeforeAttack += beforeAttack;
             Orbwalking.AfterAttack += afterAttack;
-            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
             Drawing.OnDraw += Game_OnDraw;
             Jungle.setSmiteSlot();
             HpBarDamageIndicator.DamageToUnit = ComboDamage;
         }
 
-        private void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (sender.IsMe)
-            {
-                Console.WriteLine(args.SData.Name);
-            }
-        }
 
         private void Game_OnGameUpdate(EventArgs args)
         {
@@ -154,7 +146,7 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(E.Range * 2, TargetSelector.DamageType.Physical);
-            if (target == null)
+            if (target == null || player.IsWindingUp)
             {
                 return;
             }
@@ -194,11 +186,7 @@ namespace UnderratedAIO.Champions
                 }
             }
             if (config.Item("useq", true).GetValue<bool>() && Q.CanCast(target) && !renw && !player.IsDashing() &&
-                checkFuryMode(SpellSlot.Q, target) &&
-                (!W.IsReady() ||
-                 ((W.IsReady() && !fury) || (player.Health < target.Health) ||
-                  (Environment.Minion.countMinionsInrange(player.Position, Q.Range) +
-                   player.CountEnemiesInRange(Q.Range) > 3 && fury))))
+                checkFuryMode(SpellSlot.Q, target))
             {
                 Q.Cast();
             }
@@ -228,7 +216,7 @@ namespace UnderratedAIO.Champions
             var data = Program.IncDamages.GetAllyData(player.NetworkId);
             if (((player.Health * 100 / player.MaxHealth) <= config.Item("user", true).GetValue<Slider>().Value &&
                  data.DamageTaken > 30) ||
-                config.Item("userindanger", true).GetValue<Slider>().Value < player.CountEnemiesInRange(R.Range))
+                config.Item("userindanger", true).GetValue<Slider>().Value <= player.CountEnemiesInRange(R.Range))
             {
                 R.Cast();
             }
@@ -350,10 +338,17 @@ namespace UnderratedAIO.Champions
 
         private void Clear()
         {
+            if (player.IsWindingUp)
+            {
+                return;
+            }
             if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() && !player.IsDashing())
             {
+                var minis = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly);
                 if (Environment.Minion.countMinionsInrange(player.Position, Q.Range) >=
-                    config.Item("minimumMini", true).GetValue<Slider>().Value)
+                    config.Item("minimumMini", true).GetValue<Slider>().Value &&
+                    minis.Count(m => m.Health - Q.GetDamage(m) < 50) == 0 &&
+                    (!Environment.Minion.KillableMinion(player.AttackRange) || !Orbwalking.CanAttack()))
                 {
                     Q.Cast();
                     return;
@@ -430,7 +425,7 @@ namespace UnderratedAIO.Champions
             {
                 return true;
             }
-            if (canBeOpWIthQ(player.Position))
+            if (canBeOpWIthQ(player.Position) && spellSlot != SpellSlot.Q)
             {
                 return false;
             }
@@ -448,19 +443,19 @@ namespace UnderratedAIO.Champions
                     return true;
                     break;
                 case 1:
-                    if (spellSlot != SpellSlot.Q && Q.IsReady())
+                    if (spellSlot != SpellSlot.Q && Q.IsReady(500))
                     {
                         return false;
                     }
                     break;
                 case 2:
-                    if (spellSlot != SpellSlot.W && (W.IsReady() || renw))
+                    if (spellSlot != SpellSlot.W && (W.IsReady(500) || renw) && target.IsInAttackRange())
                     {
                         return false;
                     }
                     break;
                 case 3:
-                    if (spellSlot != SpellSlot.E && rene)
+                    if (spellSlot != SpellSlot.E && rene && E.IsReady(500))
                     {
                         return false;
                     }
@@ -469,7 +464,7 @@ namespace UnderratedAIO.Champions
                     return true;
                     break;
             }
-            return false;
+            return true;
         }
 
         private void InitRenekton()
@@ -478,7 +473,7 @@ namespace UnderratedAIO.Champions
             W = new Spell(SpellSlot.W, player.AttackRange + 55);
             E = new Spell(SpellSlot.E, 450);
             E.SetSkillshot(
-                E.Instance.SData.SpellCastTime, E.Instance.SData.LineWidth, E.Speed, false, SkillshotType.SkillshotCone);
+                E.Instance.SData.SpellCastTime, E.Instance.SData.LineWidth, E.Speed, false, SkillshotType.SkillshotLine);
             R = new Spell(SpellSlot.R, 300);
         }
 
@@ -512,7 +507,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R under", true)).SetValue(new Slider(20, 0, 100));
-            menuC.AddItem(new MenuItem("userindanger", "Use R above X enemy", true)).SetValue(new Slider(2, 1, 5));
+            menuC.AddItem(new MenuItem("userindanger", "Use R min X enemy", true)).SetValue(new Slider(2, 1, 5));
             menuC.AddItem(new MenuItem("furyMode", "Fury priority", true))
                 .SetValue(new StringList(new[] { "No priority", "Q", "W", "E" }, 0));
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite")).SetValue(true);
@@ -537,7 +532,7 @@ namespace UnderratedAIO.Champions
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
