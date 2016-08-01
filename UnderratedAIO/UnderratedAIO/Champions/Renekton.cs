@@ -74,7 +74,8 @@ namespace UnderratedAIO.Champions
                  orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed))
             {
                 var time = Game.Time - W.Instance.CooldownExpires;
-                if (config.Item("hyd").GetValue<bool>() && time < -9 || (!W.IsReady() && time < -1))
+                if (config.Item("hyd").GetValue<bool>() &&
+                    (W.Instance.Cooldown - Math.Abs(time) < 1 || time < -6 || player.HealthPercent < 50))
                 {
                     ItemHandler.castHydra((Obj_AI_Hero) target);
                 }
@@ -83,6 +84,8 @@ namespace UnderratedAIO.Champions
                 config.Item("usew", true).GetValue<bool>() && checkFuryMode(SpellSlot.W, (Obj_AI_Base) target))
             {
                 W.Cast();
+                Orbwalking.ResetAutoAttackTimer();
+                return;
             }
             if (unit.IsMe && target is Obj_AI_Hero && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed &&
                 config.Item("useCH", true).GetValue<StringList>().SelectedIndex == 0)
@@ -146,7 +149,7 @@ namespace UnderratedAIO.Champions
         private void Combo()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(E.Range * 2, TargetSelector.DamageType.Physical);
-            if (target == null || player.IsWindingUp)
+            if (target == null)
             {
                 return;
             }
@@ -344,10 +347,10 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() && !player.IsDashing())
             {
-                var minis = MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly);
+                var minis = MinionManager.GetMinions(player.AttackRange + 50, MinionTypes.All, MinionTeam.NotAlly);
                 if (Environment.Minion.countMinionsInrange(player.Position, Q.Range) >=
                     config.Item("minimumMini", true).GetValue<Slider>().Value &&
-                    minis.Count(m => m.Health - Q.GetDamage(m) < 50) == 0 &&
+                    minis.Count(m => m.Health - Q.GetDamage(m) < 50 && m.Health - Q.GetDamage(m) > 0) == 0 &&
                     (!Environment.Minion.KillableMinion(player.AttackRange) || !Orbwalking.CanAttack()))
                 {
                     Q.Cast();
