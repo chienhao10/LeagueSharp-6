@@ -335,7 +335,8 @@ namespace UnderratedAIO.Champions
             if (config.Item("AutoQBarrel", true).GetValue<bool>() && !movingToBarrel)
             {
                 var target = TargetSelector.GetTarget(
-                    1650, TargetSelector.DamageType.Physical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
+                    E.Range + BarrelExplosionRange / 2f, TargetSelector.DamageType.Physical, true,
+                    HeroManager.Enemies.Where(h => h.IsInvulnerable));
                 if (target != null && BlowUpBarrel(barrels, shouldAAbarrel, false, target))
                 {
                     if (!chain)
@@ -406,7 +407,7 @@ namespace UnderratedAIO.Champions
                 return;
             }
             Obj_AI_Hero target = TargetSelector.GetTarget(
-                Q.Range + BarrelExplosionRange, TargetSelector.DamageType.Physical);
+                E.Range + BarrelExplosionRange / 2f, TargetSelector.DamageType.Physical);
 
             if (config.Item("useqLHH", true).GetValue<bool>())
             {
@@ -548,7 +549,8 @@ namespace UnderratedAIO.Champions
         private void Combo(List<Obj_AI_Minion> barrels, bool shouldAAbarrel, bool Qmana)
         {
             var target = TargetSelector.GetTarget(
-                1650, TargetSelector.DamageType.Physical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
+                E.Range + BarrelExplosionRange / 2f, TargetSelector.DamageType.Physical, true,
+                HeroManager.Enemies.Where(h => h.IsInvulnerable));
             if (target == null)
             {
                 return;
@@ -757,7 +759,7 @@ namespace UnderratedAIO.Champions
                             !p.IsWall() && p.Distance(barrel) < BarrelConnectionRange &&
                             p.Distance(player.Position) < E.Range &&
                             barrels.Count(b => b.Distance(p) < BarrelExplosionRange) == 0 &&
-                            targetPred.CastPosition.Distance(p) < BarrelExplosionRange &&
+                            targetPred.UnitPosition.Distance(p) < BarrelExplosionRange &&
                             target.Distance(p) < BarrelExplosionRange)
                     .OrderByDescending(p => enemies.Count(e => e.Distance(p) < BarrelExplosionRange))
                     .ThenBy(p => p.Distance(targetPred.CastPosition))
