@@ -92,7 +92,7 @@ namespace RandomUlt.Helpers
                     config.AddItem(new MenuItem("Backdamage", "Count second hit")).SetValue(true);
                     config.AddItem(new MenuItem("CallBack", "Reduce time between hits")).SetValue(true);
                 }
-                config.AddItem(new MenuItem("Hitchance", "Hitchance")).SetValue(new Slider(3, 1, 5));
+                config.AddItem(new MenuItem("Hitchance", "Hitchance")).SetValue(new Slider(2, 1, 5));
                 Menu DontUlt = new Menu("Don't Ult", "DontUltRandomUlt");
                 foreach (var e in HeroManager.Enemies)
                 {
