@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using Color = System.Drawing.Color;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using SharpDX.Direct3D9;
 using UnderratedAIO.Helpers;
+using UnderratedAIO.Properties;
 using Environment = UnderratedAIO.Helpers.Environment;
 using Orbwalking = UnderratedAIO.Helpers.Orbwalking;
 
@@ -27,6 +31,7 @@ namespace UnderratedAIO.Champions
         public double[] Rwave = new double[] { 50, 70, 90 };
         public double[] EDamage = new double[] { 60, 90, 120, 150, 180 };
         public Obj_AI_Minion NeedToBeDestroyed;
+        private List<Render.Sprite> ExclamationMarks = new List<Render.Sprite>();
 
         public Gangplank()
         {
@@ -41,6 +46,15 @@ namespace UnderratedAIO.Champions
             GameObject.OnCreate += GameObjectOnOnCreate;
             GameObject.OnDelete += GameObject_OnDelete;
             Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+            for (int i = 0; i < 6; i++)
+            {
+                var mark = new Render.Sprite(Resources.Exclamation_small_r, new Vector2(0, 0))
+                {
+                    Color = new ColorBGRA(255f, 255f, 255f, 0.8f)
+                };
+                mark.Add(i);
+                ExclamationMarks.Add(mark);
+            }
         }
 
         private void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
@@ -702,7 +716,8 @@ namespace UnderratedAIO.Champions
                             ? Orbwalking.GetRealAutoAttackRange(b) +
                               (CombatHelper.IsFacing(player, b.Position) ? moveDist : 0f)
                             : Q.Range) && KillableBarrel(b, isMelee, 265));
-            var secondaryBarrels = barrels.Select(b => b.Position).Concat(castedBarrels.Select(c => c.pos));
+            var secondaryBarrels =
+                barrels.Select(b => b.Position).Concat(castedBarrels.Where(c => c.pos.IsValid()).Select(c => c.pos));
             var meleeDelay = isMelee ? 0.25f : 0;
             if (moveDist > 0f)
             {
@@ -759,7 +774,7 @@ namespace UnderratedAIO.Champions
                             !p.IsWall() && p.Distance(barrel) < BarrelConnectionRange &&
                             p.Distance(player.Position) < E.Range &&
                             barrels.Count(b => b.Distance(p) < BarrelExplosionRange) == 0 &&
-                            targetPred.UnitPosition.Distance(p) < BarrelExplosionRange &&
+                            targetPred.CastPosition.Distance(p) < BarrelExplosionRange / 2f &&
                             target.Distance(p) < BarrelExplosionRange)
                     .OrderByDescending(p => enemies.Count(e => e.Distance(p) < BarrelExplosionRange))
                     .ThenBy(p => p.Distance(targetPred.CastPosition))
@@ -795,7 +810,10 @@ namespace UnderratedAIO.Champions
 
         private Vector3 GetEPos(List<Obj_AI_Minion> barrels, Obj_AI_Hero target, bool isMelee)
         {
-            var barrelPositions = barrels.Select(b => b.Position).Concat(castedBarrels.Select(c => c.pos)).ToList();
+            var barrelPositions =
+                barrels.Select(b => b.Position)
+                    .Concat(castedBarrels.Where(c => c.pos.IsValid()).Select(c => c.pos))
+                    .ToList();
             var moveDist = config.Item("movetoBarrel", true).GetValue<bool>()
                 ? config.Item("movetoBarrelDist", true).GetValue<Slider>().Value
                 : 0;
@@ -1031,10 +1049,16 @@ namespace UnderratedAIO.Champions
                 }
             }
             catch (Exception) {}
+            foreach (var ex in ExclamationMarks)
+            {
+                ex.Hide();
+            }
             if (config.Item("drawWcd", true).GetValue<bool>())
             {
-                foreach (var barrelData in savedBarrels)
+                var bar = GetBarrels().OrderBy(b => b.Distance(player.Position)).Take(6);
+                for (int i = 0; i < bar.Count(); i++)
                 {
+                    var barrelData = savedBarrels[i];
                     float time =
                         Math.Min(
                             System.Environment.TickCount - barrelData.time -
@@ -1045,9 +1069,24 @@ namespace UnderratedAIO.Champions
                             barrelData.barrel.HPBarPosition.X - -20, barrelData.barrel.HPBarPosition.Y - 20,
                             Color.DarkOrange, string.Format("{0:0.00}", time).Replace("-", ""));
                     }
+                    try
+                    {
+                        var pos = Drawing.WorldToScreen(barrelData.barrel.Position);
+                        var percent = 1f - (Math.Abs(time) / (barrelData.barrel.Health * getEActivationDelay()));
+                        var diff = (Drawing.WorldToScreen(barrelData.barrel.Position).X - Drawing.Width / 2f) /
+                                   (Drawing.Width / 2f);
+                        ExclamationMarks[i].Position = new Vector2(pos.X - 25 + 10 * diff, pos.Y - 265);
+                        var orig = ExclamationMarks[i].Color;
+                        ExclamationMarks[i].Color = new ColorBGRA(
+                            orig.R, orig.G, orig.B, Math.Max(Math.Min(percent, 0.7f), 0.3f));
+                        ExclamationMarks[i].Show();
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Fail");
+                    }
                 }
             }
-
             if (config.Item("drawEmini", true).GetValue<bool>())
             {
                 try
