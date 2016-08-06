@@ -670,14 +670,24 @@ namespace UnderratedAIO.Champions
                 {
                     if (Orbwalking.GetRealAutoAttackRange(bestBarrelMelee) < player.Distance(bestBarrelMelee))
                     {
+                        if (orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo &&
+                            orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Mixed)
+                        {
+                            Orbwalking.Orbwalk(bestBarrelMelee, bestBarrelMelee.LeashedPosition);
+                        }
                         movingToBarrel = true;
                         orbwalker.SetOrbwalkingPoint(bestBarrelMelee.Position);
                         orbwalker.SetAttack(false);
                     }
                     else
                     {
-                        if (KillableBarrel(bestBarrelMelee, true) && Orbwalking.CanAttack())
+                        if (KillableBarrel(bestBarrelMelee, true))
                         {
+                            if (orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo &&
+                                orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Mixed)
+                            {
+                                Orbwalking.Orbwalk(bestBarrelMelee, bestBarrelMelee.LeashedPosition);
+                            }
                             orbwalker.ForceTarget(bestBarrelMelee);
                         }
                     }
