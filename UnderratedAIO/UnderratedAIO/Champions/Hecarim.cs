@@ -128,10 +128,6 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            foreach (var b in player.Buffs)
-            {
-                Console.WriteLine(b.Name);
-            }
             Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical, true);
             if (target == null)
             {
@@ -240,7 +236,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
