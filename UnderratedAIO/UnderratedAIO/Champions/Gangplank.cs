@@ -22,8 +22,8 @@ namespace UnderratedAIO.Champions
         public static AutoLeveler autoLeveler;
         public static Spell Q, W, E, R;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
-        public static bool justQ, justE, chain, blockedE, movingToBarrel;
-        public Vector3 ePos;
+        public static bool justQ, justE, chain, blockedE, movingToBarrel, comboWithMiddle;
+        public Vector3 ePos, thirdEpos;
         public const int BarrelExplosionRange = 325;
         public const int BarrelConnectionRange = 670;
         public List<Barrel> savedBarrels = new List<Barrel>();
@@ -157,7 +157,7 @@ namespace UnderratedAIO.Champions
 
         private void InitGangPlank()
         {
-            Q = new Spell(SpellSlot.Q, 590f); //2600f
+            Q = new Spell(SpellSlot.Q, 605f); //2600f
             Q.SetTargetted(0.25f, 2600f);
             W = new Spell(SpellSlot.W);
             E = new Spell(SpellSlot.E, 950);
@@ -188,6 +188,20 @@ namespace UnderratedAIO.Champions
                                   config.Item("comboPrior", true).GetValue<StringList>().SelectedIndex == 1 ||
                                   (Q.IsReady() && !QMana) || !config.Item("useq", true).GetValue<bool>());
 
+
+            if (thirdEpos.IsValid() && E.Instance.Ammo > 0)
+            {
+                orbwalker.SetAttack(false);
+                orbwalker.SetMovement(false);
+                player.IssueOrder(GameObjectOrder.HoldPosition, player.ServerPosition);
+                Console.WriteLine("Castolni kéne");
+                if (E.Cast(thirdEpos))
+                {
+                    Console.WriteLine("\tDone");
+                    //thirdEpos = Vector3.Zero;
+                }
+                return;
+            }
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -284,6 +298,7 @@ namespace UnderratedAIO.Champions
                                 player.IssueOrder(GameObjectOrder.Stop, player.Position);
                             }
                             Utility.DelayAction.Add(801, () => E.Cast(middle.Extend(cp, BarrelConnectionRange)));
+                            Utility.DelayAction.Add(650, () => Q.CastOnUnit(barrel));
                         }
                         else
                         {
@@ -312,7 +327,7 @@ namespace UnderratedAIO.Champions
                     Orbwalking.MoveTo(Game.CursorPos, 60);
                 }
             }
-            if (config.Item("QbarrelCursor", true).GetValue<KeyBind>().Active && Q.IsReady())
+            if (config.Item("QbarrelCursor", true).GetValue<KeyBind>().Active)
             {
                 var meleeRangeBarrel =
                     GetBarrels()
@@ -321,7 +336,7 @@ namespace UnderratedAIO.Champions
                             o =>
                                 o.Health > 1 && o.Distance(player) < Orbwalking.GetRealAutoAttackRange(o) &&
                                 !KillableBarrel(o, true, 265));
-                if (meleeRangeBarrel != null && Orbwalking.CanAttack())
+                if (meleeRangeBarrel != null && Orbwalking.CanAttack() && Q.IsReady())
                 {
                     orbwalker.ForceTarget(meleeRangeBarrel);
                     return;
@@ -335,15 +350,18 @@ namespace UnderratedAIO.Champions
                                 KillableBarrel(o))
                         .OrderBy(o => o.Distance(Game.CursorPos))
                         .FirstOrDefault();
-                if (barrel != null)
+                if (barrel != null && Q.IsReady())
                 {
                     Q.CastOnUnit(barrel);
+                }
+                else
+                {
+                    Orbwalking.MoveTo(Game.CursorPos, 80);
                 }
             }
             if (NeedToBeDestroyed != null && NeedToBeDestroyed.IsValidTarget() && Orbwalking.CanAttack() &&
                 NeedToBeDestroyed.IsInAttackRange())
             {
-                Console.WriteLine("NeedToBeDestroyed");
                 player.IssueOrder(GameObjectOrder.AttackUnit, NeedToBeDestroyed);
             }
             if (config.Item("AutoQBarrel", true).GetValue<bool>() && !movingToBarrel)
@@ -362,8 +380,9 @@ namespace UnderratedAIO.Champions
                 if (Q.IsReady())
                 {
                     foreach (var barrel in
-                        barrels.Where(b => KillableBarrel(b) && b.CountEnemiesInRange(BarrelExplosionRange) > 0))
+                        barrels.Where(b => KillableBarrel(b) && b.CountEnemiesInRange(BarrelExplosionRange - 25) > 0))
                     {
+                        Console.WriteLine("#1 : " + barrel.CountEnemiesInRange(BarrelExplosionRange));
                         Q.Cast(barrel);
                         return;
                     }
@@ -463,16 +482,27 @@ namespace UnderratedAIO.Champions
                 if (barrels.Any())
                 {
                     var bestEMelee = GetEPos(barrels, target, true);
+                    comboWithMiddle = false;
                     var bestEQ = GetEPos(barrels, target, false);
-                    if (bestEMelee.IsValid() && shouldAAbarrel)
+                    if (bestEMelee.Item1.IsValid() && shouldAAbarrel)
                     {
                         dontQ = true;
-                        E.Cast(bestEMelee);
+                        E.Cast(bestEMelee.Item1);
                     }
-                    else if (bestEQ.IsValid() && config.Item("useqH", true).GetValue<bool>() && Q.IsReady())
+                    else if (bestEQ.Item1.IsValid() && config.Item("useqH", true).GetValue<bool>() && Q.IsReady())
                     {
                         dontQ = true;
-                        E.Cast(bestEQ);
+                        if (comboWithMiddle && bestEQ.Item1.Distance(player.Position) < E.Range && E.IsReady() &&
+                            Q.CastOnUnit(barrels.FirstOrDefault(b => b.Position.Distance(bestEQ.Item2) < 10)))
+                        {
+                            Console.WriteLine("#2 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
+                            thirdEpos = bestEQ.Item1;
+                            Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
+                        }
+                        else
+                        {
+                            E.Cast(bestEQ.Item1);
+                        }
                     }
                 }
             }
@@ -616,16 +646,27 @@ namespace UnderratedAIO.Champions
                 if (barrels.Any())
                 {
                     var bestEMelee = GetEPos(barrels, target, true);
+                    comboWithMiddle = false;
                     var bestEQ = GetEPos(barrels, target, false);
-                    if (bestEMelee.IsValid() && shouldAAbarrel)
+                    if (bestEMelee.Item1.IsValid() && shouldAAbarrel)
                     {
                         dontQ = true;
-                        E.Cast(bestEMelee);
+                        E.Cast(bestEMelee.Item1);
                     }
-                    else if (bestEQ.IsValid() && config.Item("useq", true).GetValue<bool>() && Q.IsReady())
+                    else if (bestEQ.Item1.IsValid() && config.Item("useq", true).GetValue<bool>() && Q.IsReady())
                     {
                         dontQ = true;
-                        E.Cast(bestEQ);
+                        if (comboWithMiddle && bestEQ.Item1.Distance(player.Position) < E.Range && E.IsReady() &&
+                            Q.CastOnUnit(barrels.FirstOrDefault(b => b.Position.Distance(bestEQ.Item2) < 10)))
+                        {
+                            Console.WriteLine("#3 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
+                            thirdEpos = bestEQ.Item1;
+                            Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
+                        }
+                        else
+                        {
+                            E.Cast(bestEQ.Item1);
+                        }
                     }
                 }
             }
@@ -695,6 +736,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (bestBarrelQ != null && config.Item("useq", true).GetValue<bool>())
                 {
+                    Console.WriteLine("#4 : " + bestBarrelQ.CountEnemiesInRange(BarrelExplosionRange));
                     Q.CastOnUnit(bestBarrelQ);
                     return true;
                 }
@@ -702,9 +744,10 @@ namespace UnderratedAIO.Champions
             return false;
         }
 
-        private bool EnemiesInBarrelRange(Vector3 barrel, float delay)
+        private bool EnemiesInBarrelRange(Vector3 barrel, float delay, Obj_AI_Base target)
         {
-            if (
+            var pred = Prediction.GetPrediction(target, delay * 0.75f);
+            if (pred.UnitPosition.Distance(barrel) < BarrelExplosionRange &&
                 HeroManager.Enemies.Count(
                     enemy => enemy.IsValidTarget() && enemy.Distance(barrel) < BarrelExplosionRange) > 0)
             {
@@ -750,17 +793,17 @@ namespace UnderratedAIO.Champions
                                 second.Distance(b) < BarrelConnectionRange);
                     foreach (var third in thirdBarrels)
                     {
-                        if (EnemiesInBarrelRange(third, 1.25f - meleeDelay))
+                        if (EnemiesInBarrelRange(third, 1.25f - meleeDelay, target))
                         {
                             return melee;
                         }
                     }
-                    if (EnemiesInBarrelRange(second, 1f - meleeDelay))
+                    if (EnemiesInBarrelRange(second, 1f - meleeDelay, target))
                     {
                         return melee;
                     }
                 }
-                if (EnemiesInBarrelRange(melee.Position, 0.75f - meleeDelay))
+                if (EnemiesInBarrelRange(melee.Position, 0.75f - meleeDelay, target))
                 {
                     return melee;
                 }
@@ -818,7 +861,7 @@ namespace UnderratedAIO.Champions
             return pos;
         }
 
-        private Vector3 GetEPos(List<Obj_AI_Minion> barrels, Obj_AI_Hero target, bool isMelee)
+        private Tuple<Vector3, Vector3> GetEPos(List<Obj_AI_Minion> barrels, Obj_AI_Hero target, bool isMelee)
         {
             var barrelPositions =
                 barrels.Select(b => b.Position)
@@ -843,26 +886,27 @@ namespace UnderratedAIO.Champions
             foreach (var melee in barrelsInCloseRange)
             {
                 var secondPos = GetE(melee, target, 1.265f - meleeDelay, barrelPositions);
-                var middle = GetMiddleE(melee, target, 1.465f - meleeDelay, barrelPositions);
+                var middle = GetMiddleE(melee, target, 1.265f - meleeDelay, barrelPositions);
                 if (secondPos.IsValid())
                 {
-                    return secondPos;
+                    return new Tuple<Vector3, Vector3>(secondPos, melee);
                 }
                 var secondBarrels = barrelPositions.Where(b => melee.Distance(b) < BarrelConnectionRange).ToList();
                 foreach (var secondBarrel in secondBarrels)
                 {
                     var thirdE = GetE(secondBarrel, target, 1.265f - meleeDelay, barrelPositions);
-                    if (thirdE.IsValid())
+                    if (thirdE.IsValid() && config.Item("threeBarrel", true).GetValue<bool>())
                     {
-                        return thirdE;
+                        comboWithMiddle = true;
+                        return new Tuple<Vector3, Vector3>(thirdE, melee);
                     }
                 }
                 if (middle.IsValid())
                 {
-                    return middle;
+                    return new Tuple<Vector3, Vector3>(middle, melee);
                 }
             }
-            return Vector3.Zero;
+            return new Tuple<Vector3, Vector3>(Vector3.Zero, Vector3.Zero);
         }
 
 
@@ -1188,6 +1232,26 @@ namespace UnderratedAIO.Champions
                         justQ = true;
                         Utility.DelayAction.Add(200, () => justQ = false);
                     }
+
+                    var targetBarrel = GetBarrels().FirstOrDefault(b => b.Distance(args.End) < 10);
+                    if (targetBarrel != null && targetBarrel.Distance(player) > Q.Range * 0.985f)
+                    {
+                        var enemy =
+                            HeroManager.Enemies.Where(
+                                e => e.IsValidTarget() && !GetBarrels().Any(b => b.Distance(e) < BarrelExplosionRange))
+                                .OrderBy(e => e.Health)
+                                .FirstOrDefault();
+
+                        if (enemy != null && E.IsReady())
+                        {
+                            var pred = Prediction.GetPrediction(enemy, 0.55f).CastPosition;
+                            if (pred.Distance(player.Position) < E.Range)
+                            {
+                                thirdEpos = targetBarrel.Position.Extend(pred, BarrelConnectionRange);
+                                Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
+                            }
+                        }
+                    }
                 }
                 if (args.SData.Name == "GangplankE")
                 {
@@ -1229,7 +1293,7 @@ namespace UnderratedAIO.Champions
         {
             return
                 CombatHelper.PointsAroundTheTarget(point, BarrelConnectionRange, 15f)
-                    .Where(p => !p.IsWall() && p.Distance(point) > BarrelExplosionRange);
+                    .Where(p => !p.IsWall() && p.Distance(point) > BarrelExplosionRange * 0.75f);
         }
 
         private float getEActivationDelay()
@@ -1279,6 +1343,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("useq", "Use Q", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useqBlock", "   Block Q to save for EQ", true)).SetValue(false);
             menuC.AddItem(new MenuItem("detoneateTarget", "   Blow up target with E", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("threeBarrel", "   Use 3 barrel", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usew", "Use W under health", true)).SetValue(new Slider(20, 0, 100));
             menuC.AddItem(new MenuItem("AutoW", "Use W with QSS options", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useeAlways", "Use E always", true))
