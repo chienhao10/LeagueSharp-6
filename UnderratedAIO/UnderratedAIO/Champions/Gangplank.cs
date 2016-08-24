@@ -189,15 +189,15 @@ namespace UnderratedAIO.Champions
                                   (Q.IsReady() && !QMana) || !config.Item("useq", true).GetValue<bool>());
 
 
-            if (thirdEpos.IsValid() && E.Instance.Ammo > 0)
+            if (thirdEpos.IsValid() && GetAmmo() > 0)
             {
                 orbwalker.SetAttack(false);
                 orbwalker.SetMovement(false);
                 player.IssueOrder(GameObjectOrder.HoldPosition, player.ServerPosition);
-                Console.WriteLine("Castolni kéne");
+                //Console.WriteLine("Castolni kéne");
                 if (E.Cast(thirdEpos))
                 {
-                    Console.WriteLine("\tDone");
+                    //Console.WriteLine("\tDone");
                     //thirdEpos = Vector3.Zero;
                 }
                 return;
@@ -284,7 +284,7 @@ namespace UnderratedAIO.Champions
                         ? cursorPos.Extend(cp, BarrelConnectionRange)
                         : cp;
                     var middle = GetMiddleBarrel(barrel, points, cursorPos);
-                    var threeBarrel = cursorPos.Distance(cp) > BarrelExplosionRange && E.Instance.Ammo >= 2 &&
+                    var threeBarrel = cursorPos.Distance(cp) > BarrelExplosionRange && GetAmmo() >= 2 &&
                                       Game.CursorPos.Distance(player.Position) < E.Range && middle.IsValid();
                     var firsDelay = threeBarrel ? 500 : 265;
                     if (cursorPos.IsValid() && cursorPos.Distance(player.Position) < E.Range)
@@ -382,7 +382,7 @@ namespace UnderratedAIO.Champions
                     foreach (var barrel in
                         barrels.Where(b => KillableBarrel(b) && b.CountEnemiesInRange(BarrelExplosionRange - 25) > 0))
                     {
-                        Console.WriteLine("#1 : " + barrel.CountEnemiesInRange(BarrelExplosionRange));
+                        //Console.WriteLine("#1 : " + barrel.CountEnemiesInRange(BarrelExplosionRange));
                         Q.Cast(barrel);
                         return;
                     }
@@ -476,8 +476,8 @@ namespace UnderratedAIO.Champions
             }
 
             //Cast E to chain
-            if (E.IsReady() && E.Instance.Ammo > 0 && !justQ && !chain && config.Item("useeH", true).GetValue<bool>() &&
-                config.Item("eStacksH", true).GetValue<Slider>().Value < E.Instance.Ammo)
+            if (E.IsReady() && GetAmmo() > 0 && !justQ && !chain && config.Item("useeH", true).GetValue<bool>() &&
+                config.Item("eStacksH", true).GetValue<Slider>().Value < GetAmmo())
             {
                 if (barrels.Any())
                 {
@@ -495,7 +495,7 @@ namespace UnderratedAIO.Champions
                         if (comboWithMiddle && bestEQ.Item1.Distance(player.Position) < E.Range && E.IsReady() &&
                             Q.CastOnUnit(barrels.FirstOrDefault(b => b.Position.Distance(bestEQ.Item2) < 10)))
                         {
-                            Console.WriteLine("#2 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
+                            //Console.WriteLine("#2 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
                             thirdEpos = bestEQ.Item1;
                             Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
                         }
@@ -574,7 +574,7 @@ namespace UnderratedAIO.Champions
                 Lasthit();
             }
             if (config.Item("useeLC", true).GetValue<bool>() && E.IsReady() &&
-                config.Item("eStacksLC", true).GetValue<Slider>().Value < E.Instance.Ammo)
+                config.Item("eStacksLC", true).GetValue<Slider>().Value < GetAmmo())
             {
                 MinionManager.FarmLocation bestPositionE =
                     E.GetCircularFarmLocation(
@@ -640,7 +640,7 @@ namespace UnderratedAIO.Champions
             }
 
             //Cast E to chain
-            if (E.IsReady() && E.Instance.Ammo > 0 && !justQ && !chain &&
+            if (E.IsReady() && GetAmmo() > 0 && !justQ && !chain &&
                 config.Item("detoneateTarget", true).GetValue<bool>())
             {
                 if (barrels.Any())
@@ -659,7 +659,7 @@ namespace UnderratedAIO.Champions
                         if (comboWithMiddle && bestEQ.Item1.Distance(player.Position) < E.Range && E.IsReady() &&
                             Q.CastOnUnit(barrels.FirstOrDefault(b => b.Position.Distance(bestEQ.Item2) < 10)))
                         {
-                            Console.WriteLine("#3 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
+                            //Console.WriteLine("#3 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
                             thirdEpos = bestEQ.Item1;
                             Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
                         }
@@ -674,7 +674,7 @@ namespace UnderratedAIO.Champions
 
             if (config.Item("useeAlways", true).GetValue<bool>() && E.IsReady() && player.Distance(target) < E.Range &&
                 !justE && target.Health > Q.GetDamage(target) + player.GetAutoAttackDamage(target) &&
-                Orbwalking.CanMove(100) && config.Item("eStacksC", true).GetValue<Slider>().Value < E.Instance.Ammo)
+                Orbwalking.CanMove(100) && config.Item("eStacksC", true).GetValue<Slider>().Value < GetAmmo())
             {
                 CastE(target, barrels);
             }
@@ -684,7 +684,7 @@ namespace UnderratedAIO.Champions
                         o =>
                             o.Distance(player) < Q.Range &&
                             o.Distance(target) < BarrelConnectionRange + BarrelExplosionRange);
-            if (Qbarrelsb != null && E.Instance.Ammo > 0 && Q.IsReady() && target.Health > Q.GetDamage(target))
+            if (Qbarrelsb != null && GetAmmo() > 0 && Q.IsReady() && target.Health > Q.GetDamage(target))
             {
                 dontQ = true;
             }
@@ -736,7 +736,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (bestBarrelQ != null && config.Item("useq", true).GetValue<bool>())
                 {
-                    Console.WriteLine("#4 : " + bestBarrelQ.CountEnemiesInRange(BarrelExplosionRange));
+                    //Console.WriteLine("#4 : " + bestBarrelQ.CountEnemiesInRange(BarrelExplosionRange));
                     Q.CastOnUnit(bestBarrelQ);
                     return true;
                 }
@@ -837,7 +837,7 @@ namespace UnderratedAIO.Champions
 
         private Vector3 GetMiddleE(Vector3 barrel, Obj_AI_Hero target, float delay, List<Vector3> barrels)
         {
-            if (E.Instance.Ammo < 2)
+            if (GetAmmo() < 2)
             {
                 return Vector3.Zero;
             }
@@ -1062,11 +1062,7 @@ namespace UnderratedAIO.Champions
 
                     var barrel =
                         GetBarrels()
-                            .Where(
-                                o =>
-                                    o.IsValid && !o.IsDead && o.Distance(player) < Q.Range &&
-                                    o.SkinName == "GangplankBarrel" && o.GetBuff("gangplankebarrellife").Caster.IsMe &&
-                                    KillableBarrel(o))
+                            .Where(o => o.IsValid && !o.IsDead && o.Distance(player) < Q.Range && KillableBarrel(o))
                             .OrderBy(o => o.Distance(Game.CursorPos))
                             .FirstOrDefault();
                     if (barrel != null)
@@ -1079,7 +1075,7 @@ namespace UnderratedAIO.Champions
                             ? cursorPos.Extend(cp, BarrelConnectionRange)
                             : cp;
                         var middle = GetMiddleBarrel(barrel, points, cursorPos);
-                        var threeBarrel = cursorPos.Distance(cp) > BarrelExplosionRange && E.Instance.Ammo >= 2 &&
+                        var threeBarrel = cursorPos.Distance(cp) > BarrelExplosionRange && GetAmmo() >= 2 &&
                                           cursorPos2.Distance(player.Position) < E.Range && middle.IsValid();
                         if (threeBarrel)
                         {
@@ -1091,7 +1087,7 @@ namespace UnderratedAIO.Champions
                                 Drawing.WorldToScreen(middle.Extend(barrel.Position, BarrelExplosionRange)), 2,
                                 Color.DarkOrange);
                         }
-                        else if (E.Instance.Ammo >= 1)
+                        else if (GetAmmo() > 0)
                         {
                             Drawing.DrawLine(
                                 Drawing.WorldToScreen(barrel.Position),
@@ -1164,6 +1160,15 @@ namespace UnderratedAIO.Champions
                 }
                 catch (Exception) {}
             }
+        }
+
+        public int GetAmmo()
+        {
+            if (config.Item("AmmoFix", true).GetValue<Slider>().Value > 0)
+            {
+                return config.Item("AmmoFix", true).GetValue<Slider>().Value;
+            }
+            return E.Instance.Ammo;
         }
 
         public void drawText(int mode, string result)
@@ -1395,6 +1400,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("comboPrior", "   Combo priority", true))
                 .SetValue(new StringList(new[] { "E-Q", "E-AA", }, 0));
             menuM.AddItem(new MenuItem("barrelCorrection", "Barrel placement correction", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("AmmoFix", "Ammo fix 6.17", true)).SetValue(new Slider(1, 0, 3));
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
