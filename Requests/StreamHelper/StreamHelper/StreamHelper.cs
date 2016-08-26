@@ -12,10 +12,12 @@ namespace StreamHelper
     {
         private static Obj_AI_Hero _player = ObjectManager.Player;
         private static Vector3 _actPosition, _newPosition, _offsetPosition;
-        private static int _lastClickTime, _newClickTime, _movetoDisplay;
+        private static int _lastClickTime, _newClickTime, _movetoDisplay, _cursorPos;
         private static Random _rnd = new Random();
         private static Render.Sprite _cursorAttack, _cursorMove, _moveTo;
         private static Menu _menu;
+        private static float _cursorPosRef;
+        private static bool _idle;
 
         public StreamHelper()
         {
@@ -25,7 +27,6 @@ namespace StreamHelper
             Game.OnUpdate += Game_OnUpdate;
 
             _menu = new Menu("StreamHelper", "StreamHelper", true);
-
             Menu MoveTo = new Menu("Moveto Cursor", "Moveto");
             MoveTo.AddItem(new MenuItem("MovetoLasthit", "Lasthit"))
                 .SetValue(new KeyBind("X".ToCharArray()[0], KeyBindType.Press))
@@ -58,16 +59,19 @@ namespace StreamHelper
             _cursorMove = new Render.Sprite(
                 Properties.Resources.Normal, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
             _cursorMove.Add(0);
+            _cursorMove.Visible = false;
             _cursorMove.OnDraw();
 
             _moveTo = new Render.Sprite(
                 Properties.Resources.MoveTo, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
             _moveTo.Add(0);
+            _moveTo.Visible = false;
             _moveTo.OnDraw();
 
             _newPosition = Game.CursorPos;
             _actPosition = Game.CursorPos;
         }
+
 
         private bool MoveToCursorEnabled()
         {
@@ -100,6 +104,7 @@ namespace StreamHelper
 
         private void Game_OnUpdate(EventArgs args)
         {
+            _idle = false;
             if (!_menu.Item("Enabled").GetValue<bool>())
             {
                 _cursorAttack.Visible = false;
@@ -122,6 +127,7 @@ namespace StreamHelper
             var finalPos = _actPosition;
             if (!IsThereUnit(_newPosition))
             {
+                _idle = true;
                 _newPosition = Game.CursorPos;
             }
             MoveCursors(finalPos);
@@ -218,7 +224,7 @@ namespace StreamHelper
 
         private void MoveCursors(Vector3 pos)
         {
-            if (MenuGUI.IsShopOpen)
+            if (MenuGUI.IsShopOpen || (_idle && Environment.TickCount - _lastClickTime > 1600))
             {
                 _cursorMove.Position = Utils.GetCursorPos();
                 _cursorAttack.Position = Utils.GetCursorPos();
@@ -287,9 +293,12 @@ namespace StreamHelper
                 pos = closerPos;
                 distance = (int) _player.Distance(pos);
             }
+            pos = new Vector3(
+                pos.X + _rnd.Next(-50, 50),
+                pos.Y + (HeroManager.Enemies.Any(e => e.Distance(pos) < 130) ? 130 : _rnd.Next(10, 50)), pos.Z);
 
             var between = _player.Position.Extend(pos, distance / 2);
-            var offRad = distance / 2;
+            var offRad = Math.Max(distance / 2, 100);
             var off = new Vector3(
                 between.X + _rnd.Next(-offRad, offRad), between.Y + +_rnd.Next(-offRad, offRad), between.Z);
 
@@ -297,7 +306,6 @@ namespace StreamHelper
             {
                 off = Vector3.Zero;
             }
-
             _lastClickTime = _newClickTime;
             _newPosition = pos;
             _offsetPosition = off;
