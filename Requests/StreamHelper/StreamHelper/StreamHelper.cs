@@ -224,7 +224,9 @@ namespace StreamHelper
 
         private void MoveCursors(Vector3 pos)
         {
-            if (MenuGUI.IsShopOpen || (_idle && Environment.TickCount - _lastClickTime > 1600))
+            if (MenuGUI.IsShopOpen ||
+                (_idle && Environment.TickCount - _lastClickTime > 1600) &&
+                Utils.GetCursorPos().Distance(new Vector2((Drawing.Width / 2), (Drawing.Height / 2))) > 40)
             {
                 _cursorMove.Position = Utils.GetCursorPos();
                 _cursorAttack.Position = Utils.GetCursorPos();
