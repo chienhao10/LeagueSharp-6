@@ -15,7 +15,7 @@ namespace UnderratedAIO.Helpers.SkillShot
 
         internal static event OnDeleteMissileH OnDeleteMissile;
 
-        internal delegate void OnDeleteMissileH(Skillshot skillshot, Obj_SpellMissile missile);
+        internal delegate void OnDeleteMissileH(Skillshot skillshot, MissileClient missile);
 
         internal delegate void OnDetectSkillshotH(Skillshot skillshot);
 
@@ -309,12 +309,12 @@ namespace UnderratedAIO.Helpers.SkillShot
 
         private static void DebugSpellMissileOnCreate(GameObject sender, EventArgs args)
         {
-            if (!sender.IsValid<Obj_SpellMissile>())
+            if (!sender.IsValid<MissileClient>())
             {
                 return;
             }
 
-            var missile = (Obj_SpellMissile) sender;
+            var missile = (MissileClient) sender;
 
             if (missile.SpellCaster.IsValid<Obj_AI_Hero>())
             {
@@ -327,12 +327,12 @@ namespace UnderratedAIO.Helpers.SkillShot
 
         private static void DebugSpellMissileOnDelete(GameObject sender, EventArgs args)
         {
-            if (!sender.IsValid<Obj_SpellMissile>())
+            if (!sender.IsValid<MissileClient>())
             {
                 return;
             }
 
-            var missile = (Obj_SpellMissile) sender;
+            var missile = (MissileClient) sender;
 
             if (missile.SpellCaster.IsValid<Obj_AI_Hero>())
             {
@@ -369,12 +369,12 @@ namespace UnderratedAIO.Helpers.SkillShot
 
         private static void SpellMissileOnCreate(GameObject sender, EventArgs args)
         {
-            if (!sender.IsValid<Obj_SpellMissile>())
+            if (!sender.IsValid<MissileClient>())
             {
                 return; // only valid missile
             }
 
-            var missile = (Obj_SpellMissile) sender;
+            var missile = (MissileClient) sender;
             var unit = missile.SpellCaster;
 
             if (!unit.IsValid<Obj_AI_Hero>())
@@ -424,12 +424,12 @@ namespace UnderratedAIO.Helpers.SkillShot
                 return; // no subscriptions
             }
 
-            if (!sender.IsValid<Obj_SpellMissile>())
+            if (!sender.IsValid<MissileClient>())
             {
                 return; // only valid missile
             }
 
-            var missile = (Obj_SpellMissile) sender;
+            var missile = (MissileClient) sender;
             var unit = missile.SpellCaster;
 
             if (!unit.IsValid<Obj_AI_Hero>())
