@@ -187,11 +187,9 @@ namespace StreamHelper
                 HeroManager.Enemies.FirstOrDefault(h => h.IsValidTarget() && h.Distance(pos) < h.BoundingRadius + 50);
             var minionUnderCursor =
                 MinionManager.GetMinions(pos, 600, MinionTypes.All, MinionTeam.NotAlly)
-                    .FirstOrDefault(m => m.IsValidTarget() && m.Distance(pos) < m.BoundingRadius + 50);
-            var obj =
-                ObjectManager.Get<Obj_AI_Base>()
-                    .FirstOrDefault(m => m.IsValidTarget() && m.Distance(pos) < m.BoundingRadius + 50);
-            return obj != null;
+                    .Count(m => m.IsValidTarget() && m.Distance(pos) < m.BoundingRadius + 50);
+            var obj = ObjectManager.Get<Obj_AI_Turret>().Count(m => !m.IsAlly && m.Distance(pos) < 120 && m.Health > 0);
+            return obj + minionUnderCursor > 0;
         }
 
         private bool IsThereUnitPlayer()
