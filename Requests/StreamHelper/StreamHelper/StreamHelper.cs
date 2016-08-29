@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Net.NetworkInformation;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using StreamHelper.Properties;
 using Color = System.Drawing.Color;
 
 namespace StreamHelper
@@ -14,7 +17,7 @@ namespace StreamHelper
         private static Vector3 _actPosition, _newPosition, _offsetPosition;
         private static int _lastClickTime, _newClickTime, _movetoDisplay, _cursorPos;
         private static Random _rnd = new Random();
-        private static Render.Sprite _cursorAttack, _cursorMove, _moveTo;
+        private static List<CursorSprite> _cursors = new List<CursorSprite>();
         private static Menu _menu;
         private static float _cursorPosRef;
         private static bool _idle;
@@ -49,24 +52,14 @@ namespace StreamHelper
             _menu.AddItem(new MenuItem("Enabled", "Enabled")).SetValue(true);
             _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(150, 90, 250));
             _menu.AddItem(new MenuItem("Linear", "Linear cursor speed")).SetValue(false);
+            _menu.AddItem(new MenuItem("Colorblind", "Colorblind mode")).SetValue(false);
             _menu.AddToMainMenu();
-            _cursorAttack = new Render.Sprite(
-                Properties.Resources.Attack, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
-            _cursorAttack.Add(0);
-            _cursorAttack.Visible = false;
-            _cursorAttack.OnDraw();
 
-            _cursorMove = new Render.Sprite(
-                Properties.Resources.Normal, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
-            _cursorMove.Add(0);
-            _cursorMove.Visible = false;
-            _cursorMove.OnDraw();
-
-            _moveTo = new Render.Sprite(
-                Properties.Resources.MoveTo, new Vector2((Drawing.Width / 2), (Drawing.Height / 2)));
-            _moveTo.Add(0);
-            _moveTo.Visible = false;
-            _moveTo.OnDraw();
+            _cursors.Add(new CursorSprite(Cursors.Attack, Resources.Attack, Resources.Attack_CB));
+            _cursors.Add(new CursorSprite(Cursors.Normal, Resources.Normal));
+            _cursors.Add(new CursorSprite(Cursors.MoveTo, Resources.MoveTo, Resources.MoveTo_CB));
+            _cursors.Add(new CursorSprite(Cursors.Shop, Resources.Shop));
+            _cursors.Add(new CursorSprite(Cursors.Turret, Resources.Turret));
 
             _newPosition = Game.CursorPos;
             _actPosition = Game.CursorPos;
@@ -105,10 +98,10 @@ namespace StreamHelper
         private void Game_OnUpdate(EventArgs args)
         {
             _idle = false;
+            var currentCursor = Cursors.Normal;
             if (!_menu.Item("Enabled").GetValue<bool>())
             {
-                _cursorAttack.Visible = false;
-                _cursorMove.Visible = false;
+                SetCursorType(Cursors.None);
                 return;
             }
             if (_offsetPosition.IsValid() && _offsetPosition.Distance(_newPosition) < Speed(100))
@@ -137,23 +130,54 @@ namespace StreamHelper
             }
             if (IsThereUnit(finalPos))
             {
-                _cursorAttack.Visible = true;
-                _cursorMove.Visible = false;
-                _moveTo.Visible = false;
+                currentCursor = Cursors.Attack;
             }
             else if (MoveToCursorEnabled() && Game.CursorPos.Distance(_newPosition) < 50 &&
                      Game.CursorPos.Distance(_actPosition) < 150 && Game.CursorPos.Distance(_actPosition) > 50 &&
                      _movetoDisplay - Environment.TickCount <= 150)
             {
-                _cursorAttack.Visible = false;
-                _cursorMove.Visible = false;
-                _moveTo.Visible = true;
+                currentCursor = Cursors.MoveTo;
             }
             else
             {
-                _cursorAttack.Visible = false;
-                _cursorMove.Visible = true;
-                _moveTo.Visible = false;
+                currentCursor = Cursors.Normal;
+            }
+            if (!(CursorAtMiddle && !GameCursorAtMiddle))
+            {
+                currentCursor = Cursors.None;
+            }
+            if (IsThereShop(_actPosition))
+            {
+                currentCursor = Cursors.Shop;
+            }
+            if (IsThereAllyTurret(_actPosition))
+            {
+                currentCursor = Cursors.Turret;
+            }
+
+            SetCursorType(currentCursor);
+        }
+
+        private void SetCursorType(Cursors currentCursor)
+        {
+            foreach (var cursor in _cursors)
+            {
+                if (cursor.Type == currentCursor)
+                {
+                    cursor.Enabled(true, _menu.Item("Colorblind").GetValue<bool>());
+                }
+                else
+                {
+                    cursor.Enabled(false, _menu.Item("Colorblind").GetValue<bool>());
+                }
+            }
+        }
+
+        private void SetCursorPos(Vector2 pos)
+        {
+            foreach (var cursor in _cursors)
+            {
+                cursor.SetPosition(pos);
             }
         }
 
@@ -181,6 +205,20 @@ namespace StreamHelper
                 ObjectManager.Get<Obj_AI_Base>()
                     .FirstOrDefault(m => m.IsValidTarget() && m.Distance(_player.Position) < 1000);
             return obj != null;
+        }
+
+        public static bool IsThereShop(Vector3 position)
+        {
+            var shop = ObjectHandler.Get<Obj_Shop>().FirstOrDefault(o => o.Position.Distance(position) < 300);
+            return ObjectManager.Player.InShop() && shop != null && !MenuGUI.IsShopOpen;
+        }
+
+        public static bool IsThereAllyTurret(Vector3 position)
+        {
+            var allyTurret =
+                ObjectManager.Get<Obj_AI_Turret>()
+                    .FirstOrDefault(o => o.IsAlly && o.Distance(position) < 120 && o.Health > 0);
+            return allyTurret != null;
         }
 
         private void SetActPos()
@@ -224,19 +262,28 @@ namespace StreamHelper
 
         private void MoveCursors(Vector3 pos)
         {
-            if (MenuGUI.IsShopOpen ||
-                (_idle && Environment.TickCount - _lastClickTime > 1600) &&
-                Utils.GetCursorPos().Distance(new Vector2((Drawing.Width / 2), (Drawing.Height / 2))) > 40)
+            if (MenuGUI.IsShopOpen || (_idle && Environment.TickCount - _lastClickTime > 1600 && CursorAtMiddle))
             {
-                _cursorMove.Position = Utils.GetCursorPos();
-                _cursorAttack.Position = Utils.GetCursorPos();
-                _moveTo.Position = Utils.GetCursorPos();
+                SetCursorPos(Utils.GetCursorPos());
             }
             else
             {
-                _cursorMove.Position = Drawing.WorldToScreen(pos);
-                _cursorAttack.Position = Drawing.WorldToScreen(pos);
-                _moveTo.Position = Drawing.WorldToScreen(pos);
+                SetCursorPos(Drawing.WorldToScreen(pos));
+            }
+        }
+
+        private bool CursorAtMiddle
+        {
+            get { return Utils.GetCursorPos().Distance(new Vector2((Drawing.Width / 2), (Drawing.Height / 2))) > 60; }
+        }
+
+        private bool GameCursorAtMiddle
+        {
+            get
+            {
+                return
+                    Drawing.WorldToScreen(Game.CursorPos)
+                        .Distance(new Vector2((Drawing.Width / 2), (Drawing.Height / 2))) < 60;
             }
         }
 
@@ -292,6 +339,7 @@ namespace StreamHelper
             var closerPos = _player.Position.Extend(pos, _rnd.Next(300, 600));
             if (distance > 300 && isSpell && !hasTarget)
             {
+                Console.WriteLine("Reduced cucc");
                 pos = closerPos;
                 distance = (int) _player.Distance(pos);
             }
