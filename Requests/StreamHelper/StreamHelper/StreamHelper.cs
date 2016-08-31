@@ -150,11 +150,10 @@ namespace StreamHelper
             {
                 currentCursor = Cursors.Shop;
             }
-            if (IsThereAllyTurret(_actPosition))
+            if (IsThereAlly(_actPosition))
             {
                 currentCursor = Cursors.Turret;
             }
-
             SetCursorType(currentCursor);
         }
 
@@ -207,16 +206,16 @@ namespace StreamHelper
 
         public static bool IsThereShop(Vector3 position)
         {
-            var shop = ObjectHandler.Get<Obj_Shop>().FirstOrDefault(o => o.Position.Distance(position) < 300);
+            var shop = ObjectManager.Get<Obj_Shop>().FirstOrDefault(o => o.Position.Distance(position) < 300);
             return ObjectManager.Player.InShop() && shop != null && !MenuGUI.IsShopOpen;
         }
 
-        public static bool IsThereAllyTurret(Vector3 position)
+        public static bool IsThereAlly(Vector3 position)
         {
             var allyTurret =
-                ObjectManager.Get<Obj_AI_Turret>()
-                    .FirstOrDefault(o => o.IsAlly && o.Distance(position) < 120 && o.Health > 0);
-            return allyTurret != null;
+                ObjectManager.Get<Obj_AI_Turret>().Count(o => o.IsAlly && o.Distance(position) < 120 && o.Health > 0);
+            var ally = HeroManager.Allies.Count(m => m.Distance(position) < 120 && m.Health > 0);
+            return allyTurret + ally > 0;
         }
 
         private void SetActPos()
@@ -337,9 +336,9 @@ namespace StreamHelper
             var closerPos = _player.Position.Extend(pos, _rnd.Next(300, 600));
             if (distance > 300 && isSpell && !hasTarget)
             {
-                Console.WriteLine("Reduced cucc");
-                pos = closerPos;
-                distance = (int) _player.Distance(pos);
+                //Console.WriteLine("Reduced cucc");
+                //pos = closerPos;
+                //distance = (int) _player.Distance(pos);
             }
             pos = new Vector3(
                 pos.X + _rnd.Next(-50, 50),
@@ -352,6 +351,7 @@ namespace StreamHelper
 
             if (pos.Distance(Game.CursorPos) < 100)
             {
+                //Console.WriteLine("Null");
                 off = Vector3.Zero;
             }
             _lastClickTime = _newClickTime;
