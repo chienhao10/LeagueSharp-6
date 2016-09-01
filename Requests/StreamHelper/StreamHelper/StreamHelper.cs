@@ -14,13 +14,14 @@ namespace StreamHelper
     internal class StreamHelper
     {
         private static Obj_AI_Hero _player = ObjectManager.Player;
-        private static Vector3 _actPosition, _newPosition, _offsetPosition;
+        private static Vector3 _actPosition, _newPosition, _offsetPosition, _dbg;
         private static int _lastClickTime, _newClickTime, _movetoDisplay, _cursorPos;
         private static Random _rnd = new Random();
         private static List<CursorSprite> _cursors = new List<CursorSprite>();
         private static Menu _menu;
-        private static float _cursorPosRef;
+        private static float _cursorPosRef, _speed;
         private static bool _idle;
+        private static Vector3 _lastTargetPos;
 
         public StreamHelper()
         {
@@ -50,7 +51,7 @@ namespace StreamHelper
 
             _menu.AddItem(new MenuItem("Debug", "Debug")).SetValue(false);
             _menu.AddItem(new MenuItem("Enabled", "Enabled")).SetValue(true);
-            _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(150, 90, 250));
+            _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(70, 60, 250));
             _menu.AddItem(new MenuItem("Linear", "Linear cursor speed")).SetValue(false);
             _menu.AddItem(new MenuItem("Colorblind", "Colorblind mode")).SetValue(false);
             _menu.AddToMainMenu();
@@ -63,6 +64,7 @@ namespace StreamHelper
 
             _newPosition = Game.CursorPos;
             _actPosition = Game.CursorPos;
+            _speed = 200;
         }
 
 
@@ -104,17 +106,26 @@ namespace StreamHelper
                 SetCursorType(Cursors.None);
                 return;
             }
-            if (_offsetPosition.IsValid() && _offsetPosition.Distance(_newPosition) < Speed(100))
+            if (_offsetPosition.IsValid() && _offsetPosition.Distance(_newPosition) < 70)
             {
                 _offsetPosition = Vector3.Zero;
             }
             else if (_offsetPosition.IsValid())
             {
-                _offsetPosition = _offsetPosition.Extend(_newPosition, Speed(_offsetPosition.Distance(_newPosition)));
+                var s = _speed;
+                if (_offsetPosition.Distance(_newPosition) < s)
+                {
+                    s = _offsetPosition.Distance(_newPosition) / 2;
+                }
+                _offsetPosition = _offsetPosition.Extend(_newPosition, s);
             }
             else
             {
                 _offsetPosition = Vector3.Zero;
+            }
+            if (_newPosition == Game.CursorPos)
+            {
+                _lastTargetPos = Vector3.Zero;
             }
             SetActPos();
             var finalPos = _actPosition;
@@ -182,13 +193,17 @@ namespace StreamHelper
 
         private bool IsThereUnit(Vector3 pos)
         {
-            var heroesUnderCursor =
-                HeroManager.Enemies.FirstOrDefault(h => h.IsValidTarget() && h.Distance(pos) < h.BoundingRadius + 50);
-            var minionUnderCursor =
-                MinionManager.GetMinions(pos, 600, MinionTypes.All, MinionTeam.NotAlly)
-                    .Count(m => m.IsValidTarget() && m.Distance(pos) < m.BoundingRadius + 50);
-            var obj = ObjectManager.Get<Obj_AI_Turret>().Count(m => !m.IsAlly && m.Distance(pos) < 120 && m.Health > 0);
-            return obj + minionUnderCursor > 0;
+            if (_lastTargetPos.IsValid() && _lastTargetPos.Distance(_newPosition) < 150)
+            {
+                return true;
+            }
+            var obj =
+                ObjectManager.Get<Obj_AI_Base>()
+                    .Count(
+                        m =>
+                            !m.IsAlly && m.Distance(pos) < Math.Max(200, m.MoveSpeed / 2) && m.IsValidTarget() &&
+                            m.Health > 0);
+            return obj > 0;
         }
 
         private bool IsThereUnitPlayer()
@@ -214,7 +229,7 @@ namespace StreamHelper
         {
             var allyTurret =
                 ObjectManager.Get<Obj_AI_Turret>().Count(o => o.IsAlly && o.Distance(position) < 120 && o.Health > 0);
-            var ally = HeroManager.Allies.Count(m => m.Distance(position) < 120 && m.Health > 0);
+            var ally = HeroManager.Allies.Count(m => m.Distance(position) < 120 && !m.IsMe && m.Health > 0);
             return allyTurret + ally > 0;
         }
 
@@ -232,10 +247,15 @@ namespace StreamHelper
                 return;
             }
             var l = _actPosition.Distance(_newPosition);
-            var dSpeed = Speed(l);
+            var dSpeed = _speed;
+            if (_actPosition.Distance(_newPosition) < dSpeed)
+            {
+                dSpeed = _actPosition.Distance(_newPosition) / 2;
+            }
             if (l < 70)
             {
                 _actPosition = _newPosition;
+                return;
             }
             _actPosition = _actPosition.Extend(_offsetPosition.IsValid() ? _offsetPosition : _newPosition, dSpeed);
         }
@@ -300,7 +320,15 @@ namespace StreamHelper
             }
             if (_offsetPosition.IsValid())
             {
-                Render.Circle.DrawCircle(_offsetPosition, 70, Color.Blue, 7);
+                Render.Circle.DrawCircle(_offsetPosition, 80, Color.Blue, 7);
+            }
+            if (_dbg.IsValid())
+            {
+                Render.Circle.DrawCircle(_dbg, 80, Color.DarkCyan, 7);
+            }
+            if (_lastTargetPos.IsValid())
+            {
+                Render.Circle.DrawCircle(_lastTargetPos, 50, Color.Violet, 7);
             }
         }
 
@@ -313,7 +341,7 @@ namespace StreamHelper
                 {
                     return;
                 }
-                SetNewPos(args.End, !args.SData.IsAutoAttack(), (IsThereUnit(args.End) || (args.Target != null)));
+                SetNewPos(args.End, !args.SData.IsAutoAttack(), (args.Target != null || IsThereUnit(args.End)));
             }
         }
 
@@ -325,7 +353,7 @@ namespace StreamHelper
             }
         }
 
-        private void SetNewPos(Vector3 pos, bool isSpell = false, bool hasTarget = false)
+        private void SetNewPos(Vector3 pos, bool isSpell, bool target)
         {
             var distance = (int) _player.Distance(pos);
             // HoldPosition
@@ -334,7 +362,7 @@ namespace StreamHelper
                 return;
             }
             var closerPos = _player.Position.Extend(pos, _rnd.Next(300, 600));
-            if (distance > 300 && isSpell && !hasTarget)
+            if (distance > 300 && isSpell && !target)
             {
                 //Console.WriteLine("Reduced cucc");
                 //pos = closerPos;
@@ -344,7 +372,7 @@ namespace StreamHelper
                 pos.X + _rnd.Next(-50, 50),
                 pos.Y + (HeroManager.Enemies.Any(e => e.Distance(pos) < 130) ? 130 : _rnd.Next(10, 50)), pos.Z);
 
-            var between = _player.Position.Extend(pos, distance / 2);
+            var between = Game.CursorPos.Extend(pos, distance / 2f);
             var offRad = Math.Max(distance / 2, 100);
             var off = new Vector3(
                 between.X + _rnd.Next(-offRad, offRad), between.Y + +_rnd.Next(-offRad, offRad), between.Z);
@@ -357,7 +385,11 @@ namespace StreamHelper
             _lastClickTime = _newClickTime;
             _newPosition = pos;
             _offsetPosition = off;
+            _dbg = off;
             _newClickTime = Environment.TickCount;
+            _lastTargetPos = pos;
+            _actPosition = Game.CursorPos;
+            _speed = Speed(Game.CursorPos.Distance(_newPosition));
         }
     }
 }
