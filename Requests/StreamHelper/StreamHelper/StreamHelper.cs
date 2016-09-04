@@ -19,7 +19,7 @@ namespace StreamHelper
         private static Random _rnd = new Random();
         private static List<CursorSprite> _cursors = new List<CursorSprite>();
         private static Menu _menu;
-        private static float _cursorPosRef, _speed;
+        private static float _cursorPosRef, _speed, _lastUpdate;
         private static bool _idle;
         private static Vector3 _lastTargetPos;
 
@@ -51,7 +51,7 @@ namespace StreamHelper
 
             _menu.AddItem(new MenuItem("Debug", "Debug")).SetValue(false);
             _menu.AddItem(new MenuItem("Enabled", "Enabled")).SetValue(true);
-            _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(70, 60, 250));
+            _menu.AddItem(new MenuItem("Speed", "Speed")).SetValue(new Slider(180, 60, 500));
             _menu.AddItem(new MenuItem("Linear", "Linear cursor speed")).SetValue(false);
             _menu.AddItem(new MenuItem("Colorblind", "Colorblind mode")).SetValue(false);
             _menu.AddToMainMenu();
@@ -99,6 +99,14 @@ namespace StreamHelper
 
         private void Game_OnUpdate(EventArgs args)
         {
+            if (Environment.TickCount - _lastUpdate > 17)
+            {
+                _lastUpdate = Environment.TickCount;
+            }
+            else
+            {
+                return;
+            }
             _idle = false;
             var currentCursor = Cursors.Normal;
             if (!_menu.Item("Enabled").GetValue<bool>())
@@ -123,7 +131,8 @@ namespace StreamHelper
             {
                 _offsetPosition = Vector3.Zero;
             }
-            if (_newPosition == Game.CursorPos)
+            if (_actPosition.Distance(Game.CursorPos) < 50 && _actPosition.Distance(_lastTargetPos) > 200 &&
+                _newPosition.Distance(Game.CursorPos) < 50)
             {
                 _lastTargetPos = Vector3.Zero;
             }
@@ -263,10 +272,10 @@ namespace StreamHelper
         private static float Speed(float l)
         {
             var speed = _menu.Item("Speed").GetValue<Slider>().Value;
-            var mod = 1f;
+            var mod = 2f;
             if (!_menu.Item("Linear").GetValue<bool>())
             {
-                mod = Math.Max((l / 150), 1);
+                mod = Math.Max((l / 250), 1);
             }
 
             var dSpeed = 35 * (speed / 100f) * mod;
