@@ -100,12 +100,18 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
+            var target = args.Target as Obj_AI_Base;
             if (args.Unit.IsMe && Q.IsReady() && orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear &&
-                config.Item("useqLC", true).GetValue<bool>() && !(args.Target is Obj_AI_Hero) &&
-                (args.Target.Health > 700))
+                config.Item("useqLC", true).GetValue<bool>() && !(target is Obj_AI_Hero) && (args.Target.Health > 700))
             {
                 Q.Cast();
-                player.IssueOrder(GameObjectOrder.AutoAttack, args.Target);
+                player.IssueOrder(GameObjectOrder.AutoAttack, target);
+            }
+
+            if (Q.IsReady() && target != null && config.Item("useqLH", true).GetValue<bool>() &&
+                target.Health < Q.GetDamage(target) + player.GetAutoAttackDamage(target))
+            {
+                Q.Cast();
             }
         }
 
@@ -194,7 +200,6 @@ namespace UnderratedAIO.Champions
                 var minis = MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly);
                 var ePos = E.GetCircularFarmLocation(minis, 300);
                 var poly = GetPoly(ePos.Position.To3D());
-                Console.WriteLine(minis.Count(m => poly.IsInside(m.Position)));
                 if (minis.Count(m => poly.IsInside(m.Position)) >= config.Item("useeMin", true).GetValue<Slider>().Value)
                 {
                     E.Cast(ePos.Position);
@@ -350,6 +355,7 @@ namespace UnderratedAIO.Champions
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = DrawHelper.AddMisc(menuM);
             menuM.AddItem(new MenuItem("autoWStun", "Auto W on stun", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("useqLH", "Use Q Lasthit", true)).SetValue(true);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();

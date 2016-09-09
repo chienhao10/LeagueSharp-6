@@ -374,8 +374,8 @@ namespace UnderratedAIO.Helpers
         /// <returns><c>true</c> if the name is an auto attack; otherwise, <c>false</c>.</returns>
         public static bool IsAutoAttack(string name)
         {
-            return (name.ToLower().Contains("attack") && !NoAttacks.Contains(name.ToLower())) ||
-                   Attacks.Contains(name.ToLower());
+            return (name.ToLower().Contains("attack") && !NoAttacks.Contains(name.ToLower()) &&
+                    !name.ToLower().Contains("ghoul")) || Attacks.Contains(name.ToLower());
         }
 
         /// <summary>
