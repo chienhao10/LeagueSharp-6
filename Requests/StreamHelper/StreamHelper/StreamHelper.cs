@@ -162,10 +162,11 @@ namespace StreamHelper
             {
                 currentCursor = Cursors.Normal;
             }
-            if (!(CursorAtMiddle && !GameCursorAtMiddle))
+            if ((!CursorAtMiddle && !GameCursorAtMiddle))
             {
                 currentCursor = Cursors.None;
             }
+
             if (IsThereShop(_actPosition))
             {
                 currentCursor = Cursors.Shop;
@@ -347,6 +348,10 @@ namespace StreamHelper
             {
                 if ((args.Target != null && args.Target.IsMe) ||
                     args.SData.TargettingType.ToString().ToLower().Contains("self"))
+                {
+                    return;
+                }
+                if (args.SData.IsAutoAttack() && args.SData.Name.ToLower().Contains("ghoul"))
                 {
                     return;
                 }
