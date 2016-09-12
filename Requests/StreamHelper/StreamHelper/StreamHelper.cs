@@ -99,7 +99,7 @@ namespace StreamHelper
 
         private void Game_OnUpdate(EventArgs args)
         {
-            if (Environment.TickCount - _lastUpdate > 17)
+            if (Environment.TickCount - _lastUpdate > 12)
             {
                 _lastUpdate = Environment.TickCount;
             }
@@ -258,9 +258,9 @@ namespace StreamHelper
             }
             var l = _actPosition.Distance(_newPosition);
             var dSpeed = _speed;
-            if (_actPosition.Distance(_newPosition) < dSpeed)
+            if (l < dSpeed)
             {
-                dSpeed = _actPosition.Distance(_newPosition) / 2;
+                dSpeed = l / 2;
             }
             if (l < 70)
             {
