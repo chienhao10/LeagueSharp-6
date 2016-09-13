@@ -267,6 +267,23 @@ namespace UnderratedAIO.Champions
             {
                 R.Cast();
             }
+            if (config.Item("collectBlobsC", true).GetValue<bool>() && !E.IsCharging)
+            {
+                var blob =
+                    ObjectManager.Get<Obj_AI_Base>()
+                        .Where(
+                            o =>
+                                !o.IsDead && o.IsValid && o.Name == "BlobDrop" && o.Team == player.Team &&
+                                o.Distance(player) < Orbwalking.GetRealAutoAttackRange(player))
+                        .OrderBy(o => o.Distance(player))
+                        .FirstOrDefault();
+                if (blob != null && Orbwalking.CanMove(300) && !Orbwalking.CanAttack() && !player.IsWindingUp)
+                {
+                    orbwalker.SetMovement(false);
+                    Orbwalking.Move = false;
+                    player.IssueOrder(GameObjectOrder.MoveTo, blob.Position);
+                }
+            }
         }
 
         private void CastE(Obj_AI_Base target)
@@ -377,6 +394,16 @@ namespace UnderratedAIO.Champions
             {
                 //Render.Circle.DrawCircle(pos, 100, Color.Aqua, 7);
             }
+            if (config.Item("drawblobs", true).GetValue<bool>())
+            {
+                var blobs =
+                    ObjectManager.Get<Obj_AI_Base>()
+                        .Where(o => !o.IsDead && o.IsValid && o.Name == "BlobDrop" && o.Team == player.Team);
+                foreach (var b in blobs)
+                {
+                    Render.Circle.DrawCircle(b.Position, 150, Color.GreenYellow, 7);
+                }
+            }
         }
 
         private static float ComboDamage(Obj_AI_Hero hero)
@@ -429,6 +456,7 @@ namespace UnderratedAIO.Champions
                 .SetValue(new Circle(false, Color.FromArgb(180, 100, 146, 166)));
             menuD.AddItem(new MenuItem("drawrr", "Draw R range", true))
                 .SetValue(new Circle(false, Color.FromArgb(180, 100, 146, 166)));
+            menuD.AddItem(new MenuItem("drawblobs", "Draw blobs", true)).SetValue(false);
             menuD.AddItem(new MenuItem("drawcombo", "Draw combo damage", true)).SetValue(true);
             config.AddSubMenu(menuD);
             // Combo Settings
@@ -439,6 +467,7 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("Emin", "   E min range", true)).SetValue(new Slider(300, 0, 1550));
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
             menuC.AddItem(new MenuItem("Rmin", "   R min", true)).SetValue(new Slider(2, 1, 5));
+            menuC.AddItem(new MenuItem("collectBlobsC", "Collect nearby blobs", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite", true)).SetValue(true);
             menuC = ItemHandler.addItemOptons(menuC);
             config.AddSubMenu(menuC);
@@ -461,7 +490,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Cast R to interrupt spells", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
