@@ -99,56 +99,8 @@ namespace StreamHelper
 
         private void Game_OnUpdate(EventArgs args)
         {
-            if (Environment.TickCount - _lastUpdate > 12)
-            {
-                _lastUpdate = Environment.TickCount;
-            }
-            else
-            {
-                return;
-            }
-            _idle = false;
             var currentCursor = Cursors.Normal;
-            if (!_menu.Item("Enabled").GetValue<bool>())
-            {
-                SetCursorType(Cursors.None);
-                return;
-            }
-            if (_offsetPosition.IsValid() && _offsetPosition.Distance(_newPosition) < 70)
-            {
-                _offsetPosition = Vector3.Zero;
-            }
-            else if (_offsetPosition.IsValid())
-            {
-                var s = _speed;
-                if (_offsetPosition.Distance(_newPosition) < s)
-                {
-                    s = _offsetPosition.Distance(_newPosition) / 2;
-                }
-                _offsetPosition = _offsetPosition.Extend(_newPosition, s);
-            }
-            else
-            {
-                _offsetPosition = Vector3.Zero;
-            }
-            if (_actPosition.Distance(Game.CursorPos) < 50 && _actPosition.Distance(_lastTargetPos) > 200 &&
-                _newPosition.Distance(Game.CursorPos) < 50)
-            {
-                _lastTargetPos = Vector3.Zero;
-            }
-            SetActPos();
-            var finalPos = _actPosition;
-            if (!IsThereUnit(_newPosition))
-            {
-                _idle = true;
-                _newPosition = Game.CursorPos;
-            }
-            MoveCursors(finalPos);
-            if (_actPosition.Distance(_newPosition) < 1)
-            {
-                _movetoDisplay = Environment.TickCount + 150;
-            }
-            if (IsThereUnit(finalPos))
+            if (IsThereUnit(_actPosition))
             {
                 currentCursor = Cursors.Attack;
             }
@@ -176,6 +128,54 @@ namespace StreamHelper
                 currentCursor = Cursors.Turret;
             }
             SetCursorType(currentCursor);
+            if (!_menu.Item("Enabled").GetValue<bool>())
+            {
+                SetCursorType(Cursors.None);
+                return;
+            }
+            if (Environment.TickCount - _lastUpdate > 12 || (!IsThereUnit(_newPosition) && !_lastTargetPos.IsValid()))
+            {
+                _lastUpdate = Environment.TickCount;
+            }
+            else
+            {
+                return;
+            }
+            _idle = false;
+            if (_offsetPosition.IsValid() && _offsetPosition.Distance(_newPosition) < 70)
+            {
+                _offsetPosition = Vector3.Zero;
+            }
+            else if (_offsetPosition.IsValid())
+            {
+                var s = _speed;
+                if (_offsetPosition.Distance(_newPosition) < s)
+                {
+                    s = _offsetPosition.Distance(_newPosition) / 2;
+                }
+                _offsetPosition = _offsetPosition.Extend(_newPosition, s);
+            }
+            else
+            {
+                _offsetPosition = Vector3.Zero;
+            }
+            if (_actPosition.Distance(Game.CursorPos) < 50 && _actPosition.Distance(_lastTargetPos) > 200 &&
+                _newPosition.Distance(Game.CursorPos) < 50)
+            {
+                _lastTargetPos = Vector3.Zero;
+            }
+            SetActPos();
+            var finalPos = _actPosition;
+            if (!IsThereUnit(_newPosition) && !_lastTargetPos.IsValid())
+            {
+                _idle = true;
+                _newPosition = Game.CursorPos;
+            }
+            MoveCursors(finalPos);
+            if (_actPosition.Distance(_newPosition) < 1)
+            {
+                _movetoDisplay = Environment.TickCount + 150;
+            }
         }
 
         private void SetCursorType(Cursors currentCursor)
