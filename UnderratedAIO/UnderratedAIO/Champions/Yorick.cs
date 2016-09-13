@@ -17,9 +17,10 @@ namespace UnderratedAIO.Champions
         private static Orbwalking.Orbwalker orbwalker;
         public static readonly Obj_AI_Hero player = ObjectManager.Player;
         public static Spell Q, W, E, R;
-        public static bool hasGhost = false;
+        public static bool justE, hasGhost = false;
         public static int LastAATick;
         public static AutoLeveler autoLeveler;
+        public List<Obj_AI_Base> souls = new List<Obj_AI_Base>();
 
         public Yorick()
         {
@@ -31,8 +32,49 @@ namespace UnderratedAIO.Champions
             Orbwalking.AfterAttack += AfterAttack;
             Orbwalking.BeforeAttack += beforeAttack;
             Drawing.OnDraw += Game_OnDraw;
+            Obj_AI_Base.OnCreate += Obj_AI_Base_OnCreate;
+            Obj_AI_Base.OnDelete += Obj_AI_Base_OnDelete;
+            Obj_AI_Base.OnProcessSpellCast += Game_ProcessSpell;
             HpBarDamageIndicator.DamageToUnit = ComboDamage;
+            foreach (var obj in
+                ObjectManager.Get<Obj_AI_Base>().Where(o => o.IsAlly && o.Name.ToLower().Contains("yorickmarker")))
+            {
+                souls.Add(obj);
+            }
         }
+
+        private void Game_ProcessSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (sender.IsMe)
+            {
+                if (args.Slot == SpellSlot.E)
+                {
+                    if (!justE)
+                    {
+                        justE = true;
+                        Utility.DelayAction.Add(
+                            (int) (player.Position.Distance(args.End) / E.Speed + E.Delay), () => justE = false);
+                    }
+                }
+            }
+        }
+
+        void Obj_AI_Base_OnCreate(GameObject sender, EventArgs args)
+        {
+            if (sender.IsAlly && sender.Name.ToLower().Contains("yorickmarker"))
+            {
+                souls.Add(sender as Obj_AI_Base);
+            }
+        }
+
+        void Obj_AI_Base_OnDelete(GameObject sender, EventArgs args)
+        {
+            if (sender.IsAlly && sender.Name.ToLower().Contains("yorickmarker"))
+            {
+                souls.Remove(sender as Obj_AI_Base);
+            }
+        }
+
 
         private void Game_OnGameUpdate(EventArgs args)
         {
@@ -40,6 +82,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
+            souls.RemoveAll(b => !b.IsValid);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -62,6 +105,8 @@ namespace UnderratedAIO.Champions
                     HeroManager.Enemies.Where(
                         hero =>
                             W.CanCast(hero) &&
+                            (!config.Item("autoWStunOnlyNearAlly", true).GetValue<bool>() ||
+                             HeroManager.Allies.Count(a => a.Distance(hero) < 700) > 0) &&
                             (hero.HasBuffOfType(BuffType.Snare) || hero.HasBuffOfType(BuffType.Stun) ||
                              hero.HasBuffOfType(BuffType.Taunt) || hero.HasBuffOfType(BuffType.Suppression)))
                         .OrderByDescending(hero => TargetSelector.GetPriority(hero))
@@ -109,7 +154,7 @@ namespace UnderratedAIO.Champions
             }
 
             if (Q.IsReady() && target != null && config.Item("useqLH", true).GetValue<bool>() &&
-                target.Health < Q.GetDamage(target) + player.GetAutoAttackDamage(target))
+                target.Health < Q.GetDamage(target) + player.GetAutoAttackDamage(target, true))
             {
                 Q.Cast();
             }
@@ -129,7 +174,9 @@ namespace UnderratedAIO.Champions
             }
             bool hasIgnite = player.Spellbook.CanUseSpell(player.GetSpellSlot("SummonerDot")) == SpellState.Ready;
             var wPred = W.GetPrediction(target);
-            if (config.Item("usew", true).GetValue<bool>() && W.CanCast(target) && wPred.Hitchance >= HitChance.High)
+            if (config.Item("usew", true).GetValue<bool>() && W.CanCast(target) &&
+                (wPred.Hitchance >= HitChance.High || target.HasBuffOfType(BuffType.Slow)) &&
+                (!config.Item("usee", true).GetValue<bool>() || (!E.IsReady() && !justE)))
             {
                 W.Cast(wPred.CastPosition);
             }
@@ -161,6 +208,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
+            LastHitQ();
             Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
@@ -174,6 +222,34 @@ namespace UnderratedAIO.Champions
             if (Q.IsReady() && config.Item("useq2H", true).GetValue<bool>() && CanQ2)
             {
                 Q.Cast();
+            }
+        }
+
+        private void LastHitQ()
+        {
+            if (!config.Item("useqLH", true).GetValue<bool>() || CanQ2)
+            {
+                return;
+            }
+            var targ =
+                MinionManager.GetMinions(E.Range, MinionTypes.All, MinionTeam.NotAlly)
+                    .FirstOrDefault(
+                        o =>
+                            o.IsInAttackRange(50) && o.IsValidTarget() &&
+                            HealthPrediction.GetHealthPrediction(o, 600) <
+                            Q.GetDamage(o) + player.GetAutoAttackDamage(o, true));
+
+            if (targ != null)
+            {
+                if (Q.IsReady())
+                {
+                    Q.Cast();
+                    Orbwalking.ResetAutoAttackTimer();
+                }
+                else if (targ.Health < Q.GetDamage(targ) + player.GetAutoAttackDamage(targ, true))
+                {
+                    orbwalker.ForceTarget(targ);
+                }
             }
         }
 
@@ -205,23 +281,7 @@ namespace UnderratedAIO.Champions
                     E.Cast(ePos.Position);
                 }
             }
-            if (config.Item("useqLC", true).GetValue<bool>() && Q.IsReady() && !CanQ2)
-            {
-                var targetQ =
-                    MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly)
-                        .Where(
-                            i =>
-                                (i.Health < Damage.GetSpellDamage(player, i, SpellSlot.Q) &&
-                                 !(i.Health < player.GetAutoAttackDamage(i))))
-                        .OrderByDescending(i => i.Health)
-                        .FirstOrDefault();
-                if (targetQ == null)
-                {
-                    return;
-                }
-                Q.Cast();
-                player.IssueOrder(GameObjectOrder.AutoAttack, targetQ);
-            }
+            LastHitQ();
         }
 
         private void Game_OnDraw(EventArgs args)
@@ -333,8 +393,8 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("usew", "Use W", true)).SetValue(true);
             menuC.AddItem(new MenuItem("usee", "Use E", true)).SetValue(true);
             menuC.AddItem(new MenuItem("user", "Use R", true)).SetValue(true);
-            menuC.AddItem(new MenuItem("userHp", "Under enemy health%", true)).SetValue(new Slider(50, 1, 100));
-            menuC.AddItem(new MenuItem("useronlyMelee", "Only in melee range", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("userHp", "   Under enemy health%", true)).SetValue(new Slider(50, 1, 100));
+            menuC.AddItem(new MenuItem("useronlyMelee", "   Only in melee range", true)).SetValue(true);
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite")).SetValue(true);
             menuC = ItemHandler.addItemOptons(menuC);
             config.AddSubMenu(menuC);
@@ -355,6 +415,7 @@ namespace UnderratedAIO.Champions
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = DrawHelper.AddMisc(menuM);
             menuM.AddItem(new MenuItem("autoWStun", "Auto W on stun", true)).SetValue(true);
+            menuM.AddItem(new MenuItem("autoWStunOnlyNearAlly", "   Only near ally", true)).SetValue(true);
             menuM.AddItem(new MenuItem("useqLH", "Use Q Lasthit", true)).SetValue(true);
             config.AddSubMenu(menuM);
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));

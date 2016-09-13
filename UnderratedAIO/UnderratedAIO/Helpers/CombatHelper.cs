@@ -785,8 +785,8 @@ namespace UnderratedAIO.Helpers
         public static List<BuffData> BuffsList = new List<BuffData>()
         {
             new BuffData("Twitch", "deadlyvenom", SpellSlot.Unknown, 6),
-            new BuffData("Teemo", "toxicshotparticle", SpellSlot.Unknown, 4),
-            new BuffData("Mordekaiser", "MordekaiserChildrenOfTheGrave", SpellSlot.Unknown, 10),
+            new BuffData("Teemo", "toxicshotparticle", SpellSlot.E, 4),
+            new BuffData("Mordekaiser", "MordekaiserChildrenOfTheGrave", SpellSlot.R, 10),
             new BuffData("Darius", "dariushemo", SpellSlot.Unknown, 5),
             new BuffData("Brand", "brandablaze", SpellSlot.Unknown, 4),
             new BuffData("-", "summonerdot", SpellSlot.Unknown, 5),
@@ -955,13 +955,13 @@ namespace UnderratedAIO.Helpers
 
     internal static class Obj_AI_BaseExt
     {
-        public static bool IsInAttackRange(this Obj_AI_Base target)
+        public static bool IsInAttackRange(this Obj_AI_Base target, int bonusTange = 0)
         {
             if (target == null)
             {
                 return false;
             }
-            return Orbwalking.GetRealAutoAttackRange(target) < ObjectManager.Player.Distance(target);
+            return Orbwalking.GetRealAutoAttackRange(target) > ObjectManager.Player.Distance(target) + bonusTange;
         }
     }
 }
