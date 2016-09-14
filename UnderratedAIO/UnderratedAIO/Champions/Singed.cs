@@ -78,8 +78,7 @@ namespace UnderratedAIO.Champions
                     600, () =>
                     {
                         forcedPos = Vector3.Zero;
-                        E.CastOnUnit(
-                            HeroManager.Enemies.FirstOrDefault(h => h.NetworkId == sender.NetworkId));
+                        E.CastOnUnit(HeroManager.Enemies.FirstOrDefault(h => h.NetworkId == sender.NetworkId));
                     });
             }
         }
@@ -234,7 +233,7 @@ namespace UnderratedAIO.Champions
 
         private void Throw()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -258,7 +257,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(200, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(200, TargetSelector.DamageType.Magical);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc || target == null)
             {
@@ -320,7 +319,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -448,7 +447,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawww", true).GetValue<Circle>(), W.Range);
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             HpBarDamageIndicator.Enabled = config.Item("drawcombo", true).GetValue<bool>();
-            Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target != null && config.Item("targCircle", true).GetValue<Circle>().Active)
             {
                 Render.Circle.DrawCircle(
@@ -548,7 +547,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("DontOffQ", "Do not turn off Q", true)).SetValue(false);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

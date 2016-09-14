@@ -150,6 +150,7 @@ namespace UnderratedAIO.Champions
                 config.Item("useqLC", true).GetValue<bool>() && !(target is Obj_AI_Hero) && (args.Target.Health > 700))
             {
                 Q.Cast();
+                Orbwalking.ResetAutoAttackTimer();
                 player.IssueOrder(GameObjectOrder.AutoAttack, target);
             }
 
@@ -157,12 +158,13 @@ namespace UnderratedAIO.Champions
                 target.Health < Q.GetDamage(target) + player.GetAutoAttackDamage(target, true))
             {
                 Q.Cast();
+                Orbwalking.ResetAutoAttackTimer();
             }
         }
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1500, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;
@@ -209,7 +211,7 @@ namespace UnderratedAIO.Champions
         private void Harass()
         {
             LastHitQ();
-            Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -256,7 +258,7 @@ namespace UnderratedAIO.Champions
         private void CastE(Obj_AI_Hero target)
         {
             var pred = E.GetPrediction(target);
-            var poly = GetPoly(pred.UnitPosition);
+            //var poly = GetPoly(pred.UnitPosition);
             if (pred.Hitchance >= HitChance.High && pred.CastPosition.Distance(player.Position) < 700)
             {
                 E.Cast(pred.CastPosition);

@@ -56,7 +56,7 @@ namespace UnderratedAIO.Helpers
                         .Any(
                             minion =>
                                 HealthPrediction.GetHealthPrediction(minion, 3000) <=
-                                Damage.GetAutoAttackDamage(player, minion, false));
+                                Damage.GetAutoAttackDamage(player, minion, true));
             }
         }
 

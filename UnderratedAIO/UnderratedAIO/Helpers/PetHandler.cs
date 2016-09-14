@@ -137,7 +137,7 @@ namespace UnderratedAIO.Helpers
                 switch (targetMode)
                 {
                     case 0:
-                        gtarget = TargetSelector.GetTarget(range, TargetSelector.DamageType.Magical);
+                        gtarget = DrawHelper.GetBetterTarget(range, TargetSelector.DamageType.Magical);
                         break;
                     case 1:
                         gtarget =

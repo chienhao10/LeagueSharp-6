@@ -194,10 +194,10 @@ namespace UnderratedAIO.Champions
                 orbwalker.SetAttack(false);
                 orbwalker.SetMovement(false);
                 player.IssueOrder(GameObjectOrder.HoldPosition, player.ServerPosition);
-                //Console.WriteLine("Castolni kéne");
+                Console.WriteLine("Castolni kéne");
                 if (E.Cast(thirdEpos))
                 {
-                    //Console.WriteLine("\tDone");
+                    Console.WriteLine("\tDone");
                     //thirdEpos = Vector3.Zero;
                 }
                 return;
@@ -366,7 +366,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("AutoQBarrel", true).GetValue<bool>() && !movingToBarrel)
             {
-                var target = TargetSelector.GetTarget(
+                var target = DrawHelper.GetBetterTarget(
                     E.Range + BarrelExplosionRange / 2f, TargetSelector.DamageType.Physical, true,
                     HeroManager.Enemies.Where(h => h.IsInvulnerable));
                 if (target != null && BlowUpBarrel(barrels, shouldAAbarrel, false, target))
@@ -382,7 +382,7 @@ namespace UnderratedAIO.Champions
                     foreach (var barrel in
                         barrels.Where(b => KillableBarrel(b) && b.CountEnemiesInRange(BarrelExplosionRange - 25) > 0))
                     {
-                        //Console.WriteLine("#1 : " + barrel.CountEnemiesInRange(BarrelExplosionRange));
+                        Console.WriteLine("#1 : " + barrel.CountEnemiesInRange(BarrelExplosionRange));
                         Q.Cast(barrel);
                         return;
                     }
@@ -439,7 +439,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = TargetSelector.GetTarget(
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(
                 E.Range + BarrelExplosionRange / 2f, TargetSelector.DamageType.Physical);
 
             if (config.Item("useqLHH", true).GetValue<bool>())
@@ -495,7 +495,7 @@ namespace UnderratedAIO.Champions
                         if (comboWithMiddle && bestEQ.Item1.Distance(player.Position) < E.Range && E.IsReady() &&
                             Q.CastOnUnit(barrels.FirstOrDefault(b => b.Position.Distance(bestEQ.Item2) < 10)))
                         {
-                            //Console.WriteLine("#2 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
+                            Console.WriteLine("#2 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
                             thirdEpos = bestEQ.Item1;
                             Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
                         }
@@ -592,7 +592,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo(List<Obj_AI_Minion> barrels, bool shouldAAbarrel, bool Qmana)
         {
-            var target = TargetSelector.GetTarget(
+            var target = DrawHelper.GetBetterTarget(
                 E.Range + BarrelExplosionRange / 2f, TargetSelector.DamageType.Physical, true,
                 HeroManager.Enemies.Where(h => h.IsInvulnerable));
             if (target == null)
@@ -659,7 +659,7 @@ namespace UnderratedAIO.Champions
                         if (comboWithMiddle && bestEQ.Item1.Distance(player.Position) < E.Range && E.IsReady() &&
                             Q.CastOnUnit(barrels.FirstOrDefault(b => b.Position.Distance(bestEQ.Item2) < 10)))
                         {
-                            //Console.WriteLine("#3 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
+                            Console.WriteLine("#3 : " + bestEQ.Item1.CountEnemiesInRange(BarrelExplosionRange));
                             thirdEpos = bestEQ.Item1;
                             Utility.DelayAction.Add(500, () => thirdEpos = Vector3.Zero);
                         }
@@ -736,7 +736,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (bestBarrelQ != null && config.Item("useq", true).GetValue<bool>())
                 {
-                    //Console.WriteLine("#4 : " + bestBarrelQ.CountEnemiesInRange(BarrelExplosionRange));
+                    Console.WriteLine("#4 : " + bestBarrelQ.CountEnemiesInRange(BarrelExplosionRange));
                     Q.CastOnUnit(bestBarrelQ);
                     return true;
                 }

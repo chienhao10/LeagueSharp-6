@@ -80,7 +80,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1000, TargetSelector.DamageType.Physical, true);
             if (config.Item("useeH", true).GetValue<bool>() && E.CanCast(target) && E.IsReady() && !player.IsWindingUp &&
                 Orbwalking.CanMove(100))
             {
@@ -115,7 +115,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1000, TargetSelector.DamageType.Physical, true);
             if (target == null || target.IsInvulnerable || target.MagicImmune)
             {
                 return;

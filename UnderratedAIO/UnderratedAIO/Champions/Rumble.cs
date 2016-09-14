@@ -99,7 +99,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("castR", true).GetValue<KeyBind>().Active)
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(1700, TargetSelector.DamageType.Magical, true);
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(1700, TargetSelector.DamageType.Magical, true);
                 if (target != null)
                 {
                     HandleR(target, true);
@@ -110,7 +110,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1300, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1300, TargetSelector.DamageType.Magical, true);
             if (target == null || target.IsInvulnerable)
             {
                 return;
@@ -151,12 +151,12 @@ namespace UnderratedAIO.Champions
 
         private double getShield()
         {
-            return new double[] { 50, 80, 110, 140, 170 }[W.Level - 1] + 0.4f * player.AbilityPower();
+            return new double[] { 50, 80, 110, 140, 170 }[W.Level - 1] + 0.4f * player.TotalMagicalDamage;
         }
 
         private static float getRdamage(Obj_AI_Hero target)
         {
-            var dmg = new double[] { 130, 185, 240 }[R.Level - 1] + 0.3f * player.AbilityPower();
+            var dmg = new double[] { 130, 185, 240 }[R.Level - 1] + 0.3f * player.TotalMagicalDamage;
             return (float) dmg;
         }
 
@@ -212,7 +212,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1700, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1700, TargetSelector.DamageType.Magical, true);
             if (target == null || target.IsInvulnerable || target.MagicImmune)
             {
                 return;
@@ -382,8 +382,8 @@ namespace UnderratedAIO.Champions
             return
                 (float)
                     (Damage.CalcDamage(
-                        player, hero, Damage.DamageType.Magical, 20 + (5 * player.Level) + player.AbilityPower() * 0.3f) +
-                     player.GetAutoAttackDamage(hero));
+                        player, hero, Damage.DamageType.Magical,
+                        20 + (5 * player.Level) + player.TotalMagicalDamage * 0.3f) + player.GetAutoAttackDamage(hero));
         }
 
         private void Game_ProcessSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -474,7 +474,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

@@ -193,7 +193,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(900, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(900, TargetSelector.DamageType.Magical, true);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc || target == null)
             {
@@ -305,7 +305,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(900, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(900, TargetSelector.DamageType.Magical, true);
             if (target == null || target.IsInvulnerable || target.MagicImmune)
             {
                 return;

@@ -33,7 +33,7 @@ namespace UnderratedAIO.Champions
 
         private void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            Obj_AI_Hero t = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero t = DrawHelper.GetBetterTarget(1100, TargetSelector.DamageType.Physical, true);
             if (!unit.IsMe || !W.IsReady() || !target.IsValidTarget() || !target.IsEnemy)
             {
                 return;
@@ -172,7 +172,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1100, TargetSelector.DamageType.Physical, true);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc || target == null)
             {
@@ -226,7 +226,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1100, TargetSelector.DamageType.Physical, true);
             if (target == null || target.IsInvulnerable || target.MagicImmune)
             {
                 return;
@@ -419,7 +419,7 @@ namespace UnderratedAIO.Champions
 
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

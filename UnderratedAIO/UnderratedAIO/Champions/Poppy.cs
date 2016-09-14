@@ -48,7 +48,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero targetf = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero targetf = DrawHelper.GetBetterTarget(1000, TargetSelector.DamageType.Magical);
             if (config.Item("useeflashforced", true).GetValue<KeyBind>().Active)
             {
                 if (targetf == null)
@@ -119,7 +119,7 @@ namespace UnderratedAIO.Champions
 
         private static void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1000, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -148,8 +148,7 @@ namespace UnderratedAIO.Champions
                         CombatHelper.bestVectorToPoppyFlash(target).IsValid())
                     {
                         player.Spellbook.CastSpell(player.GetSpellSlot("SummonerFlash"), bestpos);
-                        Utility.DelayAction.Add(
-                            100, () => E.CastOnUnit(target));
+                        Utility.DelayAction.Add(100, () => E.CastOnUnit(target));
                     }
                     if (E.CanCast(target) &&
                         (CheckWalls(player, target) ||
@@ -275,7 +274,7 @@ namespace UnderratedAIO.Champions
 
         private static void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc || target == null)
             {
@@ -433,7 +432,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(menuME);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

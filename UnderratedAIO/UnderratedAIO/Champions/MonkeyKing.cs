@@ -135,7 +135,7 @@ namespace UnderratedAIO.Champions
         {
             if (rActive && Game.CursorPos.CountEnemiesInRange(300) > 1)
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(
                     E.Range, TargetSelector.DamageType.Physical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
                 if (target != null && target.CountEnemiesInRange(R.Range) > 1)
                 {
@@ -187,7 +187,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Magical);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc || target == null)
             {
@@ -224,7 +224,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(
                 E.Range, TargetSelector.DamageType.Physical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
             if (target == null)
             {
@@ -414,7 +414,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Cast R to interrupt spells", true)).SetValue(false);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

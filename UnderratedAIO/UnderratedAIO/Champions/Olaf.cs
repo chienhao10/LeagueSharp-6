@@ -166,7 +166,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Physical, true);
             if (config.Item("useeH", true).GetValue<bool>() && target != null && E.CanCast(target) &&
                 !player.IsWindingUp && Orbwalking.CanMove(100))
             {
@@ -189,7 +189,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Physical, true);
             if (player.IsWindingUp || target == null || !Orbwalking.CanMove(100))
             {
                 return;
@@ -339,7 +339,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

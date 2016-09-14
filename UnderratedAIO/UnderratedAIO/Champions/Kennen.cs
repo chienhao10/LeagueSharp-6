@@ -398,13 +398,13 @@ namespace UnderratedAIO.Champions
             switch (config.Item("DmgType", true).GetValue<StringList>().SelectedIndex)
             {
                 case 0:
-                    return TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+                    return DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
                     break;
                 case 1:
-                    return TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+                    return DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Physical);
                     break;
                 default:
-                    return TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+                    return DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
                     break;
             }
         }
@@ -485,7 +485,7 @@ namespace UnderratedAIO.Champions
 
             config.AddSubMenu(menuM);
             config.Item("KenAutoQ", true).Permashow(true, "Auto Q");
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

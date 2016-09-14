@@ -36,7 +36,7 @@ namespace UnderratedAIO.Champions
 
         private void Game_OnGameUpdate(EventArgs args)
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(
                 Q.Range + player.MoveSpeed * 3, TargetSelector.DamageType.Physical);
             if (ShacoStealth && target != null && target.Health > ComboDamage(target) &&
                 CombatHelper.IsFacing(target, player.Position) &&
@@ -156,8 +156,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (!CheckWalls(target) || Environment.Map.GetPath(player, target.Position) < dist)
                     {
-                        Q.Cast(
-                            player.Position.Extend(target.Position, Q.Range));
+                        Q.Cast(player.Position.Extend(target.Position, Q.Range));
                     }
                 }
             }
@@ -254,7 +253,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;
@@ -378,7 +377,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

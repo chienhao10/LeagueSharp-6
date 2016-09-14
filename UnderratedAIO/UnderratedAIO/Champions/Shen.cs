@@ -282,7 +282,7 @@ namespace UnderratedAIO.Champions
 
         private static void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
             if (target != null && Q.IsReady() && config.Item("harassq", true).GetValue<bool>() &&
                 Orbwalking.CanMove(100))
             {
@@ -293,7 +293,7 @@ namespace UnderratedAIO.Champions
         private static void Combo()
         {
             var minHit = config.Item("useemin", true).GetValue<Slider>().Value;
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range + 400, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range + 400, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -479,7 +479,7 @@ namespace UnderratedAIO.Champions
 
         private static void FlashCombo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(EFlash.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(EFlash.Range, TargetSelector.DamageType.Magical);
             if (target != null && E.IsReady() && E.ManaCost < player.Mana &&
                 player.Distance(target.Position) < EFlash.Range && player.Distance(target.Position) > 480 &&
                 !((getPosToEflash(target.Position)).IsWall()))
@@ -642,7 +642,7 @@ namespace UnderratedAIO.Champions
                 }
             }
             config.AddSubMenu(sulti);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

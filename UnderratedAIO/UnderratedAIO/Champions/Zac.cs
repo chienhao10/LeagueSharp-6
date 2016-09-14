@@ -111,7 +111,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
                 Q.CastIfHitchanceEquals(target, HitChance.Medium);
@@ -212,14 +212,14 @@ namespace UnderratedAIO.Champions
             Obj_AI_Hero target = null;
             if (E.IsCharging)
             {
-                target = TargetSelector.GetTarget(
+                target = DrawHelper.GetBetterTarget(
                     GetTargetRange(), TargetSelector.DamageType.Magical, true,
                     HeroManager.Enemies.Where(
                         h => h.IsInvulnerable && CombatHelper.GetAngle(player, target.Position) > 50));
             }
             else
             {
-                target = TargetSelector.GetTarget(
+                target = DrawHelper.GetBetterTarget(
                     GetTargetRange(), TargetSelector.DamageType.Magical, true,
                     HeroManager.Enemies.Where(h => h.IsInvulnerable));
             }

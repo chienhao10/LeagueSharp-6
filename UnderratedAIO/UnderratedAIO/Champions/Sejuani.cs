@@ -197,7 +197,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            var target = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+            var target = DrawHelper.GetBetterTarget(R.Range, TargetSelector.DamageType.Magical);
             if (config.Item("useRmin", true).GetValue<Slider>().Value == 1)
             {
                 if (target != null && !config.Item("ult" + target.SkinName, true).GetValue<bool>())
@@ -228,7 +228,7 @@ namespace UnderratedAIO.Champions
             Ulti();
             float perc = (float) config.Item("minmana", true).GetValue<Slider>().Value / 100f;
             var minHit = config.Item("useemin", true).GetValue<Slider>().Value;
-            Obj_AI_Hero target = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(R.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -388,7 +388,7 @@ namespace UnderratedAIO.Champions
                 sulti.AddItem(new MenuItem("ult" + hero.SkinName, hero.SkinName, true)).SetValue(false);
             }
             config.AddSubMenu(sulti);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddSubMenu(Program.SPredictionMenu);
             config.AddToMainMenu();

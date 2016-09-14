@@ -56,7 +56,7 @@ namespace UnderratedAIO.Helpers
 
         public static void UseItems(Obj_AI_Hero target, Menu config, float comboDmg = 0f, bool cleanseSpell = false)
         {
-            if (config.Item("hyd").GetValue<bool>() && player.BaseSkinName != "Renekton")
+            if (config.Item("hyd").GetValue<bool>() && player.ChampionName != "Renekton")
             {
                 castHydra(target);
             }

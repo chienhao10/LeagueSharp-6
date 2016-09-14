@@ -68,7 +68,7 @@ namespace UnderratedAIO.Champions
 
         private void AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            Obj_AI_Hero targetO = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero targetO = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Physical, true);
 
             if (unit != null && unit.IsMe && Q.IsReady() && target != null)
             {
@@ -219,7 +219,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Physical, true);
             if (player.IsWindingUp || target == null || !Orbwalking.CanMove(100))
             {
                 return;

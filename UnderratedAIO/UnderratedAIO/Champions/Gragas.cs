@@ -148,7 +148,7 @@ namespace UnderratedAIO.Champions
                 return;
             }
             orbwalker.SetAttack(true);
-            Obj_AI_Hero target = TargetSelector.GetTarget(1300, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1300, TargetSelector.DamageType.Magical, true);
             var combodmg = 0f;
             if (target != null)
             {
@@ -244,7 +244,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = TargetSelector.GetTarget(1300, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1300, TargetSelector.DamageType.Magical, true);
             if (target == null || target.IsInvulnerable)
             {
                 return;
@@ -358,7 +358,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo(float combodmg)
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1100, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1100, TargetSelector.DamageType.Magical, true);
             if (target == null || target.IsInvulnerable || target.MagicImmune)
             {
                 return;

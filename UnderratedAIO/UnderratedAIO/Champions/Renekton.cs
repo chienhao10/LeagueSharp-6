@@ -148,7 +148,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range * 2, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range * 2, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;
@@ -252,7 +252,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;

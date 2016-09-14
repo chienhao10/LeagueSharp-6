@@ -94,7 +94,7 @@ namespace UnderratedAIO.Champions
         {
             if (config.Item("autoe", true).GetValue<bool>() && E.IsReady())
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Magical);
                 if (E.CanCast(target) &&
                     (target.HasBuff("zhonyasringshield") || target.HasBuffOfType(BuffType.Snare) ||
                      target.HasBuffOfType(BuffType.Taunt) || target.HasBuffOfType(BuffType.Stun) ||
@@ -135,7 +135,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -152,7 +152,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 if (maoR)
@@ -216,7 +216,7 @@ namespace UnderratedAIO.Champions
             {
                 bool enoughEnemies = config.Item("user", true).GetValue<Slider>().Value <=
                                      player.CountEnemiesInRange(R.Range - 50);
-                Obj_AI_Hero targetR = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+                Obj_AI_Hero targetR = DrawHelper.GetBetterTarget(R.Range, TargetSelector.DamageType.Magical);
 
                 if (maoR && targetR != null &&
                     ((config.Item("rks", true).GetValue<bool>() &&
@@ -377,7 +377,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

@@ -240,7 +240,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(600, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(600, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 var t2 =
@@ -503,7 +503,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("Interrupt", "Use E to interupt", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

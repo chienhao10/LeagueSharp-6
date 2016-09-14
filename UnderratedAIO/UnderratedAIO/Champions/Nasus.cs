@@ -74,7 +74,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = TargetSelector.GetTarget(950, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(950, TargetSelector.DamageType.Physical);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -154,8 +154,7 @@ namespace UnderratedAIO.Champions
                         if (ePred.CastPosition.Distance(player.Position) < 925 &&
                             target.Distance(ePred.CastPosition) < 400)
                         {
-                            E.Cast(
-                                player.Position.Extend(target.Position, E.Range));
+                            E.Cast(player.Position.Extend(target.Position, E.Range));
                         }
                     }
                 }
@@ -231,8 +230,7 @@ namespace UnderratedAIO.Champions
                 {
                     if (ePred.CastPosition.Distance(player.Position) < 925 && target.Distance(ePred.CastPosition) < 400)
                     {
-                        E.Cast(
-                            player.Position.Extend(target.Position, E.Range));
+                        E.Cast(player.Position.Extend(target.Position, E.Range));
                     }
                 }
             }
@@ -344,7 +342,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

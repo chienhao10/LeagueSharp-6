@@ -139,7 +139,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1500, TargetSelector.DamageType.Physical, true);
             if (target == null || target.IsInvulnerable)
             {
                 return;
@@ -246,10 +246,10 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1500, TargetSelector.DamageType.Physical, true);
             if (config.Item("user", true).GetValue<bool>() && R.IsReady())
             {
-                var rTarget = TargetSelector.GetTarget(2500, TargetSelector.DamageType.Physical, true);
+                var rTarget = DrawHelper.GetBetterTarget(2500, TargetSelector.DamageType.Physical, true);
                 if (!activatedR && !player.IsWindingUp)
                 {
                     if (rTarget != null && !rTarget.IsInvulnerable && !rTarget.MagicImmune &&
@@ -548,7 +548,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

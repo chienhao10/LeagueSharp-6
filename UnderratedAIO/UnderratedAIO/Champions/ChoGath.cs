@@ -184,7 +184,7 @@ namespace UnderratedAIO.Champions
 
         private static void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
             if (config.Item("useqH", true).GetValue<bool>())
             {
                 if (target.IsValidTarget(Q.Range) && Q.IsReady())
@@ -207,7 +207,7 @@ namespace UnderratedAIO.Champions
 
         private static void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(1000, TargetSelector.DamageType.Magical);
             if (config.Item("usee", true).GetValue<bool>() && !VorpalSpikes && E.GetHitCount() > 0 &&
                 (Environment.Turret.countTurretsInRange(player) < 1 || target.Health < 150))
             {
@@ -458,7 +458,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("useFlashJ", "Use Flash+R to steal buffs", true)).SetValue(true);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

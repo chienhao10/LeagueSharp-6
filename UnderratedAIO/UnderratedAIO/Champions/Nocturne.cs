@@ -39,7 +39,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Physical);
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
@@ -60,7 +60,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(GetTargetRange(), TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(GetTargetRange(), TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;
@@ -70,7 +70,7 @@ namespace UnderratedAIO.Champions
             {
                 W.Cast();
             }
-            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
+            var eTarget = DrawHelper.GetBetterTarget(E.Range, TargetSelector.DamageType.Physical);
             var cmbdmg = ComboDamage(target) + ItemHandler.GetItemsDamage(target);
             if (config.Item("useItems").GetValue<bool>())
             {

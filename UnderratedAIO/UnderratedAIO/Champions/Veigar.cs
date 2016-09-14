@@ -149,7 +149,7 @@ namespace UnderratedAIO.Champions
             switch (orbwalker.ActiveMode)
             {
                 case Orbwalking.OrbwalkingMode.Combo:
-                    Obj_AI_Hero target = TargetSelector.GetTarget(
+                    Obj_AI_Hero target = DrawHelper.GetBetterTarget(
                         1000, TargetSelector.DamageType.Magical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
                     if (target != null)
                     {
@@ -219,7 +219,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useEkey", true).GetValue<KeyBind>().Active && E.IsReady())
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(
                     1000, TargetSelector.DamageType.Magical, true, HeroManager.Enemies.Where(h => h.IsInvulnerable));
                 if (target != null)
                 {
@@ -280,7 +280,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (config.Item("useqLHinHarass", true).GetValue<bool>())
             {
@@ -802,7 +802,7 @@ namespace UnderratedAIO.Champions
             menuM.AddSubMenu(menuKS);
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
             switch (config.Item("predType", true).GetValue<StringList>().SelectedIndex)

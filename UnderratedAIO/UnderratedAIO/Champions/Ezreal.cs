@@ -120,7 +120,7 @@ namespace UnderratedAIO.Champions
                 config.Item("EzminmanaaQ", true).GetValue<Slider>().Value < player.ManaPercent &&
                 orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo && Orbwalking.CanMove(100))
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (target != null && Q.CanCast(target) && target.IsValidTarget())
                 {
                     Q.CastIfHitchanceEquals(
@@ -131,7 +131,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Physical);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc)
             {
@@ -276,8 +276,7 @@ namespace UnderratedAIO.Champions
                 }
                 if (target.CountAlliesInRange(700) > 0)
                 {
-                    R.CastIfWillHit(
-                        target, config.Item("usertf", true).GetValue<Slider>().Value);
+                    R.CastIfWillHit(target, config.Item("usertf", true).GetValue<Slider>().Value);
                 }
             }
             bool canKill = cmbDmg > target.Health;
@@ -322,13 +321,13 @@ namespace UnderratedAIO.Champions
             switch (config.Item("DmgType", true).GetValue<StringList>().SelectedIndex)
             {
                 case 0:
-                    return TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
+                    return DrawHelper.GetBetterTarget(1500, TargetSelector.DamageType.Magical);
                     break;
                 case 1:
-                    return TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
+                    return DrawHelper.GetBetterTarget(1500, TargetSelector.DamageType.Physical);
                     break;
                 default:
-                    return TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
+                    return DrawHelper.GetBetterTarget(1500, TargetSelector.DamageType.Magical);
                     break;
             }
         }
@@ -541,7 +540,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
             config.Item("EzAutoQ", true).Permashow(true, "Auto Q");
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

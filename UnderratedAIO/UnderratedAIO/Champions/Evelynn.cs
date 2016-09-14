@@ -92,7 +92,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(R.Range, TargetSelector.DamageType.Magical);
             if (target == null)
             {
                 return;
@@ -276,7 +276,7 @@ namespace UnderratedAIO.Champions
             Menu menuM = new Menu("Misc ", "Msettings");
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

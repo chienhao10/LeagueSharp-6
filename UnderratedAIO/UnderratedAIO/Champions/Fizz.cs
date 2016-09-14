@@ -103,7 +103,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("castR", true).GetValue<KeyBind>().Active && R.IsReady())
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical, true);
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(R.Range, TargetSelector.DamageType.Magical, true);
                 if (target != null && R.CanCast(target))
                 {
                     CastR(target);
@@ -135,7 +135,7 @@ namespace UnderratedAIO.Champions
 
         private void Harass()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical, true);
             float perc = config.Item("minmanaH", true).GetValue<Slider>().Value / 100f;
             if (player.Mana < player.MaxMana * perc || target == null)
             {
@@ -206,7 +206,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical, true);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(R.Range, TargetSelector.DamageType.Magical, true);
             if (target == null || target.IsInvulnerable || target.MagicImmune)
             {
                 return;
@@ -405,7 +405,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }

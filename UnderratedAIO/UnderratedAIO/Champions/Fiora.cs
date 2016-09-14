@@ -119,7 +119,7 @@ namespace UnderratedAIO.Champions
             if (data != null && W.IsReady() && config.Item("autoW", true).GetValue<bool>() &&
                 config.Item("minmanaP", true).GetValue<Slider>().Value < player.ManaPercent)
             {
-                Obj_AI_Hero enemy = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero enemy = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Physical);
                 if (enemy != null && data.ProjectileDamageTaken >= enemy.GetAutoAttackDamage(player) - 5)
                 {
                     W.Cast(enemy);
@@ -180,7 +180,7 @@ namespace UnderratedAIO.Champions
             if (unit.IsMe)
             {
                 var pos = GetClosestPassivePosition(targetO);
-                Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Physical);
                 if (orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && targetO.NetworkId == target.NetworkId &&
                     R.IsReady() && R.CanCast(target) &&
                     HealthPrediction.GetHealthPrediction(target, 1000) > player.GetAutoAttackDamage(target) &&
@@ -222,7 +222,7 @@ namespace UnderratedAIO.Champions
 
         private void Combo()
         {
-            Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;
@@ -296,7 +296,7 @@ namespace UnderratedAIO.Champions
             {
                 return;
             }
-            Obj_AI_Hero targetW = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero targetW = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Physical);
             var spellName = args.SData.Name;
             Obj_AI_Hero target = args.Target as Obj_AI_Hero;
             if (targetW != null)
@@ -343,7 +343,7 @@ namespace UnderratedAIO.Champions
             DrawHelper.DrawCircle(config.Item("drawrr", true).GetValue<Circle>(), R.Range);
             HpBarDamageIndicator.Enabled = config.Item("drawcombo").GetValue<bool>();
             return;
-            Obj_AI_Hero target = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+            Obj_AI_Hero target = DrawHelper.GetBetterTarget(W.Range, TargetSelector.DamageType.Physical);
             if (target == null)
             {
                 return;
@@ -497,7 +497,7 @@ namespace UnderratedAIO.Champions
             menuM = DrawHelper.AddMisc(menuM);
 
             config.AddSubMenu(menuM);
-            
+
             config.AddItem(new MenuItem("UnderratedAIO", "by Soresu v" + Program.version.ToString().Replace(",", ".")));
             config.AddToMainMenu();
         }
