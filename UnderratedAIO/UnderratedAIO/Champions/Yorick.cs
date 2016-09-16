@@ -243,7 +243,7 @@ namespace UnderratedAIO.Champions
 
             if (targ != null)
             {
-                if (Q.IsReady())
+                if (Q.IsReady() && orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear)
                 {
                     Q.Cast();
                     Orbwalking.ResetAutoAttackTimer();
