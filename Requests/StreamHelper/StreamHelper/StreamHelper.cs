@@ -21,7 +21,7 @@ namespace StreamHelper
         private static Menu _menu;
         private static float _cursorPosRef, _speed, _lastUpdate;
         private static bool _idle;
-        private static Vector3 _lastTargetPos;
+        private static Vector3 _lastTargetPos, _lastTargetPosPerm, _lastPlayerPos;
 
         public StreamHelper()
         {
@@ -99,6 +99,10 @@ namespace StreamHelper
 
         private void Game_OnUpdate(EventArgs args)
         {
+            if (_lastTargetPos.IsValid())
+            {
+                _lastTargetPosPerm = _lastTargetPos;
+            }
             var currentCursor = Cursors.Normal;
             if (IsThereUnit(_actPosition))
             {
@@ -210,9 +214,7 @@ namespace StreamHelper
             var obj =
                 ObjectManager.Get<Obj_AI_Base>()
                     .Count(
-                        m =>
-                            !m.IsAlly && m.Distance(pos) < Math.Max(200, m.MoveSpeed / 2) && m.IsValidTarget() &&
-                            m.Health > 0);
+                        m => !m.IsAlly && m.Distance(pos) < m.BoundingRadius + 50 && m.IsValidTarget() && m.Health > 0);
             return obj > 0;
         }
 
@@ -346,12 +348,12 @@ namespace StreamHelper
         {
             if (sender.IsMe)
             {
-                if ((args.Target != null && args.Target.IsMe) ||
-                    args.SData.TargettingType.ToString().ToLower().Contains("self"))
+                if (args.SData.IsAutoAttack() && args.SData.Name.ToLower().Contains("ghoul"))
                 {
                     return;
                 }
-                if (args.SData.IsAutoAttack() && args.SData.Name.ToLower().Contains("ghoul"))
+                if ((args.Target != null && args.Target.IsMe) ||
+                    args.SData.TargettingType.ToString().ToLower().Contains("self"))
                 {
                     return;
                 }
@@ -372,6 +374,10 @@ namespace StreamHelper
             var distance = (int) _player.Distance(pos);
             // HoldPosition
             if ((distance < 1 && !isSpell) || !pos.IsOnScreen())
+            {
+                return;
+            }
+            if (pos.Distance(_lastTargetPosPerm) < 50 && _lastPlayerPos == _player.Position)
             {
                 return;
             }
@@ -404,6 +410,7 @@ namespace StreamHelper
             _lastTargetPos = pos;
             _actPosition = Game.CursorPos;
             _speed = Speed(Game.CursorPos.Distance(_newPosition));
+            _lastPlayerPos = _player.Position;
         }
     }
 }
