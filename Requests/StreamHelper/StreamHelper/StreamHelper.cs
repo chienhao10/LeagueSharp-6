@@ -104,7 +104,7 @@ namespace StreamHelper
                 _lastTargetPosPerm = _lastTargetPos;
             }
             var currentCursor = Cursors.Normal;
-            if (IsThereUnit(_actPosition))
+            if (IsThereUnit(_actPosition, true))
             {
                 currentCursor = Cursors.Attack;
             }
@@ -205,9 +205,9 @@ namespace StreamHelper
             }
         }
 
-        private bool IsThereUnit(Vector3 pos)
+        private bool IsThereUnit(Vector3 pos, bool cursor = false)
         {
-            if (_lastTargetPos.IsValid() && _lastTargetPos.Distance(_newPosition) < 150)
+            if (_lastTargetPos.IsValid() && cursor && _lastTargetPos.Distance(_newPosition) < 150)
             {
                 return true;
             }
