@@ -112,6 +112,10 @@ namespace UnderratedAIO.Champions
         private void Harass()
         {
             Obj_AI_Hero target = DrawHelper.GetBetterTarget(Q.Range, TargetSelector.DamageType.Magical);
+            if (target == null)
+            {
+                return;
+            }
             if (config.Item("useqH", true).GetValue<bool>() && Q.CanCast(target))
             {
                 Q.CastIfHitchanceEquals(target, HitChance.Medium);
