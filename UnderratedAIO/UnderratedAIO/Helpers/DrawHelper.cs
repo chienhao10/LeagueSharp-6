@@ -114,6 +114,7 @@ namespace UnderratedAIO.Helpers
                 range, damageType, ignoreShield, ignoredChamps, rangeCheckFrom, conditions);
             var selected = TargetSelector.GetSelectedTarget();
             if (CommonMenu.Item("TargetSelectorSpellOnlyFocused").GetValue<bool>() && selected != null &&
+                player.ChampionName != "Gangplank" &&
                 selected.Distance(player) < CommonMenu.Item("TargetSelectorSpellOnlyRange").GetValue<Slider>().Value)
             {
                 if (selected.Distance(player) < range && selected.IsValidTarget())
