@@ -1400,7 +1400,7 @@ namespace UnderratedAIO.Champions
             menuM.AddItem(new MenuItem("comboPrior", "   Combo priority", true))
                 .SetValue(new StringList(new[] { "E-Q", "E-AA", }, 0));
             menuM.AddItem(new MenuItem("barrelCorrection", "Barrel placement correction", true)).SetValue(true);
-            menuM.AddItem(new MenuItem("AmmoFix", "Ammo fix 6.17", true)).SetValue(new Slider(1, 0, 3));
+            menuM.AddItem(new MenuItem("AmmoFix", "Ammo fix", true)).SetValue(new Slider(0, 0, 3));
             menuM = DrawHelper.AddMisc(menuM);
             config.AddSubMenu(menuM);
 
