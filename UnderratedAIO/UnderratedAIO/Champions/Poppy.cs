@@ -76,14 +76,18 @@ namespace UnderratedAIO.Champions
             {
                 case Orbwalking.OrbwalkingMode.Combo:
                     Combo();
+                    KsPassive();
                     break;
                 case Orbwalking.OrbwalkingMode.Mixed:
                     Harass();
+                    KsPassive();
                     break;
                 case Orbwalking.OrbwalkingMode.LaneClear:
                     Clear();
+                    KsPassive();
                     break;
                 case Orbwalking.OrbwalkingMode.LastHit:
+                    KsPassive();
                     break;
                 default:
                     break;
@@ -116,6 +120,19 @@ namespace UnderratedAIO.Champions
             }
         }
 
+        private static void KsPassive()
+        {
+            var target =
+                HeroManager.Enemies.Where(
+                    e =>
+                        e.IsInAttackRange() &&
+                        HealthPrediction.GetHealthPrediction(e, 500) < player.GetAutoAttackDamage(e, true) &&
+                        e.IsValidTarget()).OrderByDescending(e => TargetSelector.GetPriority(e)).FirstOrDefault();
+            if (target != null)
+            {
+                orbwalker.ForceTarget(target);
+            }
+        }
 
         private static void Combo()
         {
