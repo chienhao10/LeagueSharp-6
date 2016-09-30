@@ -46,7 +46,7 @@ namespace StreamHelper
                 .SetFontStyle(FontStyle.Bold, SharpDX.Color.Orange);
             MoveTo.AddItem(new MenuItem("MovetoEnable", "Enable")).SetValue(false);
             MoveTo.AddItem(new MenuItem("MovetoOnlyEnemy", "Only around enemies")).SetValue(true);
-            MoveTo.AddItem(new MenuItem("InfoI", "It won't work wit the common fakeClick"));
+            MoveTo.AddItem(new MenuItem("MovetoAACircle", "Draw AA circle")).SetValue(false);
             _menu.AddSubMenu(MoveTo);
 
             _menu.AddItem(new MenuItem("Debug", "Debug")).SetValue(false);
@@ -64,7 +64,7 @@ namespace StreamHelper
 
             _newPosition = Game.CursorPos;
             _actPosition = Game.CursorPos;
-            _speed = 200;
+            _speed = 500;
         }
 
 
@@ -173,7 +173,8 @@ namespace StreamHelper
             if (!IsThereUnit(_newPosition) && !_lastTargetPos.IsValid())
             {
                 _idle = true;
-                _newPosition = Game.CursorPos;
+                _newPosition = Vector3.Zero;
+                _speed = 500;
             }
             MoveCursors(finalPos);
             if (_actPosition.Distance(_newPosition) < 1)
@@ -207,7 +208,7 @@ namespace StreamHelper
 
         private bool IsThereUnit(Vector3 pos, bool cursor = false)
         {
-            if (_lastTargetPos.IsValid() && cursor && _lastTargetPos.Distance(_newPosition) < 150)
+            if (_lastTargetPos.IsValid() && cursor && _lastTargetPos.Distance(pos) < 150)
             {
                 return true;
             }
@@ -291,7 +292,7 @@ namespace StreamHelper
 
         private void MoveCursors(Vector3 pos)
         {
-            if (MenuGUI.IsShopOpen || (_idle && Environment.TickCount - _lastClickTime > 1600 && CursorAtMiddle))
+            if (MenuGUI.IsShopOpen || (_idle && Environment.TickCount - _lastClickTime > _speed * 2f && CursorAtMiddle))
             {
                 SetCursorPos(Utils.GetCursorPos());
             }
@@ -318,6 +319,12 @@ namespace StreamHelper
 
         private void Drawing_OnDraw(EventArgs args)
         {
+            if (_menu.Item("MovetoAACircle").GetValue<bool>() && MoveToCursorEnabled() &&
+                IsThereUnit(_newPosition, true))
+            {
+                Drawing.DrawCircle(_player.Position, Orbwalking.GetRealAutoAttackRange(null), Color.Cyan);
+                Render.Circle.DrawCircle(_player.Position, Orbwalking.GetRealAutoAttackRange(null), Color.Honeydew, 8);
+            }
             if (!_menu.Item("Debug").GetValue<bool>())
             {
                 return;
