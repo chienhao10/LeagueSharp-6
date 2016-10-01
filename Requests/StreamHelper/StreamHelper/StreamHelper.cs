@@ -109,7 +109,7 @@ namespace StreamHelper
                 currentCursor = Cursors.Attack;
             }
             else if (MoveToCursorEnabled() && Game.CursorPos.Distance(_newPosition) < 50 &&
-                     Game.CursorPos.Distance(_actPosition) < 150 && Game.CursorPos.Distance(_actPosition) > 50 &&
+                     Game.CursorPos.Distance(_actPosition) < 250 && Game.CursorPos.Distance(_actPosition) > 50 &&
                      _movetoDisplay - Environment.TickCount <= 150)
             {
                 currentCursor = Cursors.MoveTo;
@@ -214,8 +214,7 @@ namespace StreamHelper
             }
             var obj =
                 ObjectManager.Get<Obj_AI_Base>()
-                    .Count(
-                        m => !m.IsAlly && m.Distance(pos) < m.BoundingRadius + 50 && m.IsValidTarget() && m.Health > 0);
+                    .Count(m => !m.IsAlly && m.Distance(pos) < 150 && m.IsValidTarget() && m.Health > 0);
             return obj > 0;
         }
 
@@ -385,6 +384,10 @@ namespace StreamHelper
                 return;
             }
             if (pos.Distance(_lastTargetPosPerm) < 50 && _lastPlayerPos == _player.Position)
+            {
+                return;
+            }
+            if ((_actPosition.IsValid() && _actPosition.Distance(pos) < 150) || Game.CursorPos.Distance(pos) < 150)
             {
                 return;
             }
