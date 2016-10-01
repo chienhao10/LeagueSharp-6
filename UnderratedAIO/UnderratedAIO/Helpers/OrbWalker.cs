@@ -150,7 +150,7 @@ namespace UnderratedAIO.Helpers
             "caitlynheadshotmissile", "frostarrow", "garenslash2",
             "kennenmegaproc", "masteryidoublestrike", "quinnwenhanced", "renektonexecute", "renektonsuperexecute",
             "rengarnewpassivebuffdash", "trundleq", "xenzhaothrust", "xenzhaothrust2", "xenzhaothrust3", "viktorqbuff",
-            "lucianpassiveshot", "GangplankQWrapper", "RenektonExecute", "TrundleQ"
+            "lucianpassiveshot", "GangplankQWrapper", "RenektonExecute", "TrundleQ", "monkeykingdoubleattack"
         };
 
         /// <summary>
@@ -690,6 +690,7 @@ namespace UnderratedAIO.Helpers
         /// </summary>
         public static void ResetAutoAttackTimer()
         {
+            _attacked = false;
             LastAATick = 0;
         }
 
@@ -754,7 +755,6 @@ namespace UnderratedAIO.Helpers
             try
             {
                 var spellName = Spell.SData.Name;
-
                 if (unit.IsMe && IsAutoAttackReset(spellName) && Spell.SData.SpellCastTime == 0)
                 {
                     ResetAutoAttackTimer();
