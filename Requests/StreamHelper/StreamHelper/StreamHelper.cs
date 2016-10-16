@@ -170,7 +170,7 @@ namespace StreamHelper
             }
             SetActPos();
             var finalPos = _actPosition;
-            if (!IsThereUnit(_newPosition) && !_lastTargetPos.IsValid())
+            if ((!IsThereUnit(_newPosition, true) || !_lastTargetPos.IsValid()))
             {
                 _idle = true;
                 _newPosition = Vector3.Zero;
@@ -418,6 +418,7 @@ namespace StreamHelper
             _dbg = off;
             _newClickTime = Environment.TickCount;
             _lastTargetPos = pos;
+            Utility.DelayAction.Add(650, () => { _lastTargetPos = Vector3.Zero; });
             _actPosition = Game.CursorPos;
             _speed = Speed(Game.CursorPos.Distance(_newPosition));
             _lastPlayerPos = _player.Position;
