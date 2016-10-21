@@ -229,6 +229,13 @@ namespace UnderratedAIO.Champions
                 Orbwalking.MoveTo(Game.CursorPos);
                 CastQ();
             }
+            if (config.Item("alternateComboKey", true).GetValue<KeyBind>().Active &&
+                orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None)
+            {
+                Orbwalking.Attack = false;
+                TurnOffQ();
+                Combo();
+            }
         }
 
         private void Throw()
@@ -520,6 +527,9 @@ namespace UnderratedAIO.Champions
             menuC.AddItem(new MenuItem("targRange", "Target indicator", true)).SetValue(new Slider(300, 20, 600));
             menuC.AddItem(new MenuItem("RunFOTT", "Run front of the target", true)).SetValue(true);
             menuC.AddItem(new MenuItem("RunFOTTHP", "   Only with more health", true)).SetValue(true);
+            menuC.AddItem(new MenuItem("alternateComboKey", "Combo key without AA", true))
+                .SetValue(new KeyBind("Y".ToCharArray()[0], KeyBindType.Press))
+                .SetFontStyle(System.Drawing.FontStyle.Bold, SharpDX.Color.Orange);
             menuC.AddItem(new MenuItem("useIgnite", "Use Ignite", true)).SetValue(true);
             menuC = ItemHandler.addItemOptons(menuC);
             config.AddSubMenu(menuC);

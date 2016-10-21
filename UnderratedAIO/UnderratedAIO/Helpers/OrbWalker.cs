@@ -1579,6 +1579,10 @@ namespace UnderratedAIO.Helpers
             /// <param name="args">The <see cref="EventArgs" /> instance containing the event data.</param>
             private void DrawingOnOnDraw(EventArgs args)
             {
+                if (!Enabled)
+                {
+                    return;
+                }
                 if (_config.Item("AACircle").GetValue<Circle>().Active)
                 {
                     Render.Circle.DrawCircle(
