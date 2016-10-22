@@ -198,15 +198,15 @@ namespace RandomUlt.Helpers
                             .ThenBy(p => line.Distance(p))
                             .FirstOrDefault();
                 }
-                if (pos != null)
+                if (pos.IsValid())
                 {
                     Render.Circle.DrawCircle(pos, 50, Color.Red, 8);
                 }
                 if (!enemy.Player.IsVisible)
                 {
-                    if (pos != null)
+                    if (pos.IsValid())
                     {
-                        Drawing.DrawCircle(line, dist / 1.5f, Color.LawnGreen);
+                        Render.Circle.DrawCircle(line, dist / 1.5f, Color.LawnGreen, 7);
                     }
                 }
             }
