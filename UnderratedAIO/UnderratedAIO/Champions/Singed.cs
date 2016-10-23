@@ -235,6 +235,7 @@ namespace UnderratedAIO.Champions
                 Orbwalking.Attack = false;
                 TurnOffQ();
                 Combo();
+                Orbwalking.MoveTo(Game.CursorPos, 60);
             }
         }
 
