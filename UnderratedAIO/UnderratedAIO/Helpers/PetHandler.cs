@@ -92,7 +92,8 @@ namespace UnderratedAIO.Helpers
                     {
                         Console.WriteLine("follow");
                     }
-                    if (player.IsMoving && options.Item("petFollow", true).GetValue<bool>())
+                    if (player.IsMoving && options.Item("petFollow", true).GetValue<bool>() &&
+                        player.ChampionName != "Ivern")
                     {
                         var movePos = player.Position.Extend(Prediction.GetPrediction(player, 0.5f).UnitPosition, -250);
                         MoveTo(movePos);
@@ -101,9 +102,9 @@ namespace UnderratedAIO.Helpers
                 }
                 else if (gtarget.IsValid && !Pet.IsWindingUp)
                 {
-                    if (CanPetAttack() ||
-                        options.Item("petMovementType", true).GetValue<StringList>().SelectedIndex == 1 ||
-                        player.HealthPercent < 25)
+                    if ((CanPetAttack() ||
+                         options.Item("petMovementType", true).GetValue<StringList>().SelectedIndex == 1 ||
+                         player.HealthPercent < 25) && player.ChampionName != "Ivern")
                     {
                         if (Pet.Distance(gtarget) < Pet.AttackRange + gtarget.BoundingRadius + Pet.BoundingRadius)
                         {

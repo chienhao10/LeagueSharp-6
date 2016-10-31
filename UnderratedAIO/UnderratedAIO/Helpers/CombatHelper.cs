@@ -961,7 +961,7 @@ namespace UnderratedAIO.Helpers
             {
                 return false;
             }
-            return Orbwalking.GetRealAutoAttackRange(target) > ObjectManager.Player.Distance(target) + bonusTange;
+            return Orbwalking.GetRealAutoAttackRange(target) + bonusTange > ObjectManager.Player.Distance(target);
         }
     }
 }
