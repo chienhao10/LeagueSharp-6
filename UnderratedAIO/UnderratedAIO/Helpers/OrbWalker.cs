@@ -1208,7 +1208,9 @@ namespace UnderratedAIO.Helpers
                              minion.CharData.BaseSkinName != "jarvanivstandard" ||
                              MinionManager.IsMinion(minion, _config.Item("AttackWards").GetValue<bool>())))
                         {
-                            var damage = Player.GetAutoAttackDamage(minion, true);
+                            var damage = Player.ChampionName == "Yorick"
+                                ? Player.GetAutoAttackDamage(minion)
+                                : Player.GetAutoAttackDamage(minion, true);
                             var killable = predHealth <= damage;
                             var dead = predHealth <= 0;
 
@@ -1373,7 +1375,11 @@ namespace UnderratedAIO.Helpers
                                 // calculate the hits is needed and possibilty to balance
                                 if (hpLeft == 0 && turretAttackCount != 0 && hpLeftBeforeDie != 0)
                                 {
-                                    var damage = (int) Player.GetAutoAttackDamage(turretMinion, true);
+                                    var damage =
+                                        (int)
+                                            (Player.ChampionName == "Yorick"
+                                                ? Player.GetAutoAttackDamage(turretMinion)
+                                                : Player.GetAutoAttackDamage(turretMinion, true));
                                     var hits = hpLeftBeforeDie / damage;
                                     var timeBeforeDie = turretLandTick +
                                                         (turretAttackCount + 1) *
