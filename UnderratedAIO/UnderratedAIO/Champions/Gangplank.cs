@@ -216,7 +216,7 @@ namespace UnderratedAIO.Champions
                 case Orbwalking.OrbwalkingMode.LastHit:
                     if (config.Item("useqLHH", true).GetValue<bool>() && !justE)
                     {
-                        Lasthit();
+                        Lasthit(config.Item("useqLHHOOAA", true).GetValue<bool>());
                     }
                     break;
                 default:
@@ -413,13 +413,20 @@ namespace UnderratedAIO.Champions
             return middle;
         }
 
-        private void Lasthit()
+        private void Lasthit(bool outOfAA = false)
         {
+            if (player.IsWindingUp)
+            {
+                return;
+            }
             if (Q.IsReady())
             {
                 var mini =
                     MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly)
-                        .Where(m => m.Health < Q.GetDamage(m) && m.SkinName != "GangplankBarrel")
+                        .Where(
+                            m =>
+                                m.Health < Q.GetDamage(m) && m.SkinName != "GangplankBarrel" &&
+                                (m.Distance(player) > Orbwalking.GetRealAutoAttackRange(m) || !outOfAA))
                         .OrderByDescending(m => m.MaxHealth)
                         .ThenByDescending(m => m.Distance(player))
                         .FirstOrDefault();
@@ -444,18 +451,7 @@ namespace UnderratedAIO.Champions
 
             if (config.Item("useqLHH", true).GetValue<bool>())
             {
-                var mini =
-                    MinionManager.GetMinions(Q.Range, MinionTypes.All, MinionTeam.NotAlly)
-                        .Where(m => m.Health < Q.GetDamage(m) && m.SkinName != "GangplankBarrel")
-                        .OrderByDescending(m => m.MaxHealth)
-                        .ThenByDescending(m => m.Distance(player))
-                        .FirstOrDefault();
-
-                if (mini != null)
-                {
-                    Q.CastOnUnit(mini);
-                    return;
-                }
+                Lasthit(config.Item("useqLHHOOAA", true).GetValue<bool>());
             }
 
             if (target == null || Environment.Minion.KillableMinion(player.AttackRange + 50))
@@ -571,7 +567,7 @@ namespace UnderratedAIO.Champions
             }
             if (config.Item("useqLC", true).GetValue<bool>() && !justE)
             {
-                Lasthit();
+                Lasthit(config.Item("useqLCOOAA", true).GetValue<bool>());
             }
             if (config.Item("useeLC", true).GetValue<bool>() && E.IsReady() &&
                 config.Item("eStacksLC", true).GetValue<Slider>().Value < GetAmmo())
@@ -1375,6 +1371,7 @@ namespace UnderratedAIO.Champions
             Menu menuH = new Menu("Harass ", "Hsettings");
             menuH.AddItem(new MenuItem("useqH", "Use Q harass", true)).SetValue(true);
             menuH.AddItem(new MenuItem("useqLHH", "Use Q lasthit", true)).SetValue(true);
+            menuH.AddItem(new MenuItem("useqLHHOOAA", "   Only out of AA range", true)).SetValue(false);
             menuH.AddItem(new MenuItem("useeH", "Use E", true)).SetValue(true);
             menuH.AddItem(new MenuItem("eStacksH", "   Keep stacks", true)).SetValue(new Slider(0, 0, 5));
             menuH.AddItem(new MenuItem("minmanaH", "Keep X% mana", true)).SetValue(new Slider(1, 1, 100));
@@ -1382,6 +1379,7 @@ namespace UnderratedAIO.Champions
             // LaneClear Settings
             Menu menuLC = new Menu("LaneClear ", "Lcsettings");
             menuLC.AddItem(new MenuItem("useqLC", "Use Q", true)).SetValue(true);
+            menuLC.AddItem(new MenuItem("useqLCOOAA", "   Only out of AA range", true)).SetValue(false);
             menuLC.AddItem(new MenuItem("useeLC", "Use E", true)).SetValue(true);
             menuLC.AddItem(new MenuItem("eMinHit", "   Min hit", true)).SetValue(new Slider(3, 1, 6));
             menuLC.AddItem(new MenuItem("eStacksLC", "   Keep stacks", true)).SetValue(new Slider(0, 0, 5));
