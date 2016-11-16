@@ -73,7 +73,7 @@ namespace ChatTranslator
             new List<string>(
                 new string[]
                 {
-                    "?key=trnsl.1.1.20160104T204502Z.776f8a7e2c4d9d42.b1ee11db59b64410c6402df651cb1e156e0fe1d3",
+                    "?key=trnsl.1.1.20161116T191124Z.1ab6d3c907623ceb.9807223f51de715b05e8cc05293c43c794b03465",
                     "?key=trnsl.1.1.20160104T204457Z.986a06123cc06620.f114139f32732c33ba127de92e8a14961a080edd",
                     "?key=trnsl.1.1.20160104T204437Z.d766324c28c39ddb.25569303b37b7132212831048bbc0db2476eebbb",
                     "?key=trnsl.1.1.20160416T081450Z.b4a83c93fa8dacc8.fa371dd2db68f920a81f8e6dbcee860290b4c170"
